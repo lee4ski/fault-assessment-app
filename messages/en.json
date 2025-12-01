@@ -1,0 +1,58 @@
+{
+  "common": {
+    "search": "Search",
+    "reset": "Reset",
+    "select": "Select",
+    "calculate": "Calculate",
+    "save": "Save",
+    "cancel": "Cancel",
+    "next": "Next",
+    "back": "Back"
+  },
+  "step1": {
+    "title": "Step 1: Search Assessment Criteria",
+    "description": "Enter the type and circumstances of the accident to search for appropriate assessment criteria.",
+    "searchLabel": "Search Assessment Criteria",
+    "searchPlaceholder": "Example: Intersection, Pedestrian, Parking Lot, etc. (Japanese/Alphanumeric supported)",
+    "keywordSearch": "Keyword Search",
+    "structuredSearch": "Structured Search",
+    "noResults": "No search results found",
+    "noResultsHint": "Try the following:",
+    "clearFilter": "Clear Filter",
+    "tryDifferentKeyword": "Try searching with a different keyword",
+    "accidentType": "Accident Type",
+    "location": "Location",
+    "partyTypes": "Party Types (Multiple Selection)",
+    "hasSignal": "Signal Presence",
+    "signalYes": "Signal Present",
+    "signalNo": "No Signal",
+    "signalNotSpecified": "Not Specified",
+    "keywordSearchOptional": "Keyword Search (Optional)"
+  },
+  "step2": {
+    "title": "Step 2: Apply Modification Factors and Calculate",
+    "description": "Apply modification factors to the base fault percentage and calculate the final fault percentage.",
+    "selectedCriteria": "Selected Assessment Criteria",
+    "baseFaultPercentage": "Base Fault Percentage",
+    "selectModifications": "Select Modification Factors",
+    "finalFaultPercentage": "Final Fault Percentage",
+    "saveResult": "Save Calculation Result",
+    "calculationComplete": "Calculation completed.",
+    "finalPercentage": "Final Fault Percentage: {percentage}%"
+  },
+  "step3": {
+    "title": "Step 3: Confirm AI Recommendations",
+    "description": "Review AI-recommended criteria."
+  },
+  "criteria": {
+    "chapter": "Chapter",
+    "baseFaultPercentage": "Base Fault Percentage",
+    "source": "Source",
+    "matchType": {
+      "prefix": "Prefix",
+      "partial": "Partial",
+      "suffix": "Suffix"
+    }
+  }
+}
+

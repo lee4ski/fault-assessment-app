@@ -1,0 +1,53 @@
+{
+  "name": "fault-assessment-calculator",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "npm run test:ci && next build",
+    "prebuild": "npm run test:ci",
+    "start": "next start",
+    "lint": "next lint",
+    "test": "vitest",
+    "test:ci": "vitest run --no-coverage",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest --coverage",
+    "test:mcp": "node scripts/run-mcp-visual-tests.js",
+    "test:mcp:auto": "node scripts/run-mcp-automated-tests.js",
+    "test:mcp:check": "node tests/mcp-test-checker.js",
+    "test:mcp:comprehensive": "node tests/mcp-comprehensive-test.js",
+    "predeploy": "npm run test:ci && npm run test:mcp:comprehensive && npm run build",
+    "deploy": "echo 'Deployment scripts should be configured based on your hosting platform'"
+  },
+  "dependencies": {
+    "@types/node": "^24.10.1",
+    "@types/react": "^19.2.7",
+    "@types/react-dom": "^19.2.3",
+    "@types/sharp": "^0.31.1",
+    "autoprefixer": "^10.4.22",
+    "eslint": "^9.39.1",
+    "eslint-config-next": "^16.0.5",
+    "lucide-react": "^0.555.0",
+    "next": "^16.0.5",
+    "next-intl": "^4.5.6",
+    "openai": "^6.9.1",
+    "pdf-parse": "^2.4.5",
+    "postcss": "^8.5.6",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "sharp": "^0.34.5",
+    "tailwindcss": "^3.4.18",
+    "tesseract.js": "^6.0.1",
+    "typescript": "^5.9.3"
+  },
+  "devDependencies": {
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.0",
+    "@testing-library/user-event": "^14.6.1",
+    "@vitejs/plugin-react": "^5.1.1",
+    "@vitest/coverage-v8": "^4.0.14",
+    "@vitest/ui": "^4.0.14",
+    "jsdom": "^27.2.0",
+    "vitest": "^4.0.14"
+  }
+}

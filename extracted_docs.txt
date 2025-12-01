@@ -1,0 +1,1537 @@
+================================================================================
+PRODUCT OWNER EXERCISES PDF:
+================================================================================
+ 
+Product  Owner  Candidate  Exercises  
+Table  of  Contents  
+General  information  1 Exercise  instructions  2 Fault  Assessment  Calculator  3 Questions  4 Vehicle  Lookup  5 Epic  5 Summary  5 Use  Case  5 Acceptance  Criteria  6 Business  Requirements  6 Background  6 Key  Search  Methods  6 Vehicle  Lookup  by  Vehicle  Model  Code  7 Vehicle  Lookup  by  Make  and  Model  8 Other  considerations  9 Questions  11 
+ 
+General  information  
+One  of  the  key  responsibilities  of  the  Product  Owner  is  acting  as  a  bridge  between  product  management  and  
+engineering.
+ 
+This
+ 
+responsibility
+ 
+requires
+ 
+the
+ 
+Product
+ 
+Owner
+ 
+to
+ 
+work
+ 
+closely
+ 
+with
+ 
+the
+ 
+business
+ 
+analyst
+ 
+and
+ 
+technical
+ 
+leads
+ 
+to
+ 
+effectively
+ 
+capture
+ 
+the
+ 
+business
+ 
+intent
+ 
+in
+ 
+business
+ 
+stories
+ 
+in
+ 
+a
+ 
+way
+ 
+that
+ 
+is
+ 
+understood
+ 
+by
+ 
+the
+ 
+engineering
+ 
+teams
+ 
+that
+ 
+will
+ 
+implement
+ 
+them.
+ 
+The  aim  of  these  exercises  is  to  role  play  a  business  story  review.  In  attendance  there  will  be:  
+●  The  product  manager  ●  The  business  analyst  ●  The  technical  lead  and/or  architect  
+guidewire.com  
+
+ 
+User  story  writing  exercise  
+The  exercises  provide  background  and  epic/feature  descriptions  with  additional  business  and  other  
+information
+ 
+required
+ 
+to
+ 
+write
+ 
+stories
+ 
+for
+ 
+the
+ 
+development
+ 
+team.
+ 
+From
+ 
+these
+ 
+stories
+ 
+the
+ 
+development
+ 
+team
+ 
+will
+ 
+create
+ 
+implementation
+ 
+tasks.
+  
+ 
+The  general  process  used  in  Global  Content  at  Guidewire  for  getting  to  story  creation  is:  
+●  The  product  manager  identifies  the  broad  market  requirement  and  breaks  down  that  market  
+requirement
+ 
+into
+ 
+features
+ 
+to
+ 
+realise
+ 
+that
+ 
+requirement
+ ●  The  business  analyst  under  the  product  managers  direction  investigates  areas  that  require  
+additional
+ 
+detail
+ 
+for
+ 
+implementation
+ 
+and
+ 
+captures
+ 
+the
+ 
+information
+ 
+in
+ 
+requirements
+ 
+documents
+ ●  With  the  Business  Analyst,  the  Product  Owner  identifies  the  scenarios  that  become  the  basis  of  
+the
+ 
+business
+ 
+stories
+ ●  The  Product  Owner  creates  first  drafts  of  the  business  stories  ●  The  Product  Owner  finalises  the  business  story  in  collaboration  with  the  technical  lead  and  
+business
+ 
+analyst.
+ 
+ 
+Exercise  instructions  
+Write  the  first  draft  user  stories  for  the  Epics  aligning  to  the  template  provided.  The  user  story  should  include  
+the
+ 
+following
+ 
+information:
+ 
+●  User  role  (Persona):  The  role  of  the  target  user  (user,  administrator,  etc.)  ●  Purpose:  The  function  or  action  the  user  wants  to  achieve  ●  Value  gained:  The  value  that  the  function  or  action  brings  to  the  user  ●  Acceptance  criteria  (definition  of  Done):  The  exit  conditions  for  this  story  ●  Add  other  information  to  the  story  as  needed.  This  could  include  elements  such  as  screens,  
+flows,
+ 
+data
+ 
+elements
+ 
+etc.
+ ●  Also  include  notes  that  would  be  helpful  when  finalising  with  the  lead  engineer  
+Please  explain  if  there  is  additional  information  that  you  need  to  complete  the  stories.  
+Suggest  a  priority  for  the  stories  using  MoSCoW  and  explain  your  reasoning  for  your  priorities.  
+ 
+guidewire.com  
+
+ 
+Fault  Assessment  Calculator  
+Read  the  following  Japanese  and  the  attached  PDF  (HanreiTimesSamplePages.pdf)  and  answer  questions.  
+Regarding  this  exercise,  please  write  all  presentation  materials,  such  as  epics  and  user  stories,  in  Japanese.  
+Also,
+ 
+please
+ 
+make
+ 
+your
+ 
+presentation
+ 
+in
+ 
+Japanese.
+ 
+Business  Issues  交 通 事 故 の 過 失 割 合 は、 事 故 状 況 か ら 割 り 出 し た 認 定 基 準 を も と に、 修 正 要 素 を 考 慮 し て 決 定 し て い る。 具 体 的に は、 別 冊 判 例 タ イ ム ズ に 掲 載 さ れ た 認 定 基 準 を 参 考 に し て い る。 そ し て、 そ の 別 冊 判 例 タ イ ム ズ に は、 様々 な 事故 形 態・ 状 況 に お け る 認 定 基 準 が 300 件 以 上 掲 載 さ れ て い る。  https://www.hanta.co.jp/books/6137/  例 え ば、 交 差 点 で の 歩 行 者 と 直 進 車 と の 事 故 で あ れ ば、 添 付 PDF  (HanreiTimesSamplePages.pdf)  の 67 ページ を 参 考 に す る。  ま ず、 基 本 過 失 割 合 を 決 定 す る。 こ の 事 例 の 場 合 は 10 ％ に な る。 そ の 値 に 対 し て、 修 正 要 素 を 考 慮 す る。 例 えば、 歩 行 者 が 幼 児 の 場 合、 上 の 基 本 過 失 割 合 に 対 し て 「 -5 ％」 の 調 整 を 行 い、 最 終 の 過 失 割 合 は 5 ％ と な る。   現 在、 こ の プ ロ セ ス は 手 作 業 で 行 う た め、 認 定 基 準 を 探 し 出 す た め に 多 く の 手 間 が か かっ て い る。 ま た、 人 に よって 選 択 す る 認 定 基 準 や 割 り 出 し た 過 失 割 合 の 値 に バ ラ ツ キ が 見 ら れ る。 そ こ で、 物 理 的 な 本 を 閲 覧 す る こ と な く、オ ン ラ イ ン で 認 定 基 準 を 検 索 し て 過 失 割 合 を 決 定 す る 機 能 を 追 加 し た い。    な お、 数 百 の 認 定 基 準 デー タ の 中 か ら、 該 当 の 事 故 状 況 に マッ チ し た 認 定 基 準 を 効 率 的 か つ 的 確 に 検 索 す る 工夫 も 考 慮 す る こ と。 （具 体 的 な 認 定 基 準 の 分 類 や タ イ ト ル は 添 付 PDF の 25 か ら 42 ペー ジ に あ る 第 1 章 か ら 第 7 章ま で の 目 次 を 参 照）   As  a  result  of  analyzing  the  above  business  issues,  we  decided  to  develop  the  following  epics:  
+Epic  1:  認 定 基 準 の 検 索 と 過 失 割 合 の 算 出   Goal:  別 冊 判 例 タ イ ム ズ の 事 故 類 型 分 類 に 基 づ い た 認 定 基 準 を 構 造 化 し、 効 率 的 な 検 索 を オ ン ラ イ ン 上 で 可 能に す る。   Business  background:  現 在、 こ の 作 業 は 物 理 的 な 本 を 使 用 し て 行 わ れ て お り、 検 索 に 時 間 が か か る。   Epic  2:  AI 支 援 に よ る 事 故 状 況 の 自 動 分 類   Goal:  事 故 報 告 の 内 容 か ら、 AI が 自 動 的 に 最 も 適 合 す る 認 定 基 準 を 提 案 す る。   Business  background:  利 用 者 の 経 験 に よ り、 算 出 さ れ た 過 失 割 合 の 値 に バ ラ ツ キ が 見 ら れ る。  
+guidewire.com  
+
+ 
+ Questions   1.  Create  user  stories  that  realize  the  features  defined  in  Epics  1  and  2.  Also,  if  there  are  any  other  
+features
+ 
+you
+ 
+think
+ 
+will
+ 
+be
+ 
+necessary
+ 
+in
+ 
+the
+ 
+first
+ 
+release,
+ 
+create
+ 
+epics
+ 
+and
+ 
+user
+ 
+stories
+ 
+for
+ 
+them.
+ 2.  Prioritize  the  user  stories  and  choose  the  minimum  stories  needed  for  your  first  release.  (MVP)  
+ 
+guidewire.com  
+
+ 
+Vehicle  Lookup  
+Read  the  following  Epic  description  and  answer  the  questions  that  follow.  
+Epic  Summary  
+The  feature  allows  a  policy  buyer  to  provide  a  unique  vehicle  model  code  to  the  underwriter.  Each  model  
+includes
+ 
+its
+ 
+own
+ 
+rating
+ 
+factors;
+ 
+therefore,
+ 
+it
+ 
+is
+ 
+important
+ 
+for
+ 
+underwriters
+ 
+to
+ 
+know
+ 
+the
+ 
+exact
+ 
+model
+ 
+code.
+ 
+This  feature  will  make  use  of  a  sample  data  source  for  the  purposes  of  testing  and  demonstration.  An  
+implementer
+ 
+is
+ 
+expected
+ 
+to
+ 
+replace
+ 
+the
+ 
+sample
+ 
+data
+ 
+source
+ 
+with
+ 
+an
+ 
+actual
+ 
+data
+ 
+source
+ 
+that
+ 
+conforms
+ 
+to
+ 
+the
+ 
+data
+ 
+contract
+ 
+and
+ 
+API.
+ 
+Use  Case  (End  user  =  Policy  Underwriter)  
+1.  Look  up  the  vehicle  master  data  by  Vehicle  Model  Code  ( 型 式 ).  This  code  is  written  on  the  
+Vehicle
+ 
+Inspection
+ 
+Certificate,
+ 
+so
+ 
+I
+ 
+want
+ 
+to
+ 
+ask
+ 
+the
+ 
+policy
+ 
+buyer
+ 
+if
+ 
+he
+ 
+knows
+ 
+this
+ 
+code.
+ a.  If  the  answer  is  Yes,  then  I  use  the  code  to  look  up  the  particular  model  from  the  vehicle  
+master.
+ 
+If
+ 
+there's
+ 
+no
+ 
+match....
+ 
+go
+ 
+to
+ 
+(2)
+ b.  If  the  answer  is  No,  then  go  to  (2)  2.  Look  up  the  vehicle  master  data  by  Vehicle  Make  &  Model  name.  This  is  probably  the  most  likely  
+path.
+ 
+I
+ 
+want
+ 
+to
+ 
+ask
+ 
+the
+ 
+policy
+ 
+buyer...
+ a.  First  Registration  Year  &  Month  ( 初 度 登 録 年 月 ;  user  to  filter  the  model  name)  b.  Make  of  the  vehicle  ( メー カー ;  e.g.  Toyota,  Honda,  etc.)  c.  Model  name  of  the  vehicle  ( 車 名 ;  e.g.  2020  Accord,  2021  Civic).  The  list  of  model  names  
+should
+ 
+be
+ 
+filtered
+ 
+by
+ 
+the
+ 
+first
+ 
+registration
+ 
+date
+ 
+and
+ 
+by
+ 
+the
+ 
+choice
+ 
+of
+ 
+the
+ 
+Make
+ d.  I  must  choose  the  exact  model  name  of  the  insured  vehicle  from  the  search  result.  3.  As  a  result  of  the  search,  either  from  (1)  or  (2),  I  want  the  following  info  to  be  copied  into  the  
+insured
+ 
+vehicle
+ 
+data
+ 
+on
+ 
+PolicyCenter.
+ 
+Note
+ 
+that
+ 
+the
+ 
+master
+ 
+data
+ 
+gets
+ 
+updated
+ 
+regularly,
+ 
+and
+ 
+I
+ 
+want
+ 
+the
+ 
+vehicle
+ 
+information
+ 
+as
+ 
+of
+ 
+the
+ 
+policy
+ 
+start
+ 
+date.
+ 4.  As  an  underwriter,  after  the  attempt  of  (1)  and  (2),  if  the  vehicle  model  code  of  the  insured  vehicle  
+is
+ 
+not
+ 
+found
+ 
+in
+ 
+the
+ 
+vehicle
+ 
+master
+ 
+data,
+ 
+I
+ 
+want
+ 
+to
+ 
+create
+ 
+a
+ 
+new
+ 
+model
+ 
+in
+ 
+order
+ 
+to
+ 
+proceed
+ 
+with
+ 
+the
+ 
+quote.
+ 
+This
+ 
+scenario
+ 
+might
+ 
+happen
+ 
+if
+ 
+the
+ 
+insured
+ 
+vehicle
+ 
+is
+ 
+a
+ 
+foreign
+ 
+car,
+ 
+or
+ 
+it
+ 
+has
+ 
+been
+ 
+just
+ 
+released
+ 
+recently
+ 
+and
+ 
+not
+ 
+on
+ 
+the
+ 
+vehicle
+ 
+master
+ 
+yet.
+ 
+I
+ 
+want
+ 
+to
+ 
+capture
+ 
+the
+ 
+following
+ 
+information
+ 
+for
+ 
+the
+ 
+non-existing
+ 
+model:
+ 
+guidewire.com  
+
+ 
+a.  Make  (e.g.  "Ford")  b.  Model  Name  (e.g.  " マ ダ ナ イ ")  c.  Vehicle  Model  Code  (e.g.  "UNKNOWN")  d.  New  Cost  (e.g.  JPY  2,000,000)  e.  Price  Range  Max  (e.g.  JPY  2,000,000)  f.  Price  Range  Min  (e.g.  JPY  1,500,000)  g.  Injury  Liability  Class  (e.g.  1)  h.  Property  Liability  Class  (e.g.  2)  i.  Passenger  Injury  Class  (e.g.  3)  j.  Vehicle  Damage  Class  (e.g.  9)  k.  Vehicle  Use  Type(a  typekey  from  all  the  vehicle  user  types)  l.  Release  Date  (a  date  when  this  car  has  become  available)  
+Acceptance  Criteria  
+●  UI  for  Underwriter  to  choose  the  exact  vehicle  model:  ○  Enter  First  Registration  Date  (just  Year  and  Month,  no  Day)  ○  Enter  vehicle  model  code  if  it  is  known  ○  Otherwise,  search  by  Make  and  Model  name  ○  Select  the  exact  Model  from  the  search  result  ●  UI  for  Underwriter  to  add  a  new  model  in  an  ad  hoc  way  ○  All  vehicle  details  above  can  be  entered  for  a  new  model  ●  When  underwriter  selects  a  particular  vehicle  model  (or  create  a  new  model),  the  vehicle  info  is  
+copied
+ 
+from
+ 
+the
+ 
+vehicle
+ 
+master
+ 
+to
+ 
+the
+ 
+policy’s
+ 
+vehicle
+ 
+data
+ 
+Business  Requirements  Background  
+The  vehicle  lookup  system  is  designed  to  facilitate  efficient  vehicle  information  retrieval  during  insurance  
+policy
+ 
+submission
+ 
+through
+ 
+two
+ 
+primary
+ 
+search
+ 
+methods
+ 
+and
+ 
+several
+ 
+supporting
+ 
+features:
+ 
+Key  Search  Methods  
+Vehicle  Model  Code  Search  
+●  Allows  precise  vehicle  identification  using  unique  model  codes  
+guidewire.com  
+
+ 
+●  Provides  exact  matches  from  the  Cognivision  vehicle  price  master  database  ●  Returns  comprehensive  vehicle  specifications  and  pricing  information  
+Make  and  Model  Search  
+●  Alternative  method  when  model  codes  are  unknown  ●  Enables  broader  searches  using  manufacturer  and  model  names  ●  Returns  lists  of  matching  vehicles  with  detailed  specifications  
+Core  Features:  
+●  Dynamic  data  filtering  based  on  vehicle  registration  dates  ●  Intelligent  dropdown  menus  to  prevent  information  overload  ●  Type-ahead  search  functionality  for  improved  user  experience  ●  Support  for  both  English  and  Japanese  character  searches  ●  Automatic  mapping  of  vehicle  information  to  insurance  policies  
+Data  Management:  
+●  Integration  with  Cognivision  vehicle  price  master  database  ●  Capability  to  create  and  store  new  vehicle  models  ●  Repository  for  non-standard  vehicle  specifications  ●  Regular  synchronization  of  vehicle  master  data  
+Vehicle  Lookup  by  Vehicle  Model  Code  
+Search  by  vehicle  model  code:  
+●  If  exact  /  partial  match,  then  return  vehicle  info  of  matching  vehicle  model(s)  ●  If  no  match,  return  nothing  (+  display  message  "No  results  found")  
+Retrieve  information  about  the  vehicle  from  the  vehicle  master  (to  begin  with,  sample  data)  and  map  this  
+information
+ 
+to
+ 
+the
+ 
+insured
+ 
+vehicle
+ 
+●  Make  ( メー カー );   ●  Model  ( モ デ ル );   ●  Vehicle  Model  Code  ( 型 式 コー ド );   ●  New  Vehicle  Cost  ( 新 車 価 格 );   
+guidewire.com  
+
+ 
+●  Price  Range  Max  ( 最 高 車 両 価 格 );   ●  Price  Range  Min  ( 最 低 車 両 価 格 );   ●  Bodily  Injury  Liability  Class  ( 自 動 車 対 人 賠 償 ク ラ ス );   ●  Property  Damage  Liability  Class  ( 自 動 車 対 物 賠 償 ク ラ ス );   ●  PIP  /  Passenger  Injury  Liability  Class  ( 自 動 車 対 物 賠 償 ク ラ ス );   ●  Vehicle  Damage  Class  ( 自 動 車 車 両 損 害 ク ラ ス );   ●  Vehicle  Use  Type  ( 用 途 車 種 );   ●  Release  Date  ( 発 売 日 )  
+This  search  method  enables  underwriters  to  locate  vehicle  information  during  policy  submission  using  a  
+specific
+ 
+vehicle
+ 
+model
+ 
+code.
+ 
+Each  model  code  uniquely  identifies  vehicles  with  identical  specifications,  structure,  equipment,  and  
+performance.
+ 
+When  searching  with  a  model  code,  the  system  queries  the  Cognivision  vehicle  price  master  database  to  
+find
+ 
+an
+ 
+exact
+ 
+match.
+ 
+The  system  will  display  the  matching  vehicle's  detailed  information  as  of  the  policy  start  date.  
+If  no  match  is  found,  a  "No  results  found"  message  appears  on  the  screen.  
+Once  a  vehicle  is  selected,  the  system  automatically  maps  all  relevant  vehicle  information  to  the  policy.  In  
+cases
+ 
+where
+ 
+the
+ 
+policy
+ 
+start
+ 
+date
+ 
+falls
+ 
+between
+ 
+two
+ 
+master
+ 
+data
+ 
+update
+ 
+dates,
+ 
+the
+ 
+system
+ 
+uses
+ 
+the
+ 
+most
+ 
+recent
+ 
+value
+ 
+to
+ 
+ensure
+ 
+accuracy
+ 
+in
+ 
+policy
+ 
+rating
+ 
+and
+ 
+claims
+ 
+processing.
+ 
+Vehicle  Lookup  by  Make  and  Model  
+Search  by  make  and  model:  
+●  Return  a  list  of  vehicles  matching  the  make  and  model  in  search  criteria  ●  If  no  matches,  return  nothing  (+  display  message  "No  results  found")  
+Retrieve  information  about  the  vehicle  from  the  vehicle  master  (to  begin  with,  sample  data)  and  map  this  
+information
+ 
+to
+ 
+the
+ 
+insured
+ 
+vehicle
+ 
+●  Make  ( メー カー );   ●  Model  ( モ デ ル );   
+guidewire.com  
+
+ 
+●  Vehicle  Model  Code  ( 型 式 コー ド );   ●  New  Vehicle  Cost  ( 新 車 価 格 );   ●  Price  Range  Max  ( 最 高 車 両 価 格 );   ●  Price  Range  Min  ( 最 低 車 両 価 格 );   ●  Bodily  Injury  Liability  Class  ( 自 動 車 対 人 賠 償 ク ラ ス );   ●  Property  Damage  Liability  Class  ( 自 動 車 対 物 賠 償 ク ラ ス );   ●  PIP  /  Passenger  Injury  Liability  Class  ( 自 動 車 対 物 賠 償 ク ラ ス );   ●  Vehicle  Damage  Class  ( 自 動 車 車 両 損 害 ク ラ ス );   ●  Vehicle  Use  Type  ( 用 途 車 種 );   ●  Release  Date  ( 発 売 日 )  
+This  alternative  search  method  is  particularly  useful  when  the  vehicle  model  code  is  unknown.  
+Underwriters  can  search  the  database  using  a  combination  of  the  manufacturer  name  (make)  and  model  
+name
+,
+ 
+such
+ 
+as
+ 
+"Toyota
+ 
+Civic."
+ 
+The  system  queries  the  Cognivision  vehicle  price  master  database  and  returns  a  list  of  all  possible  matching  
+vehicles.
+ 
+Users  can  view  the  detailed  information  for  each  matching  vehicle  as  of  the  policy  start  date.  If  no  matches  
+are
+ 
+found,
+ 
+the
+ 
+system
+ 
+displays
+ 
+a
+ 
+"No
+ 
+results
+ 
+found"
+ 
+message.
+ 
+From  the  list  of  results,  underwriters  can  select  the  appropriate  vehicle,  and  the  system  will  map  all  relevant  
+information
+ 
+to
+ 
+the
+ 
+policy.
+ 
+As  with  the  model  code  search,  if  the  policy  start  date  falls  between  two  master  data  update  dates,  the  
+system
+ 
+uses
+ 
+the
+ 
+most
+ 
+recent
+ 
+value
+ 
+to
+ 
+maintain
+ 
+accuracy
+ 
+in
+ 
+policy
+ 
+documentation.
+ 
+Other  considerations  
+If  we  simply  import  the  list  of  vehicles  from  the  master  data  and  use  it  to  feed  the  dropdowns  for  Make  and  
+Model,
+ 
+the
+ 
+list
+ 
+could
+ 
+run
+ 
+several
+ 
+pages
+ 
+long.
+ 
+This
+ 
+is
+ 
+inefficient,
+ 
+and
+ 
+is
+ 
+certainly
+ 
+not
+ 
+user-friendly
+ 
+system
+ 
+behaviour.
+ 
+Therefore,
+ 
+we
+ 
+must
+ 
+find
+ 
+a
+ 
+way
+ 
+to
+ 
+limit
+ 
+the
+ 
+entries
+ 
+that
+ 
+appear
+ 
+in
+ 
+the
+ 
+dropdowns.
+ 
+The  master  data  contains  information  such  as  release  (sale)  date,  make,  model,  etc.  of  each  vehicle  model.  
+The  policyholder,  of  course,  knows  the  first  registration  date  of  their  vehicle  (in  their  vehicle  inspection  
+certificate)
+ 
+and
+ 
+the
+ 
+names
+ 
+of
+ 
+the
+ 
+make
+ 
+and
+ 
+model
+ 
+of
+ 
+their
+ 
+vehicle.
+ 
+guidewire.com  
+
+ 
+We  use  this  information  to  filter  out  irrelevant  vehicle  models  to  make  the  search  process  smooth  and  
+user-friendly.
+ 
+The  requirement  is  to  filter  out  any  vehicle  models  released  (i.e.,  came  into  the  market  for  the  first  time)  after  
+the
+ 
+first
+ 
+registration
+ 
+date
+ 
+of
+ 
+the
+ 
+insured
+ 
+vehicle,
+ 
+and
+ 
+to
+ 
+filter
+ 
+out
+ 
+model
+ 
+names
+ 
+not
+ 
+belonging
+ 
+to
+ 
+the
+ 
+selected
+ 
+vehicle
+ 
+make.
+ 
+Specifically:  
+●  If  first  registration  date  of  a  vehicle  is  date  D;  then  update  the  vehicle  make  and  model  dropdowns  
+to
+ 
+only
+ 
+display
+ 
+those
+ 
+released
+ 
+on
+ 
+or
+ 
+before
+ 
+date
+ 
+D
+ ●  If  a  vehicle  make  is  specified  (say,  Toyota),  then  update  the  vehicle  model  name  dropdown  to  
+only
+ 
+display
+ 
+vehicle
+ 
+models
+ 
+belonging
+ 
+to
+ 
+make
+ 
+Toyota.
+ 
+In  some  cases,  while  the  vehicle  itself  exists,  its  detailed  specifications,  as  identified  by  the  model  code,  
+might
+ 
+not
+ 
+be
+ 
+standardized
+ 
+in
+ 
+the
+ 
+typical
+ 
+"vehicle
+ 
+master
+ 
+data"
+ 
+used
+ 
+by
+ 
+insurers.
+ 
+In  such  cases,  the  user  must  have  the  option  of  creating  a  new  vehicle  model.  The  user  can  create  the  
+model
+ 
+on
+ 
+the
+ 
+Create
+ 
+Vehicle
+ 
+Model
+ 
+UI
+ 
+by
+ 
+entering
+ 
+the
+ 
+information
+ 
+related
+ 
+to
+ 
+the
+ 
+fields
+ 
+mentioned
+ 
+in
+ 
+summary.
+ 
+It  is  possible  that  this  information  could  be  retained  for  future  use.  Insurers  using  PolicyCenter  may  also  
+decide
+ 
+to
+ 
+regularly
+ 
+sync
+ 
+the
+ 
+created
+ 
+vehicle
+ 
+models
+ 
+with
+ 
+up-to-date
+ 
+information
+ 
+in
+ 
+the
+ 
+vehicle
+ 
+master.
+ 
+Alternatively,
+ 
+they
+ 
+may
+ 
+retain
+ 
+this
+ 
+information
+ 
+in
+ 
+order
+ 
+to
+ 
+update
+ 
+their
+ 
+vehicle
+ 
+master
+ 
+data
+ 
+(either
+ 
+manually
+ 
+or
+ 
+by
+ 
+configuring
+ 
+some
+ 
+logic).
+ 
+If  an  insured  vehicle  is  already  selected,  confirm  whether  the  user  wants  to  overwrite  this  before  proceeding  
+to
+ 
+create
+ 
+the
+ 
+new
+ 
+vehicle
+ 
+model.
+ 
+The  requirement  is:  
+●  Develop  UI  for  Create  New  Vehicle  Model  ●  Map  this  information  to  the  insured  vehicle  ●  Store  this  information  in  the  policy  file  ●  Store  this  vehicle  model  in  a  repository  for  future  use  (either  to  sync  or  update  vehicle  master  
+data)
+ 
+ 
+guidewire.com  
+
+ 
+The  number  of  distinct  possible  values  in  the  field  make  ( メー カー ),  and  especially  in  model  ( モ デ ル )  and  
+vehicle
+ 
+model
+ 
+code
+ 
+(
+型
+式
+コー
+ド
+)
+ 
+is
+ 
+very
+ 
+high.
+ 
+In
+ 
+order
+ 
+to
+ 
+improve
+ 
+the
+ 
+search
+ 
+experience,
+ 
+we
+ 
+shall
+ 
+implement
+ 
+type-ahead
+ 
+search
+ 
+functionality
+ 
+in
+ 
+these
+ 
+fields.
+ 
+The  requirement  is  
+●  When  the  user  is  performing  a  search  for  a  particular  field,  he/she  types  a  series  of  characters  
+which
+ 
+match
+ 
+entries
+ 
+in
+ 
+the
+ 
+master
+ 
+data
+ ●  The  list  /  dropdown  should  automatically  display  the  likely  entries  based  on  the  search  string  ●  The  list  should  be  sorted  in  the  following  order  (top  to  bottom):  ○  Entries  starting  with  the  search  string  ○  Entries  having  the  search  string  somewhere  in  the  middle  ○  Entries  ending  with  the  search  string  
+This  behaviour  may  not  be  possible  in  case  of  Japanese  search.  
+Japanese  search  applies  to  make  ( メー カー )  and  model  ( モ デ ル ),  which  can  be  searched  using  Japanese  
+characters
+ 
+(eg.
+ 
+ト
+ヨ
+タ
+ 
+for
+ 
+Toyota;
+ 
+ホ
+ン
+ダ
+ 
+for
+ 
+Honda).
+ 
+The
+ 
+user
+ 
+may
+ 
+choose
+ 
+to
+ 
+enter
+ 
+a
+ 
+partial
+ 
+search
+ 
+string
+ 
+(eg.
+ 
+ト
+ヨ
+ 
+“toyo”
+ 
+for
+ 
+ト
+ヨ
+タ
+;
+ 
+プ
+リ
+ 
+“puri”
+ 
+for
+ 
+プ
+リ
+ウ
+ス
+)
+ 
+or
+ 
+the
+ 
+full
+ 
+search
+ 
+string.
+ 
+Vehicle  Model  Code  ( 型 式 コー ド )  will  always  be  a  set  of  alphanumeric  characters,  so  isn't  a  target  for  
+Japanese
+ 
+search.
+ 
+In  case  of  Japanese  search,  the  following  is  the  expected  behaviour:  
+●  User  enters  the  search  string  in  Japanese  (full  text  search  or  partial  match  search)  ●  User  clicks  "Search"  ●  A  list  of  possible  matches  appears,  sorted  in  Japanese  alphabetical  order  
+Questions  1.  Write  user  stories  to  break  down  the  Epic,  keeping  in  mind  the  overall  Business  Requirements.  2.  Prioritize  the  user  stories  and  choose  the  minimum  stories  needed  for  your  first  release.  (MVP)  3.  What  are  the  key  considerations  from  an  implementation  perspective?  4.  How  would  you  address  any  challenges  you  foresee  from  an  implementation  perspective?  Pick  
+any
+ 
+one
+ 
+key
+ 
+consideration
+ 
+from
+ 
+answer
+ 
+3
+ 
+and
+ 
+discuss
+ 
+the
+ 
+potential
+ 
+challenges
+ 
+you
+ 
+foresee.
+ 
+guidewire.com  
+
+ 
+Structure  your  answers  bearing  in  mind  Agile  development  principles  and  regular  opportunities  to  interact  
+with
+ 
+end-users.
+ 
+guidewire.com  
+
+
+
+
+================================================================================
+FAULT ASSESSMENT USER STORIES DOCX:
+================================================================================
+Fault Assessment Calculator — ユーザーストーリー（テンプレ準拠・改訂版）
+【前提】
+・テンプレ構成は「User Story Template」に準拠。
+・課題／エピックは「Product Owner Candidate Exercises – Fault Assessment Calculator」を参照。
+Epic A：認定基準の検索と基本過失割合の算出
+Goal：事故状況に合致する「認定基準」を迅速に特定し、基本過失割合を提示する
+Story A-1（MUST）
+Summary
+事故状況から「認定基準」を検索して基本過失割合を表示する
+As a：損害サービス担当者（調査・示談担当）
+I want：事故類型／場所／当事者種別などを入力すると、合致する認定基準と基本過失割合を取得したい
+So that：紙やPDFの参照をせずに、一次回答までの時間と判断ばらつきを減らせる
+Acceptance Criteria（G/W/T）
+Given：ユーザーが事故属性（例：歩行者×四輪、交差点、信号有無 等）を入力している
+When：検索を実行する
+Then：一致度順に「認定基準カード（章・節名／要約／基本過失割合／出典）」を上位10件まで表示する
+And：いずれかのカードを選択すると、基本過失割合が明示され「修正要素の適用」ステップへ遷移できる
+And：該当なしの場合は「該当する認定基準が見つかりません／No results found」と表示する
+Definition of Done
+・検索応答 P50≤2秒、P95≤4秒で結果描画
+・表示項目：章・節・見出し、要約（100–200字）、基本過失割合、出典（書籍名・版・ページ）
+・監査ログ：入力条件、提示結果、選択履歴を保存
+Non-Functional
+・i18n（ja/EN）
+・SSO（社内IdP）
+・操作ログの改ざん防止（監査証跡）
+Dependencies
+・認定基準メタデータ（章構造・見出し）
+・基本過失割合データセット（社内DBまたは抽出済み辞書）
+Story A-2（MUST）
+Summary
+タイプアヘッド＆ファセットで候補絞り込み
+As a：損害サービス担当者
+I want：章／節ファセットとタイプアヘッド検索で数百件の基準から素早く絞り込みたい
+So that：入力負荷を下げ、誤選択を防げる
+Acceptance Criteria（G/W/T）
+Given：検索フォームが表示されている
+When：ファセットを選び、キーワード（日本語／英数字）を入力する
+Then：候補は「前方一致→部分一致→後方一致」の順に並ぶ（日本語は五十音順ソート）
+And：ヒット数を章・節ごとにバッジ表示する
+And：候補0件の時は明確な空表示と次アクション（フィルタ解除／別キーワード）を提示する
+DoD
+・タイプアヘッド応答 P95≤150ms
+・全角/半角・かな/カナ正規化
+Epic B：修正要素の適用と最終過失割合の算出
+Goal：基準に対して修正要素を適用し、根拠付きで最終過失割合を提示する
+Story B-1（MUST）
+Summary
+修正要素を選択して最終過失割合をリアルタイム計算
+As a：損害サービス担当者
+I want：チェック式で該当修正要素を選ぶと、最終過失割合が即時計算され、根拠も表示される
+So that：説明を伴う一貫した算出ができる
+Acceptance Criteria（G/W/T）
+Given：基本過失割合が確定している
+When：修正要素（例：幼児、夜間、見通し不良 等）を選択/解除する
+Then：各要素の調整率を合成し、最終過失割合を即時計算（計算式・適用順序・丸め規則を明示）する
+And：結果カードに「基本割合→適用要素一覧（名称／±率／根拠出典）→最終割合」を表示する
+And：PDF/CSVで根拠付き計算書をエクスポートできる
+DoD
+・丸め規則（四捨五入/切上/切捨）は設定で切替可能（既定＝四捨五入）
+・無関係な修正要素は選択不可（基準IDとの整合性チェック）
+・クリックからUI更新まで P95≤200ms
+Non-Functional
+・操作履歴の完全保存（誰が/いつ/何を適用）
+・案件間の再現性（バージョン固定）
+Epic C：AI支援による基準の自動提案
+Goal：事故報告テキストから候補基準を提示し、選択時間とばらつきを低減する
+Story C-1（MUST）
+Summary
+事故報告テキストからTop-3の推奨基準を提示
+As a：損害サービス担当者
+I want：事故報告（テキスト＋構造化項目）からAIの推奨基準（Top-3）を受け取りたい
+So that：探索時間を短縮できる
+Acceptance Criteria（G/W/T）
+Given：当事者種別・場所・信号・優先関係などの項目と事故報告テキストが入力済み
+When：AI推奨を実行する
+Then：適合スコア付きでTop-3候補（章・節・要約・想定基本過失割合・抽出根拠ハイライト）を提示する
+And：ユーザーは候補を採択、または手動検索に切替できる
+And：採択結果と根拠は案件に保存される
+DoD
+・推奨生成 P95≤3秒
+・モデル/辞書のバージョンを案件に記録（後日検証可能）
+Story C-2（SHOULD）
+Summary
+AI提案に対する人手上書き理由を収集し、品質改善に活用
+As a：チームリーダー/品質管理者
+I want：AI推奨を上書きした理由を収集・集計し、モデル改善に活かしたい
+So that：継続的に精度とUXを向上できる
+Acceptance Criteria（G/W/T）
+Given：AIがTop-3候補を提示している
+When：担当者が別の基準を採択し、理由を入力する
+Then：「AI候補→最終採択」「差分（章・節・割合）」「理由テキスト」を案件履歴に保存し、月次レポートで集計できる
+DoD
+・匿名化した利用分析ダッシュボード（件数、採択率、上書き率、代表理由カテゴリ）
+Epic D：監査・エクスポート・運用基盤
+Goal：説明可能性と運用性を担保する
+Story D-1（SHOULD）
+Summary
+算出結果の監査レポートをエクスポート
+As a：社内監査/品質管理
+I want：入力条件・選択基準・修正要素・計算式・出典を含む監査レポートを出力したい
+So that：説明可能性を担保し対外説明に耐える
+Acceptance Criteria（G/W/T）
+Given：案件が最終割合まで確定している
+When：監査レポートを出力する
+Then：PDF/CSVで「入力→検索→採択→修正→最終」の全トレイルと出典を含むレポートが生成される
+And：案件ID/日時/担当者/モデル版を明記する
+データ項目（抜粋）
+・事故属性：当事者A/Bカテゴリ、場所（交差点/直線/駐車場/高速）、信号/標識、一時停止、優先関係、天候/時間帯
+・認定基準：章、節、見出し、要約、基本過失割合、出典（書籍名・版・ページ）
+・修正要素：名称、適用条件、調整率（±%）、適用順序、出典
+・AI支援：候補（上位3）、スコア、抽出根拠スニペット、モデル/辞書バージョン
+・監査：操作ユーザー、操作内容、時刻、前後値差分
+NFR（横断）
+・可用性：99.9%
+・パフォーマンス：上記各P95要件を満たす
+・セキュリティ：社内認証（SSO）、権限（閲覧/編集/エクスポート）、監査ログのWORM保管
+・国際化：ja/EN UI、数値/日付ローカライズ
+既知の制約／未確定事項（Open Questions）
+1）出典の正確なページ・表番号の最終確定方法（OCR or 手入力確認）
+2）丸め規則の既定値と案件単位/組織単位の上書き可否
+3）AIモデルの運用枠組み（許容精度・誤提案時の運用ハンドオフ）
+4）用語正規化辞書の初期充実度と更新フロー（異表記の吸収）
+MVP提案
+・A-1 / B-1 / C-1 をMUSTで実装（検索→算出→AI候補）
+・A-2 / C-2 / D-1 はPhase 2（運用最適化・説明責任の強化）
+
+
+

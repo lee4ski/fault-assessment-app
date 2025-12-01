@@ -1,0 +1,593 @@
+"use client";
+
+import React, { useState, useRef, useEffect } from "react";
+import { ChatMessage } from "@/types/workflow";
+import { sampleCriteria } from "@/data/sampleCriteria";
+import { MessageSquare, Sparkles, ChevronRight } from "lucide-react";
+
+type DetailKey = "location" | "signal" | "pedestrian" | "vehicles" | "extra";
+
+const detailQuestions: { id: DetailKey; text: string }[] = [
+  {
+    id: "location",
+    text: "Q1: 事故の場所を教えてください。（例：信号付き交差点、市街地の駐車場、高速道路本線 など）",
+  },
+  {
+    id: "signal",
+    text: "Q2: 信号の状況を教えてください。（歩行者と車両それぞれの信号の色と、信号が変わったかどうか）",
+  },
+  {
+    id: "pedestrian",
+    text: "Q3: 歩行者や運転者に、幼児・高齢者・身体障害者・飲酒など、過失割合に影響しそうな属性はありますか？",
+  },
+  {
+    id: "vehicles",
+    text: "Q4: 関係する車両の台数と種類、わかっている範囲の情報（メーカー・車種・年式など）を教えてください。",
+  },
+  {
+    id: "extra",
+    text: "Q5: その他、過失割合に影響しそうな事情（速度超過、見通し不良、夜間など）があれば教えてください。",
+  },
+];
+
+interface ChatWindowProps {
+  step: number;
+  stepName: string;
+  onAIAnalysis?: (analysis: any) => void;
+}
+
+export default function ChatWindow({
+  step,
+  stepName,
+  onAIAnalysis,
+}: ChatWindowProps) {
+  const [isCollapsed, setIsCollapsed] = useState(true);
+  const [messages, setMessages] = useState<ChatMessage[]>([
+    {
+      id: "1",
+      role: "assistant",
+      content: `こんにちは！${stepName}ステップのアシスタントです。何かお手伝いできることはありますか？\n\n💡 **ヒント**: 事故の詳細を記述すると、AIが自動的にステップを埋めます！`,
+      timestamp: new Date(),
+    },
+  ]);
+  const [input, setInput] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [isCollectingDetails, setIsCollectingDetails] = useState(false);
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [collectedDetails, setCollectedDetails] = useState<
+    Partial<Record<DetailKey, string>>
+  >({});
+  const [initialAccidentText, setInitialAccidentText] = useState<string | null>(
+    null
+  );
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const scrollToBottom = () => {
+    if (messagesEndRef.current && !isCollapsed) {
+      try {
+        messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+      } catch (error) {
+        // Silently handle scroll errors (element might not be mounted yet)
+        console.debug("Scroll error:", error);
+      }
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    // Shift+Enter sends the message
+    if (e.key === "Enter" && e.shiftKey) {
+      e.preventDefault();
+      handleSend();
+    }
+    // Enter adds a new line (default behavior)
+  };
+
+  useEffect(() => {
+    if (!isCollapsed) {
+      // Use setTimeout to ensure DOM is ready
+      const timer = setTimeout(() => {
+        scrollToBottom();
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [messages, isCollapsed]);
+
+  const isAccidentDescription = (text: string): boolean => {
+    // Detect if the message looks like an accident description
+    const accidentKeywords = ["事故", "衝突", "接触", "横断", "信号", "交差点", "歩行者", "車両", "駐車場", "高速"];
+    const hasKeyword = accidentKeywords.some(keyword => text.includes(keyword));
+    const isLongEnough = text.length > 30; // At least 30 characters
+    return hasKeyword && isLongEnough;
+  };
+
+  const handleSend = async () => {
+    if (!input.trim() || isLoading) return;
+
+    const userMessage: ChatMessage = {
+      id: Date.now().toString(),
+      role: "user",
+      content: input,
+      timestamp: new Date(),
+    };
+
+    setMessages((prev) => [...prev, userMessage]);
+    const currentInput = input;
+    setInput("");
+    setIsLoading(true);
+
+    // すでに詳細質問フロー中であれば、AI解析ではなく Q&A の続きを行う
+    if (isCollectingDetails) {
+      const currentQuestion = detailQuestions[currentQuestionIndex];
+      const updatedDetails: Partial<Record<DetailKey, string>> = {
+        ...collectedDetails,
+        [currentQuestion.id]: currentInput,
+      };
+      setCollectedDetails(updatedDetails);
+
+      const nextIndex = currentQuestionIndex + 1;
+
+      if (nextIndex < detailQuestions.length) {
+        // 次の質問へ
+        setCurrentQuestionIndex(nextIndex);
+        const nextQuestion = detailQuestions[nextIndex].text;
+        const assistantMessage: ChatMessage = {
+          id: `question-${Date.now()}`,
+          role: "assistant",
+          content: nextQuestion,
+          timestamp: new Date(),
+        };
+        setMessages((prev) => [...prev, assistantMessage]);
+        setIsLoading(false);
+        return;
+      } else {
+        // 全ての質問が終わったので、集めた情報で改めてAI解析を行う
+        setIsCollectingDetails(false);
+
+        const pieces: string[] = [];
+        if (initialAccidentText) {
+          pieces.push(initialAccidentText.trim());
+        }
+        if (updatedDetails.location) {
+          pieces.push(`【場所】${updatedDetails.location.trim()}`);
+        }
+        if (updatedDetails.signal) {
+          pieces.push(`【信号】${updatedDetails.signal.trim()}`);
+        }
+        if (updatedDetails.pedestrian) {
+          pieces.push(`【歩行者・運転者属性】${updatedDetails.pedestrian.trim()}`);
+        }
+        if (updatedDetails.vehicles) {
+          pieces.push(`【車両情報】${updatedDetails.vehicles.trim()}`);
+        }
+        if (updatedDetails.extra) {
+          pieces.push(`【その他事情】${updatedDetails.extra.trim()}`);
+        }
+
+        const enrichedDescription = pieces.join("\n");
+
+        setIsAnalyzing(true);
+        const analyzingMessage: ChatMessage = {
+          id: `analyzing-${Date.now()}`,
+          role: "assistant",
+          content: "✨ いただいた追加情報を含めて再分析しています...",
+          timestamp: new Date(),
+        };
+        setMessages((prev) => [...prev, analyzingMessage]);
+
+        try {
+          const analysisResponse = await fetch("/api/ai-analyze-accident", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ accidentDescription: enrichedDescription }),
+          });
+
+          if (analysisResponse.ok) {
+            const analysis = await analysisResponse.json();
+
+            if (onAIAnalysis) {
+              onAIAnalysis(analysis);
+            }
+
+            const hasCriteria =
+              !!analysis.step1?.recommendedCriteriaId &&
+              typeof analysis.step1.recommendedCriteriaId === "string";
+            const hasModsSuggestion =
+              Array.isArray(analysis.step2?.recommendedModifications) &&
+              analysis.step2.recommendedModifications.length > 0;
+            const hasVehicleSuggestion =
+              Array.isArray(analysis.step3?.extractedVehicles) &&
+              analysis.step3.extractedVehicles.length > 0;
+
+            const matchedCriteria =
+              hasCriteria &&
+              sampleCriteria.find(
+                (c) => c.id === analysis.step1.recommendedCriteriaId
+              );
+
+            let responseText = "✅ **AI分析が完了しました！**\n\n";
+            if (analysis.summary) {
+              responseText += `**概要**: ${analysis.summary}\n\n`;
+            }
+
+            if (matchedCriteria) {
+              responseText +=
+                "📍 **ステップ1（認定基準）**: 次の基準が最も適切と考えられます：\n";
+              responseText += `- ${matchedCriteria.title} （基本過失割合: ${matchedCriteria.baseFaultPercentage}%）\n`;
+            } else if (hasCriteria) {
+              responseText +=
+                "📍 **ステップ1（認定基準）**: ある程度候補はありますが、特定には追加情報が必要です。\n";
+            } else {
+              responseText +=
+                "⚠️ **ステップ1（認定基準）**: 認定基準の特定に追加情報が必要です。\n";
+            }
+
+            const step2Status = analysis.step2?.validation?.status;
+            if (step2Status === "valid-empty") {
+              responseText +=
+                "\n✅ **ステップ2（修正要素）**: このケースでは、追加の修正要素は適用不要と判断されました。\n";
+            } else if (hasModsSuggestion && matchedCriteria) {
+              const mfMap = new Map(
+                (matchedCriteria.modificationFactors || []).map((m: any) => [
+                  m.id,
+                  m,
+                ])
+              );
+              const described = analysis.step2.recommendedModifications
+                .map((id: string) => mfMap.get(id)?.description || id)
+                .filter(Boolean);
+
+              responseText +=
+                "\n✅ **ステップ2（修正要素）**: 次の修正要素を適用する候補があります：\n";
+              described.forEach((d: string) => {
+                responseText += `- ${d}\n`;
+              });
+              if (analysis.step2.validation?.reason) {
+                responseText += `理由: ${analysis.step2.validation.reason}\n`;
+              }
+            } else if (analysis.step2?.validation) {
+              responseText += `\n${
+                analysis.step2.validation.status === "complete" ? "✅" : "⚠️"
+              } **ステップ2（修正要素）**: ${
+                analysis.step2.validation.reason
+              }\n`;
+            }
+
+            if (analysis.step3?.validation) {
+              responseText += `\n${
+                analysis.step3.validation.color === "green" ? "✅" : "⚠️"
+              } **ステップ3（車両情報）**: ${
+                analysis.step3.validation.reason
+              }\n`;
+            }
+
+            responseText +=
+              "\n左側のステップを自動入力した内容を確認し、必要に応じて手動で修正してください。";
+
+            setMessages((prev) =>
+              prev.map((msg) =>
+                msg.id === analyzingMessage.id
+                  ? { ...msg, content: responseText }
+                  : msg
+              )
+            );
+          } else {
+            throw new Error("分析に失敗しました");
+          }
+        } catch (error: any) {
+          console.error("AI analysis error (detail flow):", error);
+          setMessages((prev) =>
+            prev.filter((msg) => !msg.content.includes("再分析しています"))
+          );
+        } finally {
+          setIsAnalyzing(false);
+          setIsLoading(false);
+        }
+
+        return;
+      }
+    }
+
+    // Check if this looks like an accident description
+    const shouldAnalyze = isAccidentDescription(currentInput);
+
+    if (shouldAnalyze && onAIAnalysis) {
+      setIsAnalyzing(true);
+      
+      // Add analyzing message
+      const analyzingMessage: ChatMessage = {
+        id: `analyzing-${Date.now()}`,
+        role: "assistant",
+        content: "✨ 事故情報を分析しています...",
+        timestamp: new Date(),
+      };
+      setMessages((prev) => [...prev, analyzingMessage]);
+
+      try {
+        // Call AI analysis API
+        const analysisResponse = await fetch("/api/ai-analyze-accident", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ accidentDescription: currentInput }),
+        });
+
+        if (analysisResponse.ok) {
+          const analysis = await analysisResponse.json();
+
+          // Pass analysis to parent component
+          if (onAIAnalysis) {
+            onAIAnalysis(analysis);
+          }
+
+          const hasCriteria =
+            !!analysis.step1?.recommendedCriteriaId &&
+            typeof analysis.step1.recommendedCriteriaId === "string";
+          const hasModsSuggestion =
+            Array.isArray(analysis.step2?.recommendedModifications) &&
+            analysis.step2.recommendedModifications.length > 0;
+          const hasVehicleSuggestion =
+            Array.isArray(analysis.step3?.extractedVehicles) &&
+            analysis.step3.extractedVehicles.length > 0;
+
+          const tooSimple =
+            !hasCriteria && !hasModsSuggestion && !hasVehicleSuggestion;
+
+          // Try to resolve the selected criteria for nicer messages
+          const matchedCriteria =
+            hasCriteria &&
+            sampleCriteria.find(
+              (c) => c.id === analysis.step1.recommendedCriteriaId
+            );
+
+          // 情報不足の場合は、ステップ入力ではなくチャットで一問ずつ確認するモードに入る
+          if (tooSimple) {
+            setIsCollectingDetails(true);
+            setCurrentQuestionIndex(0);
+            setCollectedDetails({});
+            setInitialAccidentText(currentInput);
+
+            const firstQuestion = detailQuestions[0].text;
+            const responseText =
+              "⚠️ **現在の説明だけでは、具体的な認定基準や修正要素を特定するには情報が足りません。**\n\n" +
+              "いくつか質問をさせてください。順番にお答えいただくと、AI が自動的にステップを埋めます。\n\n" +
+              firstQuestion;
+
+            setMessages((prev) =>
+              prev.map((msg) =>
+                msg.id === analyzingMessage.id
+                  ? { ...msg, content: responseText }
+                  : msg
+              )
+            );
+          } else {
+            let responseText = "✅ **AI分析が完了しました！**\n\n";
+            if (analysis.summary) {
+              responseText += `**概要**: ${analysis.summary}\n\n`;
+            }
+
+            // Step 1 – criteria suggestion
+            if (matchedCriteria) {
+              responseText +=
+                "📍 **ステップ1（認定基準）**: 次の基準が最も適切と考えられます：\n";
+              responseText += `- ${matchedCriteria.title} （基本過失割合: ${matchedCriteria.baseFaultPercentage}%）\n`;
+            } else if (hasCriteria) {
+              responseText +=
+                "📍 **ステップ1（認定基準）**: ある程度候補はありますが、特定には追加情報が必要です。\n";
+            } else {
+              responseText +=
+                "⚠️ **ステップ1（認定基準）**: 認定基準の特定に追加情報が必要です。\n";
+            }
+
+            // Step 2 – modification factors
+            const step2Status = analysis.step2?.validation?.status;
+            if (step2Status === "valid-empty") {
+              responseText +=
+                "\n✅ **ステップ2（修正要素）**: このケースでは、追加の修正要素は適用不要と判断されました。\n";
+            } else if (hasModsSuggestion && matchedCriteria) {
+              const mfMap = new Map(
+                (matchedCriteria.modificationFactors || []).map((m: any) => [
+                  m.id,
+                  m,
+                ])
+              );
+              const described = analysis.step2.recommendedModifications
+                .map((id: string) => mfMap.get(id)?.description || id)
+                .filter(Boolean);
+
+              responseText +=
+                "\n✅ **ステップ2（修正要素）**: 次の修正要素を適用する候補があります：\n";
+              described.forEach((d: string) => {
+                responseText += `- ${d}\n`;
+              });
+              if (analysis.step2.validation?.reason) {
+                responseText += `理由: ${analysis.step2.validation.reason}\n`;
+              }
+            } else if (analysis.step2?.validation) {
+              responseText += `\n${
+                analysis.step2.validation.status === "complete" ? "✅" : "⚠️"
+              } **ステップ2（修正要素）**: ${
+                analysis.step2.validation.reason
+              }\n`;
+            }
+
+            // Step 3 – vehicles
+            if (analysis.step3?.validation) {
+              responseText += `\n${
+                analysis.step3.validation.color === "green" ? "✅" : "⚠️"
+              } **ステップ3（車両情報）**: ${
+                analysis.step3.validation.reason
+              }\n`;
+            }
+
+            responseText +=
+              "\n左側のステップを自動入力した内容を確認し、必要に応じて手動で修正してください。";
+
+            // Replace analyzing message with result
+            setMessages((prev) =>
+              prev.map((msg) =>
+                msg.id === analyzingMessage.id
+                  ? { ...msg, content: responseText }
+                  : msg
+              )
+            );
+          }
+        } else {
+          throw new Error("分析に失敗しました");
+        }
+      } catch (error: any) {
+        console.error("AI analysis error:", error);
+        
+        // Fall back to regular chat
+        setMessages((prev) => prev.filter(msg => msg.id !== analyzingMessage.id));
+      } finally {
+        setIsAnalyzing(false);
+      }
+    }
+
+    // Always get chat response（ただし詳細質問フロー中はスキップ）
+    if (!isCollectingDetails) {
+      try {
+        const response = await fetch("/api/chat", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            messages: [...messages, userMessage].map((msg) => ({
+              role: msg.role,
+              content: msg.content,
+            })),
+            step,
+          }),
+        });
+
+        const data = await response.json();
+
+        if (response.ok && !shouldAnalyze) {
+          // Only add chat response if we didn't analyze
+          const assistantMessage: ChatMessage = {
+            id: (Date.now() + 1).toString(),
+            role: "assistant",
+            content: data.message,
+            timestamp: new Date(),
+          };
+          setMessages((prev) => [...prev, assistantMessage]);
+        }
+      } catch (error: any) {
+        if (!shouldAnalyze) {
+          const errorMessage: ChatMessage = {
+            id: (Date.now() + 1).toString(),
+            role: "assistant",
+            content: `申し訳ございません。エラーが発生しました: ${error.message}`,
+            timestamp: new Date(),
+          };
+          setMessages((prev) => [...prev, errorMessage]);
+        }
+      } finally {
+        setIsLoading(false);
+      }
+    } else {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <>
+      {/* Collapsed button on the right */}
+      {isCollapsed && (
+        <button
+          onClick={() => setIsCollapsed(false)}
+          className="fixed right-6 top-[140px] z-50 px-4 py-3 bg-blue-600 text-white rounded-lg shadow-lg hover:bg-blue-700 transition-colors flex items-center gap-2 md:top-[120px]"
+          title="チャットを開く"
+        >
+          <MessageSquare className="w-5 h-5" />
+          <span className="font-medium hidden sm:inline">チャット</span>
+        </button>
+      )}
+
+      {/* Sliding chat window */}
+      {!isCollapsed && (
+        <div
+          data-testid="chat-window"
+          className="h-full bg-white border-l border-gray-200 shadow-2xl w-[400px] flex-shrink-0"
+        >
+        <div className="flex flex-col h-full">
+          <button
+            onClick={() => setIsCollapsed(true)}
+            className="p-4 border-b border-gray-200 bg-blue-50 hover:bg-blue-100 transition-colors flex items-center justify-between"
+          >
+            <div className="flex items-center gap-2">
+              <MessageSquare className="w-5 h-5 text-blue-600" />
+              <div className="text-left">
+                <h3 className="font-semibold text-gray-900">アシスタントチャット</h3>
+                <p className="text-sm text-gray-600">{stepName}</p>
+              </div>
+            </div>
+            <ChevronRight className="w-5 h-5 text-gray-600" />
+          </button>
+
+          <div className="flex-1 overflow-y-auto p-4 space-y-4">
+            {messages.map((message) => (
+              <div
+                key={message.id}
+                className={`flex ${message.role === "user" ? "justify-end" : "justify-start"
+                  }`}
+              >
+                <div
+                  className={`max-w-[80%] rounded-lg p-3 ${message.role === "user"
+                      ? "bg-blue-600 text-white"
+                      : "bg-gray-100 text-gray-900"
+                    }`}
+                >
+                  <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                </div>
+              </div>
+            ))}
+            {(isLoading || isAnalyzing) && (
+              <div className="flex justify-start">
+                <div className="bg-gray-100 rounded-lg p-3 flex items-center gap-2">
+                  {isAnalyzing && <Sparkles className="w-4 h-4 text-blue-600 animate-pulse" />}
+                  <p className="text-sm text-gray-600">
+                    {isAnalyzing ? "AI分析中..." : "考えています..."}
+                  </p>
+                </div>
+              </div>
+            )}
+            <div ref={messagesEndRef} />
+          </div>
+
+          <div className="p-4 border-t border-gray-200">
+            <div className="flex gap-2 items-end">
+              <textarea
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder="質問を入力してください... (Shift+Enterで送信)"
+                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none overflow-y-auto"
+                style={{
+                  minHeight: "40px",
+                  maxHeight: "200px",
+                  height: input ? `${Math.min(input.split('\n').length * 24 + 16, 200)}px` : "40px"
+                }}
+                disabled={isLoading}
+                rows={1}
+              />
+              <button
+                onClick={handleSend}
+                disabled={isLoading || !input.trim()}
+                className="px-6 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex-shrink-0"
+              >
+                送信
+              </button>
+            </div>
+            <p className="text-xs text-gray-500 mt-1">
+              💡 <span className="font-medium">Shift+Enter</span>で送信、<span className="font-medium">Enter</span>で改行
+            </p>
+          </div>
+        </div>
+      </div>
+      )}
+    </>
+  );
+}
+

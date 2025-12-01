@@ -1,0 +1,8 @@
+{
+  "buildCommand": "npm run test:ci && npm run build",
+  "devCommand": "npm run dev",
+  "installCommand": "npm ci",
+  "framework": "nextjs",
+  "regions": ["nrt1"]
+}
+

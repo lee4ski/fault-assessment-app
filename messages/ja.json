@@ -1,0 +1,58 @@
+{
+  "common": {
+    "search": "検索",
+    "reset": "リセット",
+    "select": "選択",
+    "calculate": "計算",
+    "save": "保存",
+    "cancel": "キャンセル",
+    "next": "次へ",
+    "back": "戻る"
+  },
+  "step1": {
+    "title": "ステップ1: 認定基準の検索",
+    "description": "事故の種類や状況を入力して、適切な認定基準を検索してください。",
+    "searchLabel": "認定基準を検索",
+    "searchPlaceholder": "例: 交差点、歩行者、駐車場など（日本語/英数字対応）",
+    "keywordSearch": "キーワード検索",
+    "structuredSearch": "構造化検索",
+    "noResults": "検索結果が見つかりませんでした",
+    "noResultsHint": "次を試してください：",
+    "clearFilter": "フィルタを解除",
+    "tryDifferentKeyword": "別のキーワードで検索してみてください",
+    "accidentType": "事故類型",
+    "location": "場所",
+    "partyTypes": "当事者種別（複数選択可）",
+    "hasSignal": "信号有無",
+    "signalYes": "信号あり",
+    "signalNo": "信号なし",
+    "signalNotSpecified": "指定なし",
+    "keywordSearchOptional": "キーワード検索（任意）"
+  },
+  "step2": {
+    "title": "ステップ2: 修正要素の適用と計算",
+    "description": "基本過失割合に対して修正要素を適用して、最終過失割合を計算します。",
+    "selectedCriteria": "選択された認定基準",
+    "baseFaultPercentage": "基本過失割合",
+    "selectModifications": "修正要素を選択",
+    "finalFaultPercentage": "最終過失割合",
+    "saveResult": "計算結果を保存",
+    "calculationComplete": "計算が完了しました。",
+    "finalPercentage": "最終過失割合: {percentage}%"
+  },
+  "step3": {
+    "title": "ステップ3: AI推奨の確認",
+    "description": "AIによる推奨基準を確認します。"
+  },
+  "criteria": {
+    "chapter": "章",
+    "baseFaultPercentage": "基本過失割合",
+    "source": "出典",
+    "matchType": {
+      "prefix": "前方",
+      "partial": "部分",
+      "suffix": "後方"
+    }
+  }
+}
+

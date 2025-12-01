@@ -1,0 +1,17 @@
+{
+  "timestamp": "2025-11-29T03:18:52.976Z",
+  "serverAccessible": true,
+  "brokenLinks": {
+    "total": 3,
+    "broken": 0
+  },
+  "requiredElements": {
+    "allPresent": true,
+    "missing": []
+  },
+  "visualIssues": {
+    "hasIssues": false,
+    "issues": []
+  },
+  "errors": []
+}
