@@ -6,7 +6,7 @@ import { join } from "path";
 import { tmpdir } from "os";
 
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY || "",
+  apiKey: process.env.OPENAI_API_KEY || process.env.OPEN_API_KEY || "",
 });
 
 export async function POST(request: NextRequest) {
@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!process.env.OPENAI_API_KEY) {
+    if (!process.env.OPENAI_API_KEY && !process.env.OPEN_API_KEY) {
       return NextResponse.json(
         { error: "OpenAI API key is not configured" },
         { status: 500 }

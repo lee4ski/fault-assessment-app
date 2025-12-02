@@ -4,7 +4,7 @@ import { sampleCriteria } from "@/data/sampleCriteria";
 import { searchCriteria } from "@/lib/calculator";
 
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY || "",
+  apiKey: process.env.OPENAI_API_KEY || process.env.OPEN_API_KEY || "",
 });
 
 const stepPrompts = {
@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
   try {
     const { messages, step } = await request.json();
 
-    if (!process.env.OPENAI_API_KEY) {
+    if (!process.env.OPENAI_API_KEY && !process.env.OPEN_API_KEY) {
       return NextResponse.json(
         { error: "OpenAI API key is not configured" },
         { status: 500 }

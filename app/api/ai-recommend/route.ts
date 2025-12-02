@@ -3,7 +3,7 @@ import OpenAI from "openai";
 import { AssessmentCriteria } from "@/types";
 
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY || "",
+  apiKey: process.env.OPENAI_API_KEY || process.env.OPEN_API_KEY || "",
 });
 
 export async function POST(request: NextRequest) {
