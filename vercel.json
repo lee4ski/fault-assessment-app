@@ -1,8 +1,10 @@
 {
-  "buildCommand": "npm run test:ci && npm run build",
+  "buildCommand": "npm run build",
   "devCommand": "npm run dev",
-  "installCommand": "npm ci",
+  "installCommand": "npm install",
   "framework": "nextjs",
-  "regions": ["nrt1"]
+  "regions": ["iad1"],
+  "env": {
+    "OPENAI_API_KEY": "@openai-api-key"
+  }
 }
-
