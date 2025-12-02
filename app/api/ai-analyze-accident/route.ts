@@ -40,6 +40,18 @@ export interface AIAnalysisResult {
     reasoning: string;
     validation: StepValidation;
   };
+  // Extracted structured attributes (NEW)
+  attributes?: {
+    accidentType?: string;
+    location?: string;
+    partyTypes?: string[];
+    hasSignal?: boolean;
+    signalA?: string;
+    signalB?: string;
+    actionA?: string;
+    actionB?: string;
+  };
+  missingStructuredFields?: string[];
   // Overall summary
   summary: string;
 }
@@ -68,15 +80,20 @@ export async function POST(request: NextRequest) {
 1. **認定基準**: どの認定基準が最も適切か
 2. **修正要素**: どのような修正要素が適用されるべきか（幼児、高齢者、信号無視など）
 3. **車両情報**: 関係する車両の情報（メーカー、車種、年式など）
-4. **不足情報**: 何が不明または不足しているか
+4. **構造化属性**: 事故の基本属性（事故類型、場所、当事者、信号有無）
+5. **不足情報**: 何が不明または不足しているか
 
-特に、信号に関するケースでは次の点に注意してください：
-- 歩行者が**青信号**で横断開始し、車両が**赤信号**で進入した場合（信号変更なし）は、
-  - criteriaId: "intersection-pedestrian-signal-no-change" を選択し、
-  - このケースでは修正要素は存在しないため、\"modifications\": [] かつ \"missingInfo.modifications\": [] としてください。
-- 歩行者が**黄信号**で横断開始し、車両が**赤信号**で進入した場合は、
-  - criteriaId: "intersection-pedestrian-yellow-red" を選択し、
-  - この基準に定義された修正要素（幼児等・高齢者、集団横断、歩行者の著しい過失など）だけを候補として検討してください。
+特に、構造化属性の抽出では以下のフィールドを特定してください：
+- **当事者A/B**: それぞれの当事者種別（歩行者、四輪車、二輪車、自転車）
+- **信号A/B**: それぞれの当事者の信号色（青、黄、赤、右折、なし）
+- **行動A/B**: それぞれの当事者の行動（直進、右折、左折、横断、停止、後退、転回、進路変更）
+
+利用可能な属性値の定義:
+- accidentType: "歩行者×四輪", "歩行者×二輪", "四輪×四輪", "四輪×二輪", "二輪×二輪", "その他"
+- location: "交差点", "駐車場", "高速道路", "一般道路", "横断歩道", "その他"
+- partyTypes: ["歩行者", "四輪車", "二輪車", "自転車", "その他"]
+- signal states: "signal_green" (青), "signal_yellow" (黄), "signal_red" (赤), "signal_right" (右折), "signal_none" (なし)
+- actions: "action_straight" (直進), "action_turning_right" (右折), "action_turning_left" (左折), "action_crossing" (横断), "action_stopping" (停止), "action_backing" (後退)
 
 利用可能な認定基準（簡略表現）:
 ${JSON.stringify(
@@ -100,21 +117,32 @@ ${JSON.stringify(
   "criteriaId": "最も適切な認定基準のID",
   "criteriaConfidence": 0-100の数値,
   "criteriaReasoning": "なぜこの基準を選んだか",
-  "modifications": ["適用すべき修正要素のIDリスト（上記 modificationFactors の id を使用、他は使わない）"],
+  "modifications": ["適用すべき修正要素のIDリスト"],
   "modificationsReasoning": "修正要素の選択理由",
   "vehicles": [
     {
-      "make": "メーカー名（不明な場合は空文字）",
-      "model": "車種名（不明な場合は空文字）",
-      "year": "年式（不明な場合は空文字）",
-      "partial": true/false（情報が不完全な場合true）
+      "make": "メーカー名",
+      "model": "車種名",
+      "year": "年式",
+      "partial": true/false
     }
   ],
   "vehiclesReasoning": "車両情報の抽出理由",
+  "attributes": {
+    "accidentType": "事故類型",
+    "location": "場所",
+    "partyTypes": ["当事者A種別", "当事者B種別"],
+    "signalA": "当事者Aの信号ID (例: signal_green)",
+    "signalB": "当事者Bの信号ID (例: signal_red)",
+    "actionA": "当事者Aの行動ID (例: action_crossing)",
+    "actionB": "当事者Bの行動ID (例: action_straight)",
+    "hasSignal": true/false
+  },
   "missingInfo": {
-    "criteria": ["認定基準に関して不足している情報"],
-    "modifications": ["修正要素に関して不足している情報（青/赤信号ケースなど修正要素が存在しない場合は空配列にする）"],
-    "vehicles": ["車両に関して不足している情報"]
+    "criteria": ["不足情報"],
+    "modifications": ["不足情報"],
+    "vehicles": ["不足情報"],
+    "structuredFields": ["不足フィールド"]
   },
   "summary": "全体の分析サマリー"
 }`;
@@ -198,6 +226,8 @@ ${JSON.stringify(
           reason: determineStep3Reason(aiResponse.vehicles),
         },
       },
+      attributes: aiResponse.attributes || {},
+      missingStructuredFields: aiResponse.missingInfo?.structuredFields || [],
       summary: aiResponse.summary || "事故情報を分析しました。",
     };
 

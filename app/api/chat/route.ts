@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import OpenAI from "openai";
+import { sampleCriteria } from "@/data/sampleCriteria";
+import { searchCriteria } from "@/lib/calculator";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY || "",
@@ -51,6 +53,33 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Get the last user message
+    const lastUserMessage = messages[messages.length - 1]?.content || "";
+
+    // First, try to find matching cases if the message is substantial (> 5 chars)
+    if (lastUserMessage.length > 5) {
+      const results = searchCriteria(sampleCriteria, lastUserMessage);
+      
+      // If we found matches, return them as recommendations
+      if (results.length > 0) {
+        const topResults = results.slice(0, 3).map((result) => ({
+          id: result.criteria.id,
+          title: result.criteria.title,
+          description: result.criteria.summary || result.criteria.description,
+          baseFaultPercentage: result.criteria.baseFaultPercentage,
+          confidence: Math.round(result.relevanceScore),
+          matchType: result.matchType,
+        }));
+
+        return NextResponse.json({
+          message: "以下の認定基準が見つかりました。該当するものを選択してください：",
+          recommendations: topResults,
+          type: "case_recommendation",
+        });
+      }
+    }
+
+    // If no matches found, proceed with conversational AI
     const systemPrompt = stepPrompts[step as keyof typeof stepPrompts] || stepPrompts[1];
 
     const completion = await openai.chat.completions.create({
@@ -68,6 +97,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       message: completion.choices[0]?.message?.content || "申し訳ございません。回答を生成できませんでした。",
+      type: "text",
     });
   } catch (error: any) {
     console.error("OpenAI API error:", error);

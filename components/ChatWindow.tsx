@@ -4,6 +4,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { ChatMessage } from "@/types/workflow";
 import { sampleCriteria } from "@/data/sampleCriteria";
 import { MessageSquare, Sparkles, ChevronRight } from "lucide-react";
+import VoiceUpload from "./VoiceUpload";
 
 type DetailKey = "location" | "signal" | "pedestrian" | "vehicles" | "extra";
 
@@ -34,12 +35,14 @@ interface ChatWindowProps {
   step: number;
   stepName: string;
   onAIAnalysis?: (analysis: any) => void;
+  externalMessage?: string | null;
 }
 
 export default function ChatWindow({
   step,
   stepName,
   onAIAnalysis,
+  externalMessage,
 }: ChatWindowProps) {
   const [isCollapsed, setIsCollapsed] = useState(true);
   const [messages, setMessages] = useState<ChatMessage[]>([
@@ -63,6 +66,19 @@ export default function ChatWindow({
   );
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  useEffect(() => {
+    if (externalMessage) {
+      const newMessage: ChatMessage = {
+        id: `ext-${Date.now()}`,
+        role: "assistant",
+        content: externalMessage,
+        timestamp: new Date(),
+      };
+      setMessages((prev) => [...prev, newMessage]);
+      setIsCollapsed(false); // Auto-open chat on suggestion
+    }
+  }, [externalMessage]);
+
   const scrollToBottom = () => {
     if (messagesEndRef.current && !isCollapsed) {
       try {
@@ -71,6 +87,91 @@ export default function ChatWindow({
         // Silently handle scroll errors (element might not be mounted yet)
         console.debug("Scroll error:", error);
       }
+    }
+  };
+
+  const handleCaseSelect = async (caseId: string, caseTitle: string) => {
+    // Add user selection message
+    const selectionMessage: ChatMessage = {
+      id: `select-${Date.now()}`,
+      role: "user",
+      content: `「${caseTitle}」を選択しました`,
+      timestamp: new Date(),
+    };
+    setMessages((prev) => [...prev, selectionMessage]);
+
+    // Trigger AI analysis with full chat history
+    setIsAnalyzing(true);
+    const analyzingMessage: ChatMessage = {
+      id: `analyzing-${Date.now()}`,
+      role: "assistant",
+      content: "✨ 選択された認定基準に基づいて分析しています...",
+      timestamp: new Date(),
+    };
+    setMessages((prev) => [...prev, analyzingMessage]);
+
+    try {
+      // Build chat history for context
+      const chatHistory = messages
+        .filter(m => m.role === "user")
+        .map(m => m.content)
+        .join("\n");
+
+      const analysisResponse = await fetch("/api/ai-analyze-accident", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+          accidentDescription: chatHistory,
+          preferredCriteriaId: caseId // Hint to AI
+        }),
+      });
+
+      if (analysisResponse.ok) {
+        const analysis = await analysisResponse.json();
+
+        if (onAIAnalysis) {
+          onAIAnalysis(analysis);
+        }
+
+        const matchedCriteria = sampleCriteria.find(c => c.id === caseId);
+        let responseText = "✅ **認定基準が選択され、ステップが自動入力されました！**\n\n";
+        
+        if (matchedCriteria) {
+          responseText += `📍 **ステップ1（認定基準）**: ${matchedCriteria.title}\n`;
+          responseText += `- 基本過失割合: ${matchedCriteria.baseFaultPercentage}%\n\n`;
+        }
+
+        if (analysis.step2?.recommendedModifications?.length > 0) {
+          responseText += "✅ **ステップ2（修正要素）**: 修正要素が適用されました\n\n";
+        }
+
+        if (analysis.step3?.extractedVehicles?.length > 0) {
+          responseText += "✅ **ステップ3（車両情報）**: 車両情報が抽出されました\n\n";
+        }
+
+        responseText += "左側のステップで内容を確認し、必要に応じて修正してください。";
+
+        setMessages((prev) =>
+          prev.map((msg) =>
+            msg.id === analyzingMessage.id
+              ? { ...msg, content: responseText }
+              : msg
+          )
+        );
+      } else {
+        throw new Error("分析に失敗しました");
+      }
+    } catch (error: any) {
+      console.error("Case selection analysis error:", error);
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.id === analyzingMessage.id
+            ? { ...msg, content: `❌ エラーが発生しました: ${error.message}` }
+            : msg
+        )
+      );
+    } finally {
+      setIsAnalyzing(false);
     }
   };
 
@@ -92,6 +193,10 @@ export default function ChatWindow({
       return () => clearTimeout(timer);
     }
   }, [messages, isCollapsed]);
+
+  const handleTranscription = (text: string) => {
+    setInput((prev) => (prev ? prev + "\n" + text : text));
+  };
 
   const isAccidentDescription = (text: string): boolean => {
     // Detect if the message looks like an accident description
@@ -219,7 +324,8 @@ export default function ChatWindow({
                 "📍 **ステップ1（認定基準）**: ある程度候補はありますが、特定には追加情報が必要です。\n";
             } else {
               responseText +=
-                "⚠️ **ステップ1（認定基準）**: 認定基準の特定に追加情報が必要です。\n";
+                "⚠️ **ステップ1（認定基準）**: 該当する認定基準が見つかりません。\n" +
+                "💡 **提案**: このケースはデータベースに登録されていない可能性があります。新規に認定基準を作成（カスタム入力）することをお勧めします。\n";
             }
 
             const step2Status = analysis.step2?.validation?.status;
@@ -375,7 +481,8 @@ export default function ChatWindow({
                 "📍 **ステップ1（認定基準）**: ある程度候補はありますが、特定には追加情報が必要です。\n";
             } else {
               responseText +=
-                "⚠️ **ステップ1（認定基準）**: 認定基準の特定に追加情報が必要です。\n";
+                "⚠️ **ステップ1（認定基準）**: 該当する認定基準が見つかりません。\n" +
+                "💡 **提案**: このケースはデータベースに登録されていない可能性があります。新規に認定基準を作成（カスタム入力）することをお勧めします。\n";
             }
 
             // Step 2 – modification factors
@@ -463,15 +570,27 @@ export default function ChatWindow({
 
         const data = await response.json();
 
-        if (response.ok && !shouldAnalyze) {
-          // Only add chat response if we didn't analyze
-          const assistantMessage: ChatMessage = {
-            id: (Date.now() + 1).toString(),
-            role: "assistant",
-            content: data.message,
-            timestamp: new Date(),
-          };
-          setMessages((prev) => [...prev, assistantMessage]);
+        if (response.ok) {
+          // Check if response contains case recommendations
+          if (data.type === "case_recommendation" && data.recommendations) {
+            const assistantMessage: ChatMessage = {
+              id: (Date.now() + 1).toString(),
+              role: "assistant",
+              content: data.message,
+              timestamp: new Date(),
+              recommendations: data.recommendations, // Store recommendations in message
+            };
+            setMessages((prev) => [...prev, assistantMessage]);
+          } else if (!shouldAnalyze) {
+            // Regular chat response (only if we didn't analyze)
+            const assistantMessage: ChatMessage = {
+              id: (Date.now() + 1).toString(),
+              role: "assistant",
+              content: data.message,
+              timestamp: new Date(),
+            };
+            setMessages((prev) => [...prev, assistantMessage]);
+          }
         }
       } catch (error: any) {
         if (!shouldAnalyze) {
@@ -540,6 +659,41 @@ export default function ChatWindow({
                     }`}
                 >
                   <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                  
+                  {/* Render case recommendations if present */}
+                  {message.recommendations && message.recommendations.length > 0 && (
+                    <div className="mt-3 space-y-2">
+                      {message.recommendations.map((rec) => (
+                        <button
+                          key={rec.id}
+                          onClick={() => handleCaseSelect(rec.id, rec.title)}
+                          className="w-full text-left p-3 bg-white border border-blue-200 rounded-lg hover:bg-blue-50 hover:border-blue-400 transition-colors"
+                        >
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="flex-1">
+                              <h4 className="font-semibold text-gray-900 text-sm mb-1">
+                                {rec.title}
+                              </h4>
+                              <p className="text-xs text-gray-600 line-clamp-2">
+                                {rec.description}
+                              </p>
+                              <div className="mt-2 flex items-center gap-2">
+                                <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded">
+                                  基本過失割合: {rec.baseFaultPercentage}%
+                                </span>
+                                {rec.confidence > 0 && (
+                                  <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded">
+                                    一致度: {rec.confidence}%
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                            <ChevronRight className="w-4 h-4 text-gray-400 flex-shrink-0 mt-1" />
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
             ))}
@@ -558,6 +712,7 @@ export default function ChatWindow({
 
           <div className="p-4 border-t border-gray-200">
             <div className="flex gap-2 items-end">
+              <VoiceUpload onTranscriptionComplete={handleTranscription} disabled={isLoading} />
               <textarea
                 value={input}
                 onChange={(e) => setInput(e.target.value)}

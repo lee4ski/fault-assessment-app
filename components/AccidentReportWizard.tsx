@@ -6,6 +6,7 @@ import {
   AssessmentCriteria,
   AccidentReport,
   Vehicle,
+  AccidentAttributes,
 } from "@/types";
 import { StepValidation } from "@/types/workflow";
 import { sampleCriteria } from "@/data/sampleCriteria";
@@ -15,6 +16,7 @@ import Step2Calculate from "./Step2Calculate";
 import Step3VehicleLookup from "./Step3VehicleLookup";
 import Step4AIReportEditor from "./Step4AIReportEditor";
 import ChatWindow from "./ChatWindow";
+import AISuggestionsPanel from "./AISuggestionsPanel";
 
 export default function AccidentReportWizard() {
   const [currentStep, setCurrentStep] = useState(1);
@@ -32,6 +34,11 @@ export default function AccidentReportWizard() {
   const [aiRecommendedModifications, setAiRecommendedModifications] = useState<
     string[] | null
   >(null);
+  const [autoFilledAttributes, setAutoFilledAttributes] = useState<AccidentAttributes | undefined>();
+  const [missingStructuredFields, setMissingStructuredFields] = useState<string[]>([]);
+  const [aiRecommendation, setAiRecommendation] = useState<{ id: string; confidence: number } | null>(null);
+  const [aiSuggestion, setAiSuggestion] = useState<string | null>(null);
+  const [aiPanelSuggestions, setAiPanelSuggestions] = useState<string[]>([]);
 
   const handleSelectCriteria = (criteria: AssessmentCriteria) => {
     console.log("=== handleSelectCriteria ===");
@@ -87,7 +94,7 @@ export default function AccidentReportWizard() {
     
     // Criteria が変わったので、AI 推奨の修正要素は一旦リセット
     setAiRecommendedModifications(null);
-
+    
     // Auto-advance to step 2 when criteria is selected
     if (currentStep === 1) {
       setCurrentStep(2);
@@ -120,8 +127,9 @@ export default function AccidentReportWizard() {
       ...prev,
       vehicles,
     } as AccidentReportFull));
-    // Auto-advance to step 4 when vehicles are selected
-    if (currentStep === 3) {
+    
+    // Auto-advance to step 4 ONLY when vehicles are actually selected
+    if (currentStep === 3 && vehicles.length > 0) {
       setCurrentStep(4);
     }
   };
@@ -132,6 +140,35 @@ export default function AccidentReportWizard() {
   };
 
   const handleNext = () => {
+    // AI Bidirectional Sync Logic
+    if (currentStep === 2) {
+      // Moving from Step 2 (Modifications) to Step 3 (Vehicles)
+      const mods = calculatedReport?.appliedModifications || [];
+      const hasElderly = mods.some(m => m.factorDescription.includes("高齢者") || m.factorDescription.includes("幼児"));
+      const hasHeavy = mods.some(m => m.factorDescription.includes("大型") || m.factorDescription.includes("著しい"));
+      
+      if (hasElderly) {
+        const msg = "高齢者・幼児に関する修正要素が適用されました。Step 3で、相手車両に「対歩行者安全装置」や「自動ブレーキ」が装備されているか確認することをお勧めします。";
+        setAiSuggestion(`💡 **AI提案**: ${msg}`);
+        setAiPanelSuggestions(prev => [...prev, msg]);
+      } else if (hasHeavy) {
+        const msg = "大型車や著しい過失に関する修正要素が適用されました。Step 3で、車両の具体的なサイズや積載量、整備状況を確認してください。";
+        setAiSuggestion(`💡 **AI提案**: ${msg}`);
+        setAiPanelSuggestions(prev => [...prev, msg]);
+      } else {
+        setAiSuggestion(null);
+      }
+    } else if (currentStep === 3) {
+      // Moving from Step 3 (Vehicles) to Step 4 (Report)
+      if (selectedVehicles.length === 0) {
+        const msg = "車両情報が登録されていません。報告書の精度を上げるため、少なくともメーカーと車種名は特定しておくことをお勧めします。";
+        setAiSuggestion(`⚠️ **AI注意**: ${msg}`);
+        setAiPanelSuggestions(prev => [...prev, msg]);
+      } else {
+        setAiSuggestion(null);
+      }
+    }
+
     if (currentStep < 4) {
       setCurrentStep(currentStep + 1);
     }
@@ -142,6 +179,10 @@ export default function AccidentReportWizard() {
       setCurrentStep(currentStep - 1);
     }
   };
+
+  // Determine if navigation is possible
+  const canGoBack = currentStep > 1;
+  const canGoForward = currentStep < 4;
 
   const handleReportUpdate = (report: AccidentReportFull) => {
     setReportData(report);
@@ -173,8 +214,25 @@ export default function AccidentReportWizard() {
     };
     setStepValidations(newValidations);
 
+    // Auto-fill Step 1: Structured Search Attributes
+    if (analysis.attributes) {
+      setAutoFilledAttributes(analysis.attributes);
+      console.log("✅ Auto-filled Step 1: Structured attributes", analysis.attributes);
+    }
+    
+    if (analysis.missingStructuredFields) {
+      setMissingStructuredFields(analysis.missingStructuredFields);
+    } else {
+      setMissingStructuredFields([]);
+    }
+
     // Auto-fill Step 1: Select criteria
     if (analysis.step1.recommendedCriteriaId) {
+      setAiRecommendation({
+        id: analysis.step1.recommendedCriteriaId,
+        confidence: analysis.step1.confidence || 0
+      });
+
       const recommendedCriteria = sampleCriteria.find(
         (c) => c.id === analysis.step1.recommendedCriteriaId
       );
@@ -241,6 +299,9 @@ export default function AccidentReportWizard() {
               criteria={sampleCriteria}
               onSelect={handleSelectCriteria}
               selectedCriteria={selectedCriteria}
+              autoFilledAttributes={autoFilledAttributes}
+              missingFields={missingStructuredFields}
+              aiRecommendation={aiRecommendation}
             />
           )}
           {currentStep === 2 && selectedCriteria ? (
@@ -280,7 +341,7 @@ export default function AccidentReportWizard() {
         <div className="bg-white border-t p-4 flex justify-between items-center gap-4">
           <button
             onClick={handlePrevious}
-            disabled={currentStep === 1}
+            disabled={!canGoBack}
             className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed transition-colors"
           >
             前のステップに戻る
@@ -288,8 +349,8 @@ export default function AccidentReportWizard() {
           <div className="flex-1"></div>
           <button
             onClick={handleNext}
-            disabled={currentStep === 4}
-            className="px-6 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+            disabled={!canGoForward}
+            className="px-6 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 disabled:bg-gray-300 disabled:text-gray-400 disabled:cursor-not-allowed transition-colors"
           >
             次のステップへ
           </button>
@@ -301,6 +362,13 @@ export default function AccidentReportWizard() {
         step={currentStep} 
         stepName={getStepName()}
         onAIAnalysis={handleAIAnalysis}
+        externalMessage={aiSuggestion}
+      />
+      
+      <AISuggestionsPanel 
+        suggestions={aiPanelSuggestions}
+        isVisible={aiPanelSuggestions.length > 0}
+        onClose={() => setAiPanelSuggestions([])}
       />
     </div>
   );

@@ -33,5 +33,13 @@ export interface ChatMessage {
   role: "user" | "assistant";
   content: string;
   timestamp: Date;
+  recommendations?: Array<{
+    id: string;
+    title: string;
+    description: string;
+    baseFaultPercentage: number;
+    confidence: number;
+    matchType: string;
+  }>;
 }
 

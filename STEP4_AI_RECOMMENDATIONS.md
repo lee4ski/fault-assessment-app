@@ -292,3 +292,5 @@ Step 4 has been **significantly upgraded** from simple keyword matching to intel
 
 **To activate AI mode**: Simply add your OpenAI API key to `.env.local` and restart the server!
 
+
+

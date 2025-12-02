@@ -1,20 +1,29 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { AccidentAttributes } from "@/types";
 
 interface AccidentAttributesFormProps {
   onSearch: (attributes: AccidentAttributes) => void;
   initialAttributes?: AccidentAttributes;
+  missingFields?: string[];
 }
 
 export default function AccidentAttributesForm({
   onSearch,
   initialAttributes,
+  missingFields = [],
 }: AccidentAttributesFormProps) {
   const [attributes, setAttributes] = useState<AccidentAttributes>(
     initialAttributes || {}
   );
+
+  // Update state when initialAttributes changes (e.g. from AI auto-fill)
+  useEffect(() => {
+    if (initialAttributes) {
+      setAttributes(initialAttributes);
+    }
+  }, [initialAttributes]);
 
   const accidentTypes = [
     "歩行者×四輪",
@@ -34,12 +43,52 @@ export default function AccidentAttributesForm({
     "その他",
   ];
 
-  const partyTypes = [
+  const partyOptions = [
     "歩行者",
     "四輪車",
     "二輪車",
     "自転車",
     "その他",
+  ];
+
+  // Determine Parties from attributes.partyTypes array
+  const partyA = attributes.partyTypes?.[0] || "";
+  const partyB = attributes.partyTypes?.[1] || "";
+
+  const handlePartyChange = (index: number, value: string) => {
+    const currentTypes = [...(attributes.partyTypes || [])];
+    // Ensure array has at least index+1 elements
+    while (currentTypes.length <= index) currentTypes.push("");
+    
+    currentTypes[index] = value;
+    
+    // Filter out empty strings and duplicates for the search logic (optional, but cleaner)
+    const cleanTypes = currentTypes.filter(t => t);
+    
+    setAttributes({
+      ...attributes,
+      partyTypes: cleanTypes.length > 0 ? cleanTypes : undefined
+    });
+  };
+
+  const signalStates = [
+    { value: "signal_green", label: "青" },
+    { value: "signal_yellow", label: "黄" },
+    { value: "signal_red", label: "赤" },
+    { value: "signal_right", label: "右折" },
+    { value: "signal_none", label: "なし" },
+    { value: "signal_blinking", label: "点滅" },
+  ];
+
+  const actionOptions = [
+    { value: "action_straight", label: "直進" },
+    { value: "action_turning_right", label: "右折" },
+    { value: "action_turning_left", label: "左折" },
+    { value: "action_crossing", label: "横断" },
+    { value: "action_stopping", label: "停止/駐車" },
+    { value: "action_backing", label: "後退" },
+    { value: "action_u_turn", label: "転回" },
+    { value: "action_lane_change", label: "進路変更" },
   ];
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -52,20 +101,47 @@ export default function AccidentAttributesForm({
     onSearch({});
   };
 
+  const isMissing = (field: string) => missingFields.includes(field);
+
+  const getFieldClass = (field: string) => 
+    `w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+      isMissing(field) && !attributes[field as keyof AccidentAttributes]
+        ? "border-red-500 bg-red-50" 
+        : "border-gray-300"
+    }`;
+
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      {missingFields.length > 0 && (
+        <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-4">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <div className="ml-3">
+              <p className="text-sm text-yellow-700">
+                不足している情報があります。ハイライトされた項目を入力してください。
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* 事故類型 */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
             事故類型
+            {isMissing("accidentType") && <span className="text-xs text-red-500 font-bold">⚠️ 必須</span>}
           </label>
           <select
             value={attributes.accidentType || ""}
             onChange={(e) =>
               setAttributes({ ...attributes, accidentType: e.target.value || undefined })
             }
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className={getFieldClass("accidentType")}
           >
             <option value="">選択してください</option>
             {accidentTypes.map((type) => (
@@ -78,15 +154,16 @@ export default function AccidentAttributesForm({
 
         {/* 場所 */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
             場所
+            {isMissing("location") && <span className="text-xs text-red-500 font-bold">⚠️ 必須</span>}
           </label>
           <select
             value={attributes.location || ""}
             onChange={(e) =>
               setAttributes({ ...attributes, location: e.target.value || undefined })
             }
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className={getFieldClass("location")}
           >
             <option value="">選択してください</option>
             {locations.map((location) => (
@@ -97,77 +174,108 @@ export default function AccidentAttributesForm({
           </select>
         </div>
 
-        {/* 当事者種別 */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            当事者種別（複数選択可）
+        {/* 当事者種別 (Party A & B) & 信号 */}
+        <div className="col-span-1 md:col-span-2">
+          <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+            当事者と信号
+            {isMissing("partyTypes") && <span className="text-xs text-red-500 font-bold">⚠️ 必須</span>}
           </label>
-          <div className="space-y-2">
-            {partyTypes.map((type) => (
-              <label key={type} className="flex items-center">
-                <input
-                  type="checkbox"
-                  checked={attributes.partyTypes?.includes(type) || false}
-                  onChange={(e) => {
-                    const current = attributes.partyTypes || [];
-                    const updated = e.target.checked
-                      ? [...current, type]
-                      : current.filter((t) => t !== type);
-                    setAttributes({
-                      ...attributes,
-                      partyTypes: updated.length > 0 ? updated : undefined,
-                    });
-                  }}
-                  className="mr-2"
-                />
-                <span className="text-sm text-gray-700">{type}</span>
-              </label>
-            ))}
-          </div>
-        </div>
+          <div className={`grid grid-cols-2 gap-4 p-4 border rounded-lg bg-gray-50 ${isMissing("partyTypes") && (!attributes.partyTypes || attributes.partyTypes.length === 0) ? "border-red-300 bg-red-50" : "border-gray-200"}`}>
+            
+            {/* Party A Group */}
+            <div className="space-y-2">
+              <label className="block text-sm font-bold text-gray-700">当事者 A</label>
+              <select
+                value={partyA}
+                onChange={(e) => handlePartyChange(0, e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+              >
+                <option value="">種別を選択...</option>
+                {partyOptions.map((type) => (
+                  <option key={`a-${type}`} value={type}>{type}</option>
+                ))}
+              </select>
+              
+              <div className="flex items-center gap-2 mt-2">
+                <span className="text-xs text-gray-500 w-10">信号:</span>
+                <select
+                  value={attributes.signalA || ""}
+                  onChange={(e) => setAttributes({ ...attributes, signalA: e.target.value || undefined })}
+                  className="flex-1 px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-1 focus:ring-blue-500"
+                  disabled={!partyA}
+                >
+                  <option value="">不明 / 指定なし</option>
+                  {signalStates.map((s) => (
+                    <option key={`a-${s.value}`} value={s.value}>{s.label}</option>
+                  ))}
+                </select>
+              </div>
 
-        {/* 信号有無 */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            信号有無
-          </label>
-          <div className="space-y-2">
-            <label className="flex items-center">
-              <input
-                type="radio"
-                name="hasSignal"
-                checked={attributes.hasSignal === true}
-                onChange={() =>
-                  setAttributes({ ...attributes, hasSignal: true })
-                }
-                className="mr-2"
-              />
-              <span className="text-sm text-gray-700">信号あり</span>
-            </label>
-            <label className="flex items-center">
-              <input
-                type="radio"
-                name="hasSignal"
-                checked={attributes.hasSignal === false}
-                onChange={() =>
-                  setAttributes({ ...attributes, hasSignal: false })
-                }
-                className="mr-2"
-              />
-              <span className="text-sm text-gray-700">信号なし</span>
-            </label>
-            <label className="flex items-center">
-              <input
-                type="radio"
-                name="hasSignal"
-                checked={attributes.hasSignal === undefined}
-                onChange={() =>
-                  setAttributes({ ...attributes, hasSignal: undefined })
-                }
-                className="mr-2"
-              />
-              <span className="text-sm text-gray-700">指定なし</span>
-            </label>
+              <div className="flex items-center gap-2 mt-2">
+                <span className="text-xs text-gray-500 w-10">行動:</span>
+                <select
+                  value={attributes.actionA || ""}
+                  onChange={(e) => setAttributes({ ...attributes, actionA: e.target.value || undefined })}
+                  className="flex-1 px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-1 focus:ring-blue-500"
+                  disabled={!partyA}
+                >
+                  <option value="">指定なし</option>
+                  {actionOptions.map((a) => (
+                    <option key={`a-${a.value}`} value={a.value}>{a.label}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            
+            {/* Party B Group */}
+            <div className="space-y-2 border-l pl-4 border-gray-300">
+              <label className="block text-sm font-bold text-gray-700">当事者 B</label>
+              <select
+                value={partyB}
+                onChange={(e) => handlePartyChange(1, e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+              >
+                <option value="">種別を選択...</option>
+                {partyOptions.map((type) => (
+                  <option key={`b-${type}`} value={type}>{type}</option>
+                ))}
+              </select>
+
+              <div className="flex items-center gap-2 mt-2">
+                <span className="text-xs text-gray-500 w-10">信号:</span>
+                <select
+                  value={attributes.signalB || ""}
+                  onChange={(e) => setAttributes({ ...attributes, signalB: e.target.value || undefined })}
+                  className="flex-1 px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-1 focus:ring-blue-500"
+                  disabled={!partyB}
+                >
+                  <option value="">不明 / 指定なし</option>
+                  {signalStates.map((s) => (
+                    <option key={`b-${s.value}`} value={s.value}>{s.label}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="flex items-center gap-2 mt-2">
+                <span className="text-xs text-gray-500 w-10">行動:</span>
+                <select
+                  value={attributes.actionB || ""}
+                  onChange={(e) => setAttributes({ ...attributes, actionB: e.target.value || undefined })}
+                  className="flex-1 px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-1 focus:ring-blue-500"
+                  disabled={!partyB}
+                >
+                  <option value="">指定なし</option>
+                  {actionOptions.map((a) => (
+                    <option key={`b-${a.value}`} value={a.value}>{a.label}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          </div>
+          <div className="mt-1 text-right">
+             <button type="button" className="text-xs text-blue-600 hover:underline" onClick={() => alert("3者以上の事故の場合は、主な衝突ごとに分けて検索するか、AI検索を利用してください。")}>
+               3者以上の事故ですか？
+             </button>
           </div>
         </div>
       </div>

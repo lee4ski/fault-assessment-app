@@ -58,7 +58,12 @@ export interface AccidentAttributes {
   accidentType?: string; // 事故類型（例: "歩行者×四輪", "車両×車両"）
   location?: string; // 場所（例: "交差点", "駐車場", "高速道路"）
   partyTypes?: string[]; // 当事者種別（例: ["歩行者", "四輪車"]）
-  hasSignal?: boolean; // 信号有無
+  hasSignal?: boolean; // 信号有無 (Legacy support)
+  signalAttribute?: string; // 信号の状況（例: "赤信号", "青信号"）- Legacy
+  signalA?: string; // 当事者Aの信号
+  signalB?: string; // 当事者Bの信号
+  actionA?: string; // 当事者Aの行動（例: "直進", "右折", "横断"）
+  actionB?: string; // 当事者Bの行動
   otherAttributes?: Record<string, string>; // その他の属性
 }
 

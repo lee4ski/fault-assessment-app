@@ -49,6 +49,11 @@ export default function Step4AIReportEditor({
     if (reportData) {
       setReportText(reportData.reportText || "");
       setStatus(reportData.status || "draft");
+
+      // Auto-generate report if text is empty and data is available
+      if (!reportData.reportText && !isGenerating && !reportText) {
+        handleGenerateReport();
+      }
     }
   }, [reportData]);
 
