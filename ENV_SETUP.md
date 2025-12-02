@@ -11,7 +11,7 @@ OpenAI API キーは `.env.local` ファイルに設定されています。
 
 ### 設定内容
 ```env
-OPENAI_API_KEY=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
+OPENAI_API_KEY=your_openai_api_key_here
 ```
 
 ## セキュリティ
@@ -34,12 +34,12 @@ npm run dev
 2. プロジェクトの Settings → Environment Variables
 3. 以下を追加：
    - Key: `OPENAI_API_KEY`
-   - Value: `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`
+   - Value: `your_new_openai_api_key_here`
 
 ### 本番環境（その他）
 環境変数として設定：
 ```bash
-export OPENAI_API_KEY=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
+export OPENAI_API_KEY=your_new_openai_api_key_here
 ```
 
 ## 動作確認
