@@ -50,10 +50,10 @@ export default function Step4AIReportEditor({
       setReportText(reportData.reportText || "");
       setStatus(reportData.status || "draft");
 
-      // Auto-generate report if text is empty and data is available
-      if (!reportData.reportText && !isGenerating && !reportText) {
-        handleGenerateReport();
-      }
+      // Do NOT auto-generate report - show keyword structure instead
+      // Removed: if (!reportData.reportText && !isGenerating && !reportText) {
+      //   handleGenerateReport();
+      // }
     }
   }, [reportData]);
 
@@ -219,15 +219,7 @@ export default function Step4AIReportEditor({
               : "❌ 却下"}
           </span>
 
-          {!reportText && (
-            <button
-              onClick={handleGenerateReport}
-              disabled={isGenerating || !reportData}
-              className="px-4 py-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg font-semibold hover:from-purple-700 hover:to-blue-700 disabled:from-gray-300 disabled:to-gray-400 disabled:cursor-not-allowed transition-all transform hover:scale-105 shadow-lg"
-            >
-              {isGenerating ? "🤖 AI生成中..." : "✨ AI報告書を生成"}
-            </button>
-          )}
+          {/* AI generation button removed - now shown in keyword structure section */}
         </div>
 
         {/* Report Summary */}
@@ -266,23 +258,137 @@ export default function Step4AIReportEditor({
           </div>
         )}
 
-        {/* AI Generation Prompt */}
-        {!reportText && reportData && (
+        {/* Keyword Document Structure */}
+        {!reportText && reportData && !isGenerating && (
+          <div className="mb-4">
+            <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-6">
+              <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                <span>📋</span>
+                報告書の構成（キーワード）
+              </h3>
+              <p className="text-sm text-gray-600 mb-4">
+                以下のキーワードとセクションを含む報告書が生成されます：
+              </p>
+              
+              <div className="space-y-3">
+                {/* Section 1 */}
+                <div className="p-4 bg-blue-50 border-l-4 border-blue-500 rounded">
+                  <h4 className="font-semibold text-blue-900 mb-2">1. 事故の概要</h4>
+                  <div className="flex flex-wrap gap-2">
+                    <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded">事故発生日時</span>
+                    <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded">事故場所</span>
+                    <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded">事故類型</span>
+                    <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded">当事者</span>
+                  </div>
+                </div>
+
+                {/* Section 2 */}
+                <div className="p-4 bg-green-50 border-l-4 border-green-500 rounded">
+                  <h4 className="font-semibold text-green-900 mb-2">2. 認定基準</h4>
+                  <div className="flex flex-wrap gap-2">
+                    {reportData.selectedCriteria ? (
+                      <>
+                        <span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded">{reportData.selectedCriteria.title}</span>
+                        <span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded">基本過失割合: {reportData.selectedCriteria.baseFaultPercentage}%</span>
+                        <span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded">出典: {reportData.selectedCriteria.sourceBook || "判例タイムズ"}</span>
+                      </>
+                    ) : (
+                      <span className="px-2 py-1 bg-yellow-100 text-yellow-800 text-xs rounded">⚠️ 認定基準が未選択</span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Section 3 */}
+                {reportData.appliedModifications && reportData.appliedModifications.length > 0 && (
+                  <div className="p-4 bg-purple-50 border-l-4 border-purple-500 rounded">
+                    <h4 className="font-semibold text-purple-900 mb-2">3. 適用された修正要素</h4>
+                    <div className="flex flex-wrap gap-2">
+                      {reportData.appliedModifications.map((mod, idx) => (
+                        <span key={idx} className="px-2 py-1 bg-purple-100 text-purple-800 text-xs rounded">
+                          {mod.factorDescription} ({mod.adjustment > 0 ? "+" : ""}{mod.adjustment}%)
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Section 4 */}
+                {reportData.finalFaultPercentage !== undefined && (
+                  <div className="p-4 bg-orange-50 border-l-4 border-orange-500 rounded">
+                    <h4 className="font-semibold text-orange-900 mb-2">4. 最終過失割合</h4>
+                    <div className="flex flex-wrap gap-2">
+                      <span className="px-2 py-1 bg-orange-100 text-orange-800 text-xs rounded font-bold">
+                        最終過失割合: {reportData.finalFaultPercentage}%
+                      </span>
+                      {reportData.selectedCriteria && (
+                        <span className="px-2 py-1 bg-orange-100 text-orange-800 text-xs rounded">
+                          基本: {reportData.selectedCriteria.baseFaultPercentage}%
+                        </span>
+                      )}
+                      {reportData.appliedModifications && reportData.appliedModifications.length > 0 && (
+                        <span className="px-2 py-1 bg-orange-100 text-orange-800 text-xs rounded">
+                          修正: {reportData.appliedModifications.reduce((sum, m) => sum + m.adjustment, 0) > 0 ? "+" : ""}
+                          {reportData.appliedModifications.reduce((sum, m) => sum + m.adjustment, 0)}%
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Section 5 */}
+                {reportData.vehicles && reportData.vehicles.length > 0 && (
+                  <div className="p-4 bg-indigo-50 border-l-4 border-indigo-500 rounded">
+                    <h4 className="font-semibold text-indigo-900 mb-2">5. 関係車両情報</h4>
+                    <div className="flex flex-wrap gap-2">
+                      {reportData.vehicles.map((vehicle, idx) => (
+                        <span key={idx} className="px-2 py-1 bg-indigo-100 text-indigo-800 text-xs rounded">
+                          {vehicle.make || "未入力"} {vehicle.model || ""} ({vehicle.year || "?"}年)
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Section 6 */}
+                <div className="p-4 bg-gray-50 border-l-4 border-gray-500 rounded">
+                  <h4 className="font-semibold text-gray-900 mb-2">6. 結論</h4>
+                  <div className="flex flex-wrap gap-2">
+                    <span className="px-2 py-1 bg-gray-100 text-gray-800 text-xs rounded">総合評価</span>
+                    <span className="px-2 py-1 bg-gray-100 text-gray-800 text-xs rounded">法的根拠</span>
+                    <span className="px-2 py-1 bg-gray-100 text-gray-800 text-xs rounded">認定理由</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-6 pt-4 border-t border-gray-200">
+                <button
+                  onClick={handleGenerateReport}
+                  disabled={isGenerating}
+                  className="w-full px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg font-semibold hover:from-purple-700 hover:to-blue-700 disabled:from-gray-300 disabled:to-gray-400 disabled:cursor-not-allowed transition-all transform hover:scale-105 shadow-lg"
+                >
+                  {isGenerating ? "🤖 生成中..." : "✨ AI報告書を生成する"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* AI Generation Loading State */}
+        {!reportText && reportData && isGenerating && (
           <div className="mb-4 p-6 bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-50 border-2 border-dashed border-purple-300 rounded-xl text-center">
             <div className="text-4xl mb-3">🤖</div>
             <h3 className="text-lg font-bold text-gray-900 mb-2">
-              AIが専門的な報告書を自動生成します
+              AIが専門的な報告書を自動生成中...
             </h3>
             <p className="text-sm text-gray-600 mb-4">
-              認定基準、修正要素、車両情報から、詳細で正確な事故報告書を作成します
+              認定基準、修正要素、車両情報から、詳細で正確な事故報告書を作成しています
             </p>
-            <button
-              onClick={handleGenerateReport}
-              disabled={isGenerating}
-              className="px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg font-semibold hover:from-purple-700 hover:to-blue-700 disabled:from-gray-300 disabled:to-gray-400 disabled:cursor-not-allowed transition-all transform hover:scale-105 shadow-lg text-lg"
-            >
-              {isGenerating ? "🤖 生成中..." : "✨ AI報告書を生成する"}
-            </button>
+            <div className="flex justify-center">
+              <svg className="animate-spin h-8 w-8 text-purple-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+            </div>
           </div>
         )}
 
