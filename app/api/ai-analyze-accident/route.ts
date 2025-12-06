@@ -1,10 +1,122 @@
 import { NextRequest, NextResponse } from "next/server";
 import OpenAI from "openai";
 import { sampleCriteria } from "@/data/sampleCriteria";
+import { AssessmentCriteria } from "@/types";
+import fs from "fs";
+import path from "path";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY || process.env.OPEN_API_KEY || "",
 });
+
+// --- Vector DB Utilities ---
+// Using pre-generated embeddings for semantic search
+
+interface CaseEmbedding {
+  id: string;
+  embedding: number[];
+  metadata: {
+    title: string;
+    description: string;
+    chapterTitle: string;
+    baseFaultPercentage: number;
+  };
+}
+
+async function getEmbedding(text: string): Promise<number[]> {
+  try {
+    const response = await openai.embeddings.create({
+      model: "text-embedding-3-small",
+      input: text,
+      encoding_format: "float",
+    });
+    return response.data[0].embedding;
+  } catch (error) {
+    console.error("Embedding error:", error);
+    return new Array(1536).fill(0);
+  }
+}
+
+// Cosine similarity
+function cosineSimilarity(vecA: number[], vecB: number[]): number {
+  const dotProduct = vecA.reduce((sum, a, i) => sum + a * vecB[i], 0);
+  const magnitudeA = Math.sqrt(vecA.reduce((sum, a) => sum + a * a, 0));
+  const magnitudeB = Math.sqrt(vecB.reduce((sum, b) => sum + b * b, 0));
+  if (magnitudeA === 0 || magnitudeB === 0) return 0;
+  return dotProduct / (magnitudeA * magnitudeB);
+}
+
+// Load vector index from file (cached in memory)
+let vectorIndexCache: CaseEmbedding[] | null = null;
+
+function loadVectorIndex(): CaseEmbedding[] {
+  if (vectorIndexCache) return vectorIndexCache;
+  
+  try {
+    const indexPath = path.join(process.cwd(), 'data', 'vectorIndex.json');
+    const indexData = fs.readFileSync(indexPath, 'utf-8');
+    vectorIndexCache = JSON.parse(indexData);
+    console.log(`✅ Loaded vector index with ${vectorIndexCache?.length || 0} cases`);
+    return vectorIndexCache || [];
+  } catch (error) {
+    console.error("Error loading vector index:", error);
+    return [];
+  }
+}
+
+// Retrieval Function using Vector Embeddings
+async function retrieveRelevantCases(query: string, topK: number = 5): Promise<{ criteria: AssessmentCriteria; similarity: number }[]> {
+  // 1. Load pre-generated embeddings
+  const vectorIndex = loadVectorIndex();
+  
+  if (vectorIndex.length === 0) {
+    console.warn("Vector index is empty, falling back to keyword search");
+    // Fallback to keyword search
+    const scores = sampleCriteria.map(c => {
+      let score = 0;
+      const text = `${c.title} ${c.description} ${c.summary} ${c.chapterTitle}`;
+      const queryTerms = query.toLowerCase().split(/\s+/);
+      
+      queryTerms.forEach(term => {
+        if (term.length < 2) return;
+        if (text.toLowerCase().includes(term)) score += 1;
+        if (c.title.includes(term)) score += 2;
+      });
+      
+      return { id: c.id, score };
+    });
+    
+    scores.sort((a, b) => b.score - a.score);
+    const topIds = scores.slice(0, topK).map(s => s.id);
+    return sampleCriteria
+      .filter(c => topIds.includes(c.id))
+      .map(c => ({ criteria: c, similarity: 0.5 }));
+  }
+  
+  // 2. Generate embedding for the query
+  const queryEmbedding = await getEmbedding(query);
+  
+  // 3. Calculate cosine similarity for all cases
+  const similarities = vectorIndex.map(item => {
+    const similarity = cosineSimilarity(queryEmbedding, item.embedding);
+    return { id: item.id, similarity };
+  });
+  
+  // 4. Sort by similarity and get top K
+  similarities.sort((a, b) => b.similarity - a.similarity);
+  const topIds = similarities.slice(0, topK);
+  
+  // 5. Map back to full criteria objects with similarity scores
+  const results = topIds.map(({ id, similarity }) => {
+    const criteria = sampleCriteria.find(c => c.id === id);
+    if (!criteria) return null;
+    return { criteria, similarity };
+  }).filter((r): r is { criteria: AssessmentCriteria; similarity: number } => r !== null);
+  
+  return results;
+}
+
+// --- End Vector DB Simulation ---
 
 export interface StepValidation {
   stepNumber: number;
@@ -22,6 +134,12 @@ export interface AIAnalysisResult {
     reasoning: string;
     validation: StepValidation;
   };
+  // Candidates with probabilities (NEW)
+  candidates?: Array<{
+    id: string;
+    title: string;
+    probability: number;
+  }>;
   // Step 2: Modifications
   step2: {
     recommendedModifications: string[];
@@ -74,10 +192,24 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Build the analysis prompt
+    // --- RAG Step 1: Retrieve Relevant Context using Vector Search ---
+    // Instead of sending ALL cases, we fetch only the most relevant ones using semantic similarity.
+    // This enables scaling to 1000s of cases stored in a DB.
+    const relevantCriteriaWithScores = await retrieveRelevantCases(accidentDescription, 5);
+    const relevantCriteria = relevantCriteriaWithScores.map(r => r.criteria);
+    
+    // Store similarity scores for later use (we'll pass them to LLM as initial probabilities)
+    const similarityScores = new Map(
+      relevantCriteriaWithScores.map(r => [r.criteria.id, Math.round(r.similarity * 100)])
+    );
+    
+    // --- RAG Step 2: Generate Analysis with Retrieved Context ---
+    
+    // Build the analysis prompt with ONLY the retrieved context
     const systemPrompt = `あなたは交通事故の専門家です。事故の説明文を分析し、以下の情報を抽出してください：
-
-1. **認定基準**: どの認定基準が最も適切か
+    
+1. **認定基準**: 検索された候補の中から、最も適切な認定基準を選んでください。また、各候補に対して「適合確率（0-100%）」を推定してください。
+   ベクトル検索による類似度も参考にしてください（各候補に「similarity」スコアが付与されています）。
 2. **修正要素**: どのような修正要素が適用されるべきか（幼児、高齢者、信号無視など）
 3. **車両情報**: 関係する車両の情報（メーカー、車種、年式など）
 4. **構造化属性**: 事故の基本属性（事故類型、場所、当事者、信号有無）
@@ -95,19 +227,23 @@ export async function POST(request: NextRequest) {
 - signal states: "signal_green" (青), "signal_yellow" (黄), "signal_red" (赤), "signal_right" (右折), "signal_none" (なし)
 - actions: "action_straight" (直進), "action_turning_right" (右折), "action_turning_left" (左折), "action_crossing" (横断), "action_stopping" (停止), "action_backing" (後退)
 
-利用可能な認定基準（簡略表現）:
+【検索された認定基準候補】(ベクトル検索による類似度スコア付き。これらの中から最適なものを選択し、確率を付与してください):
 ${JSON.stringify(
-  sampleCriteria.map((c) => ({
-    id: c.id,
-    title: c.title,
-    description: c.description,
-    baseFaultPercentage: c.baseFaultPercentage,
-    // 修正要素は「IDと説明」をセットで渡す
-    modificationFactors: (c.modificationFactors || []).map((m: any) => ({
-      id: m.id,
-      description: m.description,
-    })),
-  })),
+  relevantCriteriaWithScores.map((r) => {
+    const c = r.criteria;
+    return {
+      id: c.id,
+      title: c.title,
+      description: c.description,
+      baseFaultPercentage: c.baseFaultPercentage,
+      similarity: Math.round(r.similarity * 100), // Vector similarity score (0-100)
+      // 修正要素は「IDと説明」をセットで渡す
+      modificationFactors: (c.modificationFactors || []).map((m: any) => ({
+        id: m.id,
+        description: m.description,
+      })),
+    };
+  }),
   null,
   2
 )}
@@ -117,6 +253,9 @@ ${JSON.stringify(
   "criteriaId": "最も適切な認定基準のID",
   "criteriaConfidence": 0-100の数値,
   "criteriaReasoning": "なぜこの基準を選んだか",
+  "candidates": [
+    { "id": "基準ID", "probability": 0-100の数値, "reason": "簡単な理由" }
+  ],
   "modifications": ["適用すべき修正要素のIDリスト"],
   "modificationsReasoning": "修正要素の選択理由",
   "vehicles": [
@@ -150,7 +289,7 @@ ${JSON.stringify(
     const userPrompt = `以下の事故説明を分析してください：\n\n${accidentDescription}`;
 
     const completion = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
+      model: "gpt-4o",
       messages: [
         { role: "system", content: systemPrompt },
         { role: "user", content: userPrompt },
@@ -163,6 +302,7 @@ ${JSON.stringify(
     const aiResponse = JSON.parse(completion.choices[0]?.message?.content || "{}");
 
     // --- Post-process modifications based on the selected criteria definition ---
+    // IMPORTANT: We must look up the full criteria object again because we passed only a subset
     const criteria =
       aiResponse.criteriaId &&
       sampleCriteria.find((c) => c.id === aiResponse.criteriaId);
@@ -187,6 +327,29 @@ ${JSON.stringify(
       }
     }
 
+    // Enhance candidates with titles and include similarity scores
+    // If AI didn't return candidates, use vector similarity scores as fallback
+    let candidates: Array<{ id: string; title: string; probability: number }> = [];
+    
+    if (aiResponse.candidates && aiResponse.candidates.length > 0) {
+      // Use AI-provided candidates with probabilities
+      candidates = aiResponse.candidates.map((cand: any) => {
+        const c = sampleCriteria.find(s => s.id === cand.id);
+        return {
+          id: cand.id,
+          title: c?.title || cand.id,
+          probability: cand.probability || similarityScores.get(cand.id) || 0
+        };
+      });
+    } else {
+      // Fallback: Use vector similarity scores for all retrieved cases
+      candidates = relevantCriteriaWithScores.map((r) => ({
+        id: r.criteria.id,
+        title: r.criteria.title,
+        probability: Math.round(r.similarity * 100)
+      }));
+    }
+
     // Build the structured response
     const result: AIAnalysisResult = {
       step1: {
@@ -203,6 +366,7 @@ ${JSON.stringify(
             : "認定基準を特定できませんでした。追加情報が必要です。",
         },
       },
+      candidates: candidates, // Return candidates with probability
       step2: {
         // 上で正規化した修正要素IDを使用
         recommendedModifications: normalizedMods,
@@ -323,4 +487,3 @@ function determineStep3Reason(vehicles: any[]): string {
   
   return `${vehicles.length}台の車両情報が確認されました`;
 }
-

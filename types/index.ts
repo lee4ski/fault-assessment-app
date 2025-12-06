@@ -44,6 +44,7 @@ export interface SearchResult {
   relevanceScore: number;
   matchType: "prefix" | "partial" | "suffix";
   matchField: "title" | "description" | "chapterTitle";
+  aiProbability?: number; // AI vector search similarity score (0-100)
 }
 
 // Hit count per chapter/section

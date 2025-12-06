@@ -159,6 +159,8 @@ export default function Step1Search({
       if (response.ok) {
         const result = await response.json();
         
+        console.log("[AI Search] Response:", result);
+        
         // Store candidates with probabilities
         if (result.candidates && result.candidates.length > 0) {
           setAiCandidates(result.candidates);
@@ -173,17 +175,40 @@ export default function Step1Search({
           // Trigger search with new attributes, but also show AI candidates
           const searchRes = searchByAttributes(criteria, result.attributes);
           
-          // Enhance search results with AI probability scores
-          const enhancedResults = searchRes.map(sr => {
-            const aiCandidate = result.candidates?.find((c: any) => c.id === sr.criteria.id);
-            return {
-              ...sr,
-              aiProbability: aiCandidate?.probability,
-            };
-          });
-          
-          setDisplayedResults(enhancedResults);
-          setHasSearched(true);
+          // If structured search returns results, enhance them with AI probability scores
+          if (searchRes.length > 0) {
+            const enhancedResults = searchRes.map(sr => {
+              const aiCandidate = result.candidates?.find((c: any) => c.id === sr.criteria.id);
+              return {
+                ...sr,
+                aiProbability: aiCandidate?.probability,
+              };
+            });
+            
+            setDisplayedResults(enhancedResults);
+            setHasSearched(true);
+          } else if (result.candidates && result.candidates.length > 0) {
+            // If structured search returns no results but we have AI candidates, show candidates instead
+            const candidateResults: SearchResult[] = result.candidates.map((cand: any) => {
+              const crit = criteria.find(c => c.id === cand.id);
+              if (!crit) return null;
+              return {
+                criteria: crit,
+                relevanceScore: cand.probability / 100, // Convert to 0-1 scale
+                matchType: "partial" as const,
+                matchField: "title" as const,
+                aiProbability: cand.probability,
+              };
+            }).filter((r: SearchResult | null): r is SearchResult => r !== null);
+            
+            setDisplayedResults(candidateResults);
+            setHasSearched(true);
+          } else {
+            // No results from either method
+            setDisplayedResults([]);
+            setHasSearched(true);
+            alert("AI検索の結果、該当する認定基準が見つかりませんでした。別のキーワードで検索してください。");
+          }
         } else if (result.candidates && result.candidates.length > 0) {
           // If no attributes but we have candidates, show them directly
           const candidateResults: SearchResult[] = result.candidates.map((cand: any) => {
@@ -200,9 +225,18 @@ export default function Step1Search({
           
           setDisplayedResults(candidateResults);
           setHasSearched(true);
+        } else {
+          // No results found - show message
+          console.warn("[AI Search] No candidates or attributes returned");
+          setDisplayedResults([]);
+          setHasSearched(true);
+          alert("AI検索の結果、該当する認定基準が見つかりませんでした。別のキーワードで検索してください。");
         }
       } else {
-        alert("AI検索に失敗しました");
+        // Handle error response
+        const errorData = await response.json().catch(() => ({ error: "Unknown error" }));
+        console.error("[AI Search] Error:", response.status, errorData);
+        alert(`AI検索に失敗しました: ${errorData.error || "エラーが発生しました"}`);
       }
     } catch (error) {
       console.error(error);
@@ -448,11 +482,7 @@ export default function Step1Search({
                   onChange={(e) => handleSearchChange(e.target.value)}
                   placeholder="例: 交差点、歩行者、駐車場など"
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      handleKeywordSearchClick();
-                    }
-                  }}
+                  // Removed onKeyDown - search now only triggers on button click
                 />
               </div>
               

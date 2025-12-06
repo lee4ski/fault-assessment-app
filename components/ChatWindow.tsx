@@ -3,7 +3,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { ChatMessage } from "@/types/workflow";
 import { sampleCriteria } from "@/data/sampleCriteria";
-import { MessageSquare, Sparkles, ChevronRight } from "lucide-react";
+import { MessageSquare, Sparkles, ChevronRight, Image as ImageIcon, X } from "lucide-react";
 import VoiceUpload from "./VoiceUpload";
 
 type DetailKey = "location" | "signal" | "pedestrian" | "vehicles" | "extra";
@@ -64,7 +64,10 @@ export default function ChatWindow({
   const [initialAccidentText, setInitialAccidentText] = useState<string | null>(
     null
   );
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [selectedAudio, setSelectedAudio] = useState<{ name: string; url: string; type: string } | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (externalMessage) {
@@ -194,8 +197,29 @@ export default function ChatWindow({
     }
   }, [messages, isCollapsed]);
 
-  const handleTranscription = (text: string) => {
+  const handleTranscription = (text: string, audioData?: { name: string; url: string; type: string }) => {
     setInput((prev) => (prev ? prev + "\n" + text : text));
+    if (audioData) {
+      setSelectedAudio(audioData);
+    }
+  };
+
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setSelectedImage(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const clearImage = () => {
+    setSelectedImage(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
   };
 
   const isAccidentDescription = (text: string): boolean => {
@@ -207,18 +231,26 @@ export default function ChatWindow({
   };
 
   const handleSend = async () => {
-    if (!input.trim() || isLoading) return;
+    if ((!input.trim() && !selectedImage) || isLoading) return;
 
     const userMessage: ChatMessage = {
       id: Date.now().toString(),
       role: "user",
       content: input,
       timestamp: new Date(),
+      image: selectedImage || undefined,
+      audio: selectedAudio || undefined,
     };
 
     setMessages((prev) => [...prev, userMessage]);
     const currentInput = input;
+    const currentImage = selectedImage;
+    
     setInput("");
+    setSelectedImage(null);
+    setSelectedAudio(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+    
     setIsLoading(true);
 
     // すでに詳細質問フロー中であれば、AI解析ではなく Q&A の続きを行う
@@ -395,7 +427,8 @@ export default function ChatWindow({
     }
 
     // Check if this looks like an accident description
-    const shouldAnalyze = isAccidentDescription(currentInput);
+    // If image is present, we definitely want to analyze
+    const shouldAnalyze = isAccidentDescription(currentInput) || !!currentImage;
 
     if (shouldAnalyze && onAIAnalysis) {
       setIsAnalyzing(true);
@@ -404,20 +437,27 @@ export default function ChatWindow({
       const analyzingMessage: ChatMessage = {
         id: `analyzing-${Date.now()}`,
         role: "assistant",
-        content: "✨ 事故情報を分析しています...",
+        content: currentImage ? "🖼️ 画像を分析して状況を推論しています..." : "✨ 事故情報を分析しています...",
         timestamp: new Date(),
       };
       setMessages((prev) => [...prev, analyzingMessage]);
 
       try {
-        // Call AI analysis API
-        const analysisResponse = await fetch("/api/ai-analyze-accident", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ accidentDescription: currentInput }),
-        });
-
-        if (analysisResponse.ok) {
+        // If image is present, we use the chat API with vision instead of the specialized accident analysis API for now
+        if (currentImage) {
+           // Skip the specific ai-analyze-accident API for images, let the general chat API handle it
+           // Keep the analyzing message visible and proceed to chat API call below
+           // The analyzing message will be replaced by the actual response when it arrives
+        } else {
+          // Text-only analysis (existing logic)
+          // Call AI analysis API
+          const analysisResponse = await fetch("/api/ai-analyze-accident", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ accidentDescription: currentInput }),
+          });
+          
+          if (analysisResponse.ok) {
           const analysis = await analysisResponse.json();
 
           // Pass analysis to parent component
@@ -541,15 +581,16 @@ export default function ChatWindow({
         } else {
           throw new Error("分析に失敗しました");
         }
-      } catch (error: any) {
-        console.error("AI analysis error:", error);
-        
-        // Fall back to regular chat
-        setMessages((prev) => prev.filter(msg => msg.id !== analyzingMessage.id));
-      } finally {
-        setIsAnalyzing(false);
       }
+    } catch (error: any) {
+      console.error("AI analysis error:", error);
+      
+      // Fall back to regular chat
+      setMessages((prev) => prev.filter(msg => msg.id !== analyzingMessage.id));
+    } finally {
+      setIsAnalyzing(false);
     }
+  }
 
     // Always get chat response（ただし詳細質問フロー中はスキップ）
     if (!isCollectingDetails) {
@@ -563,6 +604,7 @@ export default function ChatWindow({
             messages: [...messages, userMessage].map((msg) => ({
               role: msg.role,
               content: msg.content,
+              image: msg.image,
             })),
             step,
           }),
@@ -581,19 +623,89 @@ export default function ChatWindow({
               recommendations: data.recommendations, // Store recommendations in message
             };
             setMessages((prev) => [...prev, assistantMessage]);
-          } else if (!shouldAnalyze) {
-            // Regular chat response (only if we didn't analyze)
-            const assistantMessage: ChatMessage = {
-              id: (Date.now() + 1).toString(),
-              role: "assistant",
-              content: data.message,
-              timestamp: new Date(),
-            };
-            setMessages((prev) => [...prev, assistantMessage]);
+          } else if (!shouldAnalyze || currentImage) {
+            // Regular chat response (if we didn't analyze OR if it's an image-based query)
+            if (currentImage && isAnalyzing) {
+              // Replace the analyzing message with the actual response for image queries
+              setMessages((prev) =>
+                prev.map((msg) =>
+                  msg.content.includes("🖼️ 画像を分析して状況を推論しています")
+                    ? { ...msg, content: data.message }
+                    : msg
+                )
+              );
+              setIsAnalyzing(false);
+            } else {
+              const assistantMessage: ChatMessage = {
+                id: (Date.now() + 1).toString(),
+                role: "assistant",
+                content: data.message,
+                timestamp: new Date(),
+              };
+              setMessages((prev) => [...prev, assistantMessage]);
+            }
+            
+            // Check if AI has finished reasoning and provided a complete accident description (works for both image and text conversations)
+            if (data.message.includes("【事故分析完了】") && data.message.includes("【分析終了】")) {
+                // Extract the accident description
+                const match = data.message.match(/【事故分析完了】\s*([\s\S]*?)\s*【分析終了】/);
+                if (match && match[1]) {
+                  const accidentDescription = match[1].trim();
+                  
+                  // Trigger automatic analysis to fill in the steps
+                  setTimeout(async () => {
+                    try {
+                      setIsAnalyzing(true);
+                      
+                      // Add analyzing message
+                      const autoAnalyzingMsg: ChatMessage = {
+                        id: `auto-analyzing-${Date.now()}`,
+                        role: "assistant",
+                        content: "✨ 収集した情報を基に事故を分析し、ステップを自動入力しています...",
+                        timestamp: new Date(),
+                      };
+                      setMessages((prev) => [...prev, autoAnalyzingMsg]);
+                      
+                      const analysisResponse = await fetch("/api/ai-analyze-accident", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ accidentDescription }),
+                      });
+                      
+                      if (analysisResponse.ok) {
+                        const analysis = await analysisResponse.json();
+                        
+                        // Pass analysis to parent to fill in steps
+                        if (onAIAnalysis) {
+                          onAIAnalysis(analysis);
+                        }
+                        
+                        // Update the analyzing message with success
+                        setMessages((prev) =>
+                          prev.map((msg) =>
+                            msg.id === autoAnalyzingMsg.id
+                              ? { ...msg, content: "✅ 分析完了！左側のステップが自動入力されました。内容を確認してください。" }
+                              : msg
+                          )
+                        );
+                      } else {
+                        throw new Error("分析に失敗しました");
+                      }
+                    } catch (error: any) {
+                      console.error("Auto-analysis error:", error);
+                      setMessages((prev) =>
+                        prev.filter((msg) => !msg.content.includes("収集した情報を基に"))
+                      );
+                    } finally {
+                      setIsAnalyzing(false);
+                    }
+                  }, 500);
+                }
+              }
           }
         }
       } catch (error: any) {
-        if (!shouldAnalyze) {
+        if (!shouldAnalyze || currentImage) {
           const errorMessage: ChatMessage = {
             id: (Date.now() + 1).toString(),
             role: "assistant",
@@ -658,6 +770,34 @@ export default function ChatWindow({
                       : "bg-gray-100 text-gray-900"
                     }`}
                 >
+                  {/* Render image attachment if present */}
+                  {message.image && (
+                    <div className="mb-2">
+                      <img 
+                        src={message.image} 
+                        alt="Uploaded" 
+                        className="max-w-full rounded cursor-pointer hover:opacity-90 transition-opacity"
+                        onClick={() => window.open(message.image, '_blank')}
+                        style={{ maxHeight: '200px' }}
+                      />
+                    </div>
+                  )}
+                  
+                  {/* Render audio attachment if present */}
+                  {message.audio && (
+                    <div className="mb-2 p-2 bg-white bg-opacity-20 rounded flex items-center gap-2">
+                      <audio 
+                        controls 
+                        className="w-full"
+                        style={{ height: '32px' }}
+                      >
+                        <source src={message.audio.url} type={message.audio.type} />
+                        Your browser does not support the audio element.
+                      </audio>
+                      <span className="text-xs opacity-75 whitespace-nowrap">{message.audio.name}</span>
+                    </div>
+                  )}
+                  
                   <p className="text-sm whitespace-pre-wrap">{message.content}</p>
                   
                   {/* Render case recommendations if present */}
@@ -711,8 +851,50 @@ export default function ChatWindow({
           </div>
 
           <div className="p-4 border-t border-gray-200">
+            {selectedImage && (
+              <div className="relative inline-block mb-2">
+                <img src={selectedImage} alt="Selected" className="h-24 w-auto rounded-lg border border-gray-300 shadow-sm object-cover" />
+                <button
+                  onClick={clearImage}
+                  className="absolute -top-2 -right-2 bg-gray-800 text-white rounded-full p-1 hover:bg-gray-700 shadow-md"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </div>
+            )}
+            {selectedAudio && (
+              <div className="relative mb-2 p-3 bg-gray-50 rounded-lg border border-gray-300 shadow-sm">
+                <div className="flex items-center gap-2">
+                  <audio controls className="flex-1" style={{ height: '32px' }}>
+                    <source src={selectedAudio.url} type={selectedAudio.type} />
+                  </audio>
+                  <span className="text-xs text-gray-600">{selectedAudio.name}</span>
+                </div>
+                <button
+                  onClick={() => setSelectedAudio(null)}
+                  className="absolute -top-2 -right-2 bg-gray-800 text-white rounded-full p-1 hover:bg-gray-700 shadow-md"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </div>
+            )}
             <div className="flex gap-2 items-end">
               <VoiceUpload onTranscriptionComplete={handleTranscription} disabled={isLoading} />
+              <input
+                type="file"
+                accept="image/*"
+                className="hidden"
+                ref={fileInputRef}
+                onChange={handleImageSelect}
+              />
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                className={`p-2 rounded-full hover:bg-gray-100 text-gray-500 transition-colors ${selectedImage ? 'text-blue-600 bg-blue-50 ring-2 ring-blue-100' : ''}`}
+                title="画像をアップロード"
+                disabled={isLoading}
+              >
+                <ImageIcon className="w-5 h-5" />
+              </button>
               <textarea
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
@@ -729,7 +911,7 @@ export default function ChatWindow({
               />
               <button
                 onClick={handleSend}
-                disabled={isLoading || !input.trim()}
+                disabled={isLoading || (!input.trim() && !selectedImage)}
                 className="px-6 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex-shrink-0"
               >
                 送信

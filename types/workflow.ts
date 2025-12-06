@@ -33,6 +33,12 @@ export interface ChatMessage {
   role: "user" | "assistant";
   content: string;
   timestamp: Date;
+  image?: string; // Base64 image data
+  audio?: {
+    name: string;
+    url: string; // Data URL or blob URL
+    type: string;
+  };
   recommendations?: Array<{
     id: string;
     title: string;

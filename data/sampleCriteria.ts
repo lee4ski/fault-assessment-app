@@ -1,8 +1,10 @@
 import { AssessmentCriteria } from "@/types";
+import { generatedCriteria } from "./generatedCriteria";
 
 // Sample assessment criteria based on the requirements
 // This represents a subset of the 300+ criteria from 別冊判例タイムズ
 export const sampleCriteria: AssessmentCriteria[] = [
+  ...generatedCriteria,
   {
     id: "intersection-pedestrian-straight-1",
     chapter: 1,
@@ -180,8 +182,8 @@ export const sampleCriteria: AssessmentCriteria[] = [
     chapter: 1,
     chapterTitle: "歩行者と四輪車・単車との事故",
     title: "[1] 🟢 歩行者：青信号で横断開始 / 🔴 車両：赤信号で進入（信号変更なし）",
-    description: "歩行者が青信号で横断を開始し、横断中に信号が変わらず、車両が赤信号で進入した場合",
-    summary: "歩行者が青信号で横断を開始し、車両が赤信号で進入した場合の基本過失割合は0%です。歩行者には全く過失がなく、車両が100%の責任を負います。このケースでは修正要素は適用されません。",
+    description: "交差点の横断歩道において、歩行者が青信号で横断を開始し、横断中に信号が変わらず、直進車両が赤信号で進入した場合",
+    summary: "交差点の横断歩道において、歩行者が青信号で横断を開始し、車両が赤信号で進入した場合の基本過失割合は0%です。歩行者には全く過失がなく、車両が100%の責任を負います。このケースでは修正要素は適用されません。",
     baseFaultPercentage: 0,
     pageNumber: 67,
     sourceBook: "別冊判例タイムズ",
@@ -193,8 +195,8 @@ export const sampleCriteria: AssessmentCriteria[] = [
     chapter: 1,
     chapterTitle: "歩行者と四輪車・単車との事故",
     title: "[2] 🟡 歩行者：黄信号で横断開始 / 🔴 車両：赤信号で進入",
-    description: "歩行者が黄信号で横断を開始し、車両が赤信号で進入した場合",
-    summary: "歩行者が黄信号で横断を開始し、車両が赤信号で進入した場合の基本過失割合は10%です。歩行者に一定の過失が認められますが、5個の修正要素により調整が可能です。",
+    description: "交差点の横断歩道において、歩行者が黄信号で横断を開始し、直進車両が赤信号で進入した場合",
+    summary: "交差点の横断歩道において、歩行者が黄信号で横断を開始し、車両が赤信号で進入した場合の基本過失割合は10%です。歩行者に一定の過失が認められますが、5個の修正要素により調整が可能です。",
     baseFaultPercentage: 10,
     pageNumber: 67,
     sourceBook: "別冊判例タイムズ",

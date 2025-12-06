@@ -103,7 +103,7 @@ export function searchCriteria(
       // て、した、する、た are verb endings that connect clauses
       const parts = searchTerm
         .split(/(?:における|での|して|した|する|が|は|の|で|に|を|と|た|て|\s|・)+/)
-        .filter(p => p.trim().length > 1); // Ignore single-character parts
+        .filter(p => p.trim().length > 0); // Keep all non-empty parts including single characters (important for Japanese kanji like 青, 赤)
       
       if (parts.length >= 2) {
         // Count how many parts match (more flexible than requiring ALL)
@@ -252,6 +252,16 @@ const checkSignalMatch = (item: AssessmentCriteria, partyType: string, signalSta
   // However, we must be careful not to match "Pedestrian Green" when searching for "Car Green" if text says "Pedestrian Green / Car Red"
   // So we trust the "Pattern" matching more.
   
+  // RELAXED CHECK: If specific patterns fail, check if BOTH keywords exist in the text.
+  // This is necessary because "Vehicle: Red" might not be caught if we search for "Car" (四輪車)
+  // and the text only says "Vehicle" (車両), even if we mapped it.
+  if (hasAnyText(item, partyKeywords) && hasAnyText(item, keywords)) {
+      // To reduce false positives (e.g. matching "Car Red" in a "Car Green" case),
+      // we can add a simple safeguard: if we find the OPPOSITE signal for this party, be careful.
+      // But for now, let's return TRUE to find the case. The user can filter manually.
+      return true;
+  }
+  
   // Special case: If searching for "Car Red", and title is "[1] Ped Green / Car Red",
   // "Car Red" pattern will match "Car: Red".
   
@@ -283,7 +293,7 @@ const checkSignalMatch = (item: AssessmentCriteria, partyType: string, signalSta
 const checkActionMatch = (item: AssessmentCriteria, partyType: string, actionState: string): boolean => {
   // Map action states to keywords
   const actionKeywords: Record<string, string[]> = {
-    "action_straight": ["直進"],
+    "action_straight": ["直進", "進入"], // Added "進入" (Entering) as it implies straight/entry in signal cases
     "action_turning_right": ["右折"],
     "action_turning_left": ["左折"],
     "action_crossing": ["横断"],
@@ -336,6 +346,11 @@ const checkActionMatch = (item: AssessmentCriteria, partyType: string, actionSta
   // We must ensure the action applies to the correct party.
   // Titles often follow: "Action Party vs Action Party" -> "右折車と直進車"
   // So "Right Turn" is next to "Car".
+  
+  // RELAXED CHECK: If specific patterns fail, check if BOTH keywords exist in the text.
+  if (hasAnyText(item, partyKeywords) && hasAnyText(item, keywords)) {
+      return true;
+  }
   
   // If we are searching for "Straight Car", and text is "Right Turn Car vs Straight Car".
   // We found "Straight Car" pattern above.

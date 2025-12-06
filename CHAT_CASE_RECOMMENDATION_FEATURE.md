@@ -100,3 +100,5 @@ The Chat Window now intelligently searches for existing cases and recommends the
 *   Allow user to request "more cases" if top 3 don't match
 *   Integrate with Phase 9 (Smart Create New Record) if no cases found
 
+
+

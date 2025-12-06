@@ -109,3 +109,5 @@ Query: "歩行者が青信号で横断して直進した車が事故"
 ## License
 Proprietary - All rights reserved
 
+
+

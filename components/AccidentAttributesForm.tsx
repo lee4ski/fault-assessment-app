@@ -7,16 +7,19 @@ interface AccidentAttributesFormProps {
   onSearch: (attributes: AccidentAttributes) => void;
   initialAttributes?: AccidentAttributes;
   missingFields?: string[];
+  onAiSearch?: (attributes: AccidentAttributes) => Promise<void>; // AI search callback with structured attributes
 }
 
 export default function AccidentAttributesForm({
   onSearch,
   initialAttributes,
   missingFields = [],
+  onAiSearch,
 }: AccidentAttributesFormProps) {
   const [attributes, setAttributes] = useState<AccidentAttributes>(
     initialAttributes || {}
   );
+  const [isAiSearching, setIsAiSearching] = useState(false);
 
   // Update state when initialAttributes changes (e.g. from AI auto-fill)
   useEffect(() => {
@@ -99,6 +102,27 @@ export default function AccidentAttributesForm({
   const handleReset = () => {
     setAttributes({});
     onSearch({});
+  };
+
+  const handleAiSearch = async () => {
+    // Check if we have enough attributes to search
+    const hasMinimalAttributes = attributes.location || 
+      (attributes.partyTypes && attributes.partyTypes.length > 0);
+    
+    if (!hasMinimalAttributes || isAiSearching) {
+      alert("AI検索を行うには、場所または当事者の情報が必要です。");
+      return;
+    }
+    
+    if (onAiSearch) {
+      // Use parent's AI search handler if provided
+      setIsAiSearching(true);
+      try {
+        await onAiSearch(attributes);
+      } finally {
+        setIsAiSearching(false);
+      }
+    }
   };
 
   const isMissing = (field: string) => missingFields.includes(field);
@@ -281,12 +305,36 @@ export default function AccidentAttributesForm({
       </div>
 
       {/* ボタン */}
-      <div className="flex gap-2">
+      <div className="flex gap-2 flex-wrap">
         <button
           type="submit"
           className="px-6 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors"
         >
           検索
+        </button>
+        <button
+          type="button"
+          onClick={handleAiSearch}
+          disabled={isAiSearching || (!attributes.location && (!attributes.partyTypes || attributes.partyTypes.length === 0))}
+          className="px-6 py-2 bg-purple-600 text-white rounded-lg font-semibold hover:bg-purple-700 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center gap-2"
+          title="設定した条件を基にAIで確率検索を実行します"
+        >
+          {isAiSearching ? (
+            <>
+              <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              検索中...
+            </>
+          ) : (
+            <>
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/>
+              </svg>
+              AI検索
+            </>
+          )}
         </button>
         <button
           type="button"

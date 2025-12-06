@@ -79,20 +79,69 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // If no matches found, proceed with conversational AI
-    const systemPrompt = stepPrompts[step as keyof typeof stepPrompts] || stepPrompts[1];
+    // Check if any message has an image
+    const hasImage = messages.some((msg: any) => msg.image);
+    
+    // If no matches found or image is present, proceed with conversational AI
+    let systemPrompt = stepPrompts[step as keyof typeof stepPrompts] || stepPrompts[1];
+    
+    if (hasImage) {
+      systemPrompt += `
+      
+ユーザーから事故現場の画像が提供されました。あなたは事故調査員として、画像を分析し、質問を通じて事故の詳細を明らかにしてください。
+
+**重要な指示:**
+1. **画像は事故後の現場写真**です。信号の色、車両の位置、損傷などから推測できることを述べてください。
+2. **一度に1つの質問をしてください**。まるで現場で調査員が聞くように、自然な対話を心がけてください。
+3. 最低限確認すべき情報:
+   - 事故の当事者数（車両数、歩行者の有無）
+   - 各当事者の信号状態（事故発生時）
+   - 速度や動き
+   - その他の状況
+
+4. **【事故分析完了】マーカーは使用しないでください**。十分な情報が集まったと思ったら、代わりに以下のように確認してください：
+   
+   「以下の理解で正しいでしょうか？
+   - [当事者1の状況]
+   - [当事者2の状況]
+   - [その他の重要な情報]
+   
+   この内容で過失割合の分析を開始してもよろしいですか？
+   ✅ はい、分析を開始
+   ❌ いいえ、修正や追加情報があります」
+
+5. ユーザーが「はい」「分析を開始」「OK」などと答えた場合のみ、次の形式で最終的な事故説明を提供してください：
+【事故分析完了】
+[詳細な事故の説明]
+【分析終了】`;
+    }
+
+    const model = hasImage ? "gpt-4o" : "gpt-4o-mini";
+
+    const formattedMessages = messages.map((msg: any) => {
+      if (msg.image) {
+        return {
+          role: msg.role,
+          content: [
+            { type: "text", text: msg.content || "（画像が添付されました）" },
+            { type: "image_url", image_url: { url: msg.image } }
+          ]
+        };
+      }
+      return {
+        role: msg.role,
+        content: msg.content
+      };
+    });
 
     const completion = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
+      model: model,
       messages: [
         { role: "system", content: systemPrompt },
-        ...messages.map((msg: any) => ({
-          role: msg.role,
-          content: msg.content,
-        })),
+        ...formattedMessages,
       ],
       temperature: 0.7,
-      max_tokens: 500,
+      max_tokens: 800,
     });
 
     return NextResponse.json({

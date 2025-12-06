@@ -13,12 +13,15 @@ interface Step2CalculateProps {
   onCalculate: (report: AccidentReport) => void;
   /** AI などで事前に推奨された修正要素ID（初期選択用） */
   initialSelectedModificationIds?: string[];
+  /** 以前に選択された修正要素ID（戻った時の復元用） */
+  previouslyAppliedModificationIds?: string[];
 }
 
 export default function Step2Calculate({
   criteria,
   onCalculate,
   initialSelectedModificationIds,
+  previouslyAppliedModificationIds,
 }: Step2CalculateProps) {
   // Ensure modificationFactors is always an array
   // CRITICAL: Get factors directly from criteria, don't use useMemo which might cache incorrectly
@@ -53,15 +56,24 @@ export default function Step2Calculate({
   console.log("Step2Calculate - modificationFactors:", modificationFactors);
   console.log("Step2Calculate - modificationFactors.length:", modificationFactors.length);
 
+  // Use previously applied modifications if available (when returning to step), otherwise use AI recommendations
+  const defaultModificationIds = previouslyAppliedModificationIds || initialSelectedModificationIds || [];
+  
   const [selectedModifications, setSelectedModifications] = useState<
     Set<string>
-  >(() => new Set(initialSelectedModificationIds || []));
+  >(() => new Set(defaultModificationIds));
 
-  // 認定基準またはAI推奨が変わったときに初期選択を更新
+  // Update when criteria changes OR when previously applied modifications are provided (restoring state)
   useEffect(() => {
-    setSelectedModifications(new Set(initialSelectedModificationIds || []));
+    if (previouslyAppliedModificationIds && previouslyAppliedModificationIds.length > 0) {
+      // Restore previously applied modifications when returning to this step
+      setSelectedModifications(new Set(previouslyAppliedModificationIds));
+    } else if (initialSelectedModificationIds && initialSelectedModificationIds.length > 0) {
+      // Use AI recommendations if no previous modifications
+      setSelectedModifications(new Set(initialSelectedModificationIds));
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [criteria?.id, (initialSelectedModificationIds || []).join(",")]);
+  }, [criteria?.id]);
 
   const toggleModification = (factorId: string) => {
     const newSet = new Set(selectedModifications);
@@ -230,12 +242,12 @@ export default function Step2Calculate({
               {modificationFactors.length > 0 ? (
                 Array.from(
                   new Set(modificationFactors.map((f) => f.category))
-                ).map((category) => {
+                ).map((category, index) => {
                 const factorsInCategory = modificationFactors.filter(
                   (f) => f.category === category
                 );
                 return (
-                  <div key={category} className="mb-3">
+                  <div key={category || `category-${index}`} className="mb-3">
                     <div className="text-xs font-medium text-gray-500 mb-2">
                       {category === "pedestrian"
                         ? "歩行者関連"

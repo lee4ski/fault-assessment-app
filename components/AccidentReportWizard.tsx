@@ -11,7 +11,7 @@ import {
 import { StepValidation } from "@/types/workflow";
 import { sampleCriteria } from "@/data/sampleCriteria";
 import WorkflowStepper from "./WorkflowStepper";
-import Step1Search from "./Step1Search";
+import Step1Search, { Step1SearchState } from "./Step1Search";
 import Step2Calculate from "./Step2Calculate";
 import Step3VehicleLookup from "./Step3VehicleLookup";
 import Step4AIReportEditor from "./Step4AIReportEditor";
@@ -39,6 +39,8 @@ export default function AccidentReportWizard() {
   const [aiRecommendation, setAiRecommendation] = useState<{ id: string; confidence: number } | null>(null);
   const [aiSuggestion, setAiSuggestion] = useState<string | null>(null);
   const [aiPanelSuggestions, setAiPanelSuggestions] = useState<string[]>([]);
+  const [step1SearchState, setStep1SearchState] = useState<Step1SearchState | null>(null);
+  const [aiExpectedVehicles, setAiExpectedVehicles] = useState<Array<{make: string, model: string}>>([]);
 
   const handleSelectCriteria = (criteria: AssessmentCriteria) => {
     console.log("=== handleSelectCriteria ===");
@@ -81,9 +83,9 @@ export default function AccidentReportWizard() {
         fullCriteria.modificationFactors = [];
       }
       
-      // Debug: Show alert if modificationFactors is missing or empty
+      // Debug: Log modification factors count (empty is valid for some criteria)
       if (!fullCriteria.modificationFactors || fullCriteria.modificationFactors.length === 0) {
-        console.error("⚠️ WARNING: Criteria found but has no modificationFactors!", fullCriteria);
+        console.log("ℹ️ INFO: Criteria has no modification factors (this is valid for some cases)");
       } else {
         console.log("✅ SUCCESS: Criteria has", fullCriteria.modificationFactors.length, "modification factors");
       }
@@ -127,6 +129,75 @@ export default function AccidentReportWizard() {
       ...prev,
       vehicles,
     } as AccidentReportFull));
+    
+    // Update validation status for Step 3 based on selection with AI awareness
+    if (vehicles.length > 0) {
+      let status: "complete" | "incomplete" | "valid-empty" = "complete";
+      let color: "green" | "red" | "yellow" = "green";
+      let missingItems: string[] = [];
+      let reason = `${vehicles.length}台の車両情報が選択されました`;
+
+      // Check 1: Count mismatch (if AI expected something)
+      if (aiExpectedVehicles.length > 0 && vehicles.length !== aiExpectedVehicles.length) {
+        status = "incomplete";
+        color = "red";
+        reason = `AIは${aiExpectedVehicles.length}台の車両を検出しましたが、${vehicles.length}台しか選択されていません`;
+        missingItems.push("車両台数の不一致");
+      } 
+      // Check 2: Maker mismatch
+      else if (aiExpectedVehicles.length > 0) {
+        const issues: string[] = [];
+        
+        aiExpectedVehicles.forEach(expected => {
+          if (!expected.make) return; // Skip if AI didn't find a maker
+          
+          // Try to find a match in selected vehicles (loose string matching)
+          const match = vehicles.find(v => 
+            (v.make && expected.make && (
+              v.make.toLowerCase().includes(expected.make.toLowerCase()) || 
+              expected.make.toLowerCase().includes(v.make.toLowerCase())
+            )) ||
+            (v.model && expected.model && (
+              v.model.toLowerCase().includes(expected.model.toLowerCase()) ||
+              expected.model.toLowerCase().includes(v.model.toLowerCase())
+            ))
+          );
+          
+          if (!match) {
+            issues.push(expected.make + (expected.model ? ` ${expected.model}` : ""));
+          }
+        });
+        
+        if (issues.length > 0) {
+          status = "incomplete";
+          color = "red";
+          reason = `選択された車両がAI分析結果（${issues.join(", ")}）と一致しません`;
+          missingItems.push("車両情報の不一致");
+        }
+      }
+
+      setStepValidations(prev => ({
+        ...prev,
+        3: {
+          stepNumber: 3,
+          status,
+          color,
+          missingItems,
+          reason
+        }
+      }));
+    } else {
+      setStepValidations(prev => ({
+        ...prev,
+        3: {
+          stepNumber: 3,
+          status: "incomplete",
+          color: "red",
+          missingItems: ["車両情報"],
+          reason: "車両情報が登録されていません"
+        }
+      }));
+    }
     
     // Auto-advance to step 4 ONLY when vehicles are actually selected
     if (currentStep === 3 && vehicles.length > 0) {
@@ -256,6 +327,13 @@ export default function AccidentReportWizard() {
 
     // Auto-fill Step 3: Extract vehicles
     if (analysis.step3.extractedVehicles && analysis.step3.extractedVehicles.length > 0) {
+      // Store expectations for validation
+      const expectations = analysis.step3.extractedVehicles.map((v: any) => ({
+        make: v.make || "",
+        model: v.model || ""
+      })).filter((v: any) => v.make || v.model);
+      setAiExpectedVehicles(expectations);
+
       const vehicles: Vehicle[] = analysis.step3.extractedVehicles.map((v: any, index: number) => ({
         id: `vehicle-${Date.now()}-${index}`,
         make: v.make || "",
@@ -302,6 +380,8 @@ export default function AccidentReportWizard() {
               autoFilledAttributes={autoFilledAttributes}
               missingFields={missingStructuredFields}
               aiRecommendation={aiRecommendation}
+              preservedState={step1SearchState}
+              onStateChange={setStep1SearchState}
             />
           )}
           {currentStep === 2 && selectedCriteria ? (
@@ -310,6 +390,9 @@ export default function AccidentReportWizard() {
               onCalculate={handleCalculate}
               initialSelectedModificationIds={
                 aiRecommendedModifications || undefined
+              }
+              previouslyAppliedModificationIds={
+                calculatedReport?.appliedModifications?.map(m => m.factorId) || undefined
               }
             />
           ) : currentStep === 2 ? (

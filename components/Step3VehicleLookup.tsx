@@ -8,6 +8,8 @@ import {
   getUniqueMakes,
   getModelsForMake,
   createCustomVehicle,
+  getYearsForMakeAndModel,
+  getModelCodesForVehicle,
 } from "@/lib/vehicleData";
 
 interface Step3VehicleLookupProps {
@@ -25,6 +27,8 @@ export default function Step3VehicleLookup({
   const [model, setModel] = useState("");
   const [searchResults, setSearchResults] = useState<Vehicle[]>([]);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [editingVehicleId, setEditingVehicleId] = useState<string | null>(null);
+  const [showModelCodeSuggestions, setShowModelCodeSuggestions] = useState(false);
   const [newVehicle, setNewVehicle] = useState({
     make: "",
     model: "",
@@ -32,11 +36,48 @@ export default function Step3VehicleLookup({
     modelCode: "",
   });
 
-  const makes = useMemo(() => getUniqueMakes(), []);
-  const models = useMemo(() => {
+  const modalMakes = useMemo(() => getUniqueMakes(), []);
+  
+  // Models for the manual entry modal (depends on newVehicle.make)
+  const modalModels = useMemo(() => {
+    if (!newVehicle.make) return [];
+    return getModelsForMake(newVehicle.make);
+  }, [newVehicle.make]);
+  
+  // Models for the search form (depends on make state)
+  const searchModels = useMemo(() => {
     if (!make) return [];
     return getModelsForMake(make);
   }, [make]);
+
+  const modalYears = useMemo(() => {
+    if (!newVehicle.make || !newVehicle.model) return [];
+    return getYearsForMakeAndModel(newVehicle.make, newVehicle.model);
+  }, [newVehicle.make, newVehicle.model]);
+
+  const modalModelCodes = useMemo(() => {
+    if (!newVehicle.make || !newVehicle.model) return [];
+    
+    const yearInt = newVehicle.year ? parseInt(newVehicle.year) : undefined;
+    console.log(`Searching codes for: ${newVehicle.make}, ${newVehicle.model}, Year: ${yearInt}`);
+    
+    // Try exact year match first
+    let codes = getModelCodesForVehicle(
+      newVehicle.make, 
+      newVehicle.model, 
+      !isNaN(yearInt || NaN) ? yearInt : undefined
+    );
+    
+    // If no codes found with year (e.g. user entered reg year 2010, but release was 2009), 
+    // fallback to showing all codes for this model
+    if (codes.length === 0 && yearInt) {
+      console.log("No exact year match, falling back to all codes for model");
+      codes = getModelCodesForVehicle(newVehicle.make, newVehicle.model);
+    }
+    
+    console.log(`Found codes:`, codes);
+    return codes;
+  }, [newVehicle.make, newVehicle.model, newVehicle.year]);
 
   const handleModelCodeSearch = () => {
     if (!modelCode.trim()) {
@@ -76,14 +117,34 @@ export default function Step3VehicleLookup({
       return;
     }
 
-    const vehicle = createCustomVehicle(
-      newVehicle.make,
-      newVehicle.model,
-      newVehicle.year,
-      newVehicle.modelCode
-    );
+    if (editingVehicleId) {
+      // Update existing vehicle
+      const updatedList = selectedVehicles.map(v => {
+        if (v.id === editingVehicleId) {
+          return {
+            ...v,
+            make: newVehicle.make,
+            model: newVehicle.model,
+            year: newVehicle.year,
+            modelCode: newVehicle.modelCode,
+            releaseDate: v.releaseDate // Preserve existing fields if any
+          };
+        }
+        return v;
+      });
+      onSelect(updatedList);
+      setEditingVehicleId(null);
+    } else {
+      // Create new vehicle
+      const vehicle = createCustomVehicle(
+        newVehicle.make,
+        newVehicle.model,
+        newVehicle.year,
+        newVehicle.modelCode
+      );
+      handleApplyVehicle(vehicle);
+    }
 
-    handleApplyVehicle(vehicle);
     setShowCreateModal(false);
     setNewVehicle({
       make: "",
@@ -91,6 +152,17 @@ export default function Step3VehicleLookup({
       year: "",
       modelCode: "",
     });
+  };
+
+  const handleEditVehicle = (vehicle: Vehicle) => {
+    setNewVehicle({
+      make: vehicle.make,
+      model: vehicle.model,
+      year: vehicle.year,
+      modelCode: vehicle.modelCode,
+    });
+    setEditingVehicleId(vehicle.id);
+    setShowCreateModal(true);
   };
 
   return (
@@ -163,7 +235,7 @@ export default function Step3VehicleLookup({
                 className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white"
               >
                 <option value="">メーカーを選択</option>
-                {makes.map((m) => (
+                {modalMakes.map((m) => (
                   <option key={m} value={m}>
                     {m}
                   </option>
@@ -182,7 +254,7 @@ export default function Step3VehicleLookup({
                 className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 text-gray-900 bg-white"
               >
                 <option value="">車種を選択</option>
-                {models.map((m) => (
+                {searchModels.map((m) => (
                   <option key={m} value={m}>
                     {m}
                   </option>
@@ -311,12 +383,20 @@ export default function Step3VehicleLookup({
                         : ""}
                     </td>
                     <td className="px-4 py-3 text-sm">
-                      <button
-                        onClick={() => handleRemoveVehicle(vehicle.id)}
-                        className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 text-xs"
-                      >
-                        削除
-                      </button>
+                      <div className="flex space-x-2">
+                        <button
+                          onClick={() => handleEditVehicle(vehicle)}
+                          className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 text-xs"
+                        >
+                          編集
+                        </button>
+                        <button
+                          onClick={() => handleRemoveVehicle(vehicle.id)}
+                          className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 text-xs"
+                        >
+                          削除
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -328,7 +408,16 @@ export default function Step3VehicleLookup({
 
       {/* Create Custom Vehicle Button */}
       <button
-        onClick={() => setShowCreateModal(true)}
+        onClick={() => {
+          setEditingVehicleId(null);
+          setNewVehicle({
+            make: "",
+            model: "",
+            year: "",
+            modelCode: "",
+          });
+          setShowCreateModal(true);
+        }}
         className="w-full px-6 py-3 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors font-medium"
       >
         + 手動で車両情報を入力
@@ -339,69 +428,121 @@ export default function Step3VehicleLookup({
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">
-              車両情報を手動入力
+              {editingVehicleId ? "車両情報を編集" : "車両情報を手動入力"}
             </h3>
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   メーカー <span className="text-red-500">*</span>
                 </label>
-                <input
-                  type="text"
-                  value={newVehicle.make}
-                  onChange={(e) =>
-                    setNewVehicle({ ...newVehicle, make: e.target.value })
-                  }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white"
-                  placeholder="例: トヨタ"
-                />
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={newVehicle.make}
+                    onChange={(e) =>
+                      setNewVehicle({ ...newVehicle, make: e.target.value, model: "", year: "", modelCode: "" })
+                    }
+                    list="modal-makes"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white"
+                    placeholder="例: トヨタ"
+                  />
+                  <datalist id="modal-makes">
+                    {modalMakes.map((m) => (
+                      <option key={m} value={m} />
+                    ))}
+                  </datalist>
+                </div>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   車名 <span className="text-red-500">*</span>
                 </label>
-                <input
-                  type="text"
-                  value={newVehicle.model}
-                  onChange={(e) =>
-                    setNewVehicle({ ...newVehicle, model: e.target.value })
-                  }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white"
-                  placeholder="例: カローラ"
-                />
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={newVehicle.model}
+                    onChange={(e) =>
+                      setNewVehicle({ ...newVehicle, model: e.target.value, year: "", modelCode: "" })
+                    }
+                    list="modal-models"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white"
+                    placeholder="例: カローラ"
+                    disabled={!newVehicle.make}
+                  />
+                  <datalist id="modal-models">
+                    {modalModels.map((m) => (
+                      <option key={m} value={m} />
+                    ))}
+                  </datalist>
+                </div>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   年式 <span className="text-red-500">*</span>
                 </label>
-                <input
-                  type="number"
-                  value={newVehicle.year}
-                  onChange={(e) =>
-                    setNewVehicle({ ...newVehicle, year: e.target.value })
-                  }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white"
-                  placeholder="例: 2020"
-                  min="1900"
-                  max="2099"
-                />
+                <div className="relative">
+                  <input
+                    type="number"
+                    value={newVehicle.year}
+                    onChange={(e) =>
+                      setNewVehicle({ ...newVehicle, year: e.target.value, modelCode: "" })
+                    }
+                    list="modal-years"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white"
+                    placeholder="例: 2020"
+                    min="1900"
+                    max="2099"
+                  />
+                  <datalist id="modal-years">
+                    {modalYears.map((y) => (
+                      <option key={y} value={y} />
+                    ))}
+                  </datalist>
+                </div>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   型式コード <span className="text-red-500">*</span>
                 </label>
-                <input
-                  type="text"
-                  value={newVehicle.modelCode}
-                  onChange={(e) =>
-                    setNewVehicle({ ...newVehicle, modelCode: e.target.value })
-                  }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white"
-                  placeholder="例: TA-NZE120"
-                />
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={newVehicle.modelCode}
+                    onChange={(e) => {
+                      setNewVehicle({ ...newVehicle, modelCode: e.target.value });
+                      setShowModelCodeSuggestions(true);
+                    }}
+                    onFocus={() => setShowModelCodeSuggestions(true)}
+                    onBlur={() => setTimeout(() => setShowModelCodeSuggestions(false), 200)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white"
+                    placeholder="例: TA-NZE120"
+                    autoComplete="off"
+                  />
+                  {showModelCodeSuggestions && modalModelCodes.length > 0 && (
+                    <ul className="absolute z-10 w-full bg-white border border-gray-300 rounded-md mt-1 max-h-60 overflow-y-auto shadow-lg">
+                      {modalModelCodes.map((c) => (
+                        <li
+                          key={c}
+                          className="px-3 py-2 hover:bg-blue-50 cursor-pointer text-sm text-gray-900"
+                          onClick={() => {
+                            setNewVehicle({ ...newVehicle, modelCode: c });
+                            setShowModelCodeSuggestions(false);
+                          }}
+                        >
+                          {c}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+                {modalModelCodes.length > 0 && (
+                  <p className="text-xs text-gray-500 mt-1">
+                    ※ 選択した車種・年式に関連する型式コードが候補として表示されます
+                  </p>
+                )}
               </div>
             </div>
 
@@ -409,6 +550,7 @@ export default function Step3VehicleLookup({
               <button
                 onClick={() => {
                   setShowCreateModal(false);
+                  setEditingVehicleId(null);
                   setNewVehicle({
                     make: "",
                     model: "",
@@ -424,7 +566,7 @@ export default function Step3VehicleLookup({
                 onClick={handleCreateVehicle}
                 className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
               >
-                追加
+                {editingVehicleId ? "更新" : "追加"}
               </button>
             </div>
           </div>
