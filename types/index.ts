@@ -17,7 +17,7 @@ export interface ModificationFactor {
   id: string;
   description: string;
   adjustment: number; // Percentage adjustment (e.g., -5, +10)
-  category: string; // e.g., "pedestrian", "vehicle", "road"
+  category?: string; // e.g., "pedestrian", "vehicle", "road" - Made optional
 }
 
 export interface AccidentReport {
