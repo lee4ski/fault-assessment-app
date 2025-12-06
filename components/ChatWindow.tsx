@@ -207,9 +207,27 @@ export default function ChatWindow({
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      // Compress image to reduce API payload and prevent Vercel timeouts
       const reader = new FileReader();
       reader.onloadend = () => {
-        setSelectedImage(reader.result as string);
+        const img = new Image();
+        img.onload = () => {
+          // Resize to max 800px width while maintaining aspect ratio
+          const maxWidth = 800;
+          const scale = Math.min(1, maxWidth / img.width);
+          const canvas = document.createElement('canvas');
+          canvas.width = img.width * scale;
+          canvas.height = img.height * scale;
+          
+          const ctx = canvas.getContext('2d');
+          if (ctx) {
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            // Compress to JPEG with 0.8 quality (reduces size by 70-90%)
+            const compressedImage = canvas.toDataURL('image/jpeg', 0.8);
+            setSelectedImage(compressedImage);
+          }
+        };
+        img.src = reader.result as string;
       };
       reader.readAsDataURL(file);
     }

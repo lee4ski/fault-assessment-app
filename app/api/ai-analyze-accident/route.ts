@@ -185,6 +185,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Check for overly long descriptions to prevent Vercel request size limits
+    if (accidentDescription.length > 1000) {
+      return NextResponse.json(
+        { error: "事故の説明が長すぎます。要約して入力してください（最大1000文字）。" },
+        { status: 400 }
+      );
+    }
+
     if (!process.env.OPENAI_API_KEY && !process.env.OPEN_API_KEY) {
       return NextResponse.json(
         { error: "OpenAI API key is not configured" },
@@ -288,16 +296,19 @@ ${JSON.stringify(
 
     const userPrompt = `以下の事故説明を分析してください：\n\n${accidentDescription}`;
 
-    const completion = await openai.chat.completions.create({
-      model: "gpt-4o",
-      messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: userPrompt },
-      ],
-      response_format: { type: "json_object" },
-      temperature: 0.3,
-      max_tokens: 2000,
-    });
+    const completion = await openai.chat.completions.create(
+      {
+        model: "gpt-4o-mini", // Faster model for Vercel production
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: userPrompt },
+        ],
+        response_format: { type: "json_object" },
+        temperature: 0.3,
+        max_tokens: 1500, // Reduced for faster response
+      },
+      { timeout: 18000 } // 18s timeout for Vercel compatibility
+    );
 
     const aiResponse = JSON.parse(completion.choices[0]?.message?.content || "{}");
 

@@ -116,7 +116,8 @@ export async function POST(request: NextRequest) {
 【分析終了】`;
     }
 
-    const model = hasImage ? "gpt-4o" : "gpt-4o-mini";
+    // Use gpt-4o-mini for all requests (faster, cheaper, supports vision)
+    const model = "gpt-4o-mini";
 
     const formattedMessages = messages.map((msg: any) => {
       if (msg.image) {
@@ -134,15 +135,18 @@ export async function POST(request: NextRequest) {
       };
     });
 
-    const completion = await openai.chat.completions.create({
-      model: model,
-      messages: [
-        { role: "system", content: systemPrompt },
-        ...formattedMessages,
-      ],
-      temperature: 0.7,
-      max_tokens: 800,
-    });
+    const completion = await openai.chat.completions.create(
+      {
+        model: model,
+        messages: [
+          { role: "system", content: systemPrompt },
+          ...formattedMessages,
+        ],
+        temperature: 0.7,
+        max_tokens: hasImage ? 500 : 800, // Reduce tokens for images to stay under 10s
+      },
+      { timeout: 18000 } // 18s timeout for Vercel compatibility
+    );
 
     return NextResponse.json({
       message: completion.choices[0]?.message?.content || "申し訳ございません。回答を生成できませんでした。",
