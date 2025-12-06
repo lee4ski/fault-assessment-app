@@ -116,8 +116,8 @@ export async function POST(request: NextRequest) {
 【分析終了】`;
     }
 
-    // Use gpt-4o-mini for all requests (faster, cheaper, supports vision)
-    const model = "gpt-4o-mini";
+    // Use gpt-4o for images (better vision), gpt-4o-mini for text
+    const model = hasImage ? "gpt-4o" : "gpt-4o-mini";
 
     const formattedMessages = messages.map((msg: any) => {
       if (msg.image) {
