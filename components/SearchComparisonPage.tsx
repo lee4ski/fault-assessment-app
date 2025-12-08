@@ -121,35 +121,35 @@ export default function SearchComparisonPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="min-h-screen bg-gray-50 p-3 md:p-6">
       <div className="max-w-7xl mx-auto">
-        {/* Header with return button */}
-        <div className="mb-6 flex items-center justify-between">
+        {/* Mobile-responsive Header */}
+        <div className="mb-4 md:mb-6 flex flex-col md:flex-row items-center gap-3 md:gap-0 md:justify-between">
           <button
             onClick={() => router.push('/')}
-            className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors flex items-center gap-2"
+            className="w-full md:w-auto px-4 py-3 md:py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 active:bg-gray-800 transition-colors flex items-center justify-center gap-2 touch-manipulation"
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="m15 18-6-6 6-6"/>
             </svg>
             Step 1に戻る
           </button>
-          <h1 className="text-3xl font-bold text-gray-900">検索方法の比較デモ</h1>
-          <div className="w-32"></div>
+          <h1 className="text-xl md:text-3xl font-bold text-gray-900 text-center md:text-left">検索方法の比較デモ</h1>
+          <div className="hidden md:block w-32"></div>
         </div>
 
-        {/* Search input */}
-        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+        {/* Mobile-responsive Search input */}
+        <div className="bg-white rounded-lg shadow-md p-4 md:p-6 mb-4 md:mb-6">
           <label className="block text-sm font-medium text-gray-700 mb-2">
             事故状況を入力してください
           </label>
-          <div className="flex gap-3">
+          <div className="flex flex-col md:flex-row gap-2 md:gap-3">
             <input
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="例：交差点で歩行者と車が衝突、信号機のある横断歩道"
-              className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="例：交差点で歩行者と車が衝突"
+              className="flex-1 px-4 py-3 text-base md:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               onKeyPress={(e) => {
                 if (e.key === 'Enter' && !isSearching) {
                   handleComparisonSearch();
@@ -159,7 +159,7 @@ export default function SearchComparisonPage() {
             <button
               onClick={handleComparisonSearch}
               disabled={isSearching || query.trim().length < 5}
-              className="px-6 py-3 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center gap-2 whitespace-nowrap"
+              className="w-full md:w-auto px-6 py-3 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 active:bg-green-800 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2 touch-manipulation"
             >
               {isSearching ? (
                 <>
@@ -181,9 +181,9 @@ export default function SearchComparisonPage() {
           </div>
         </div>
 
-        {/* AI適合度 explanation */}
-        <div className="bg-blue-50 rounded-lg shadow-md p-6 mb-6 border border-blue-200">
-          <h2 className="text-xl font-bold text-blue-900 mb-4 flex items-center gap-2">
+        {/* Mobile-responsive AI適合度 explanation */}
+        <div className="bg-blue-50 rounded-lg shadow-md p-4 md:p-6 mb-4 md:mb-6 border border-blue-200">
+          <h2 className="text-lg md:text-xl font-bold text-blue-900 mb-3 md:mb-4 flex items-center gap-2">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/>
             </svg>
@@ -455,8 +455,8 @@ export default function SearchComparisonPage() {
           </div>
         </div>
 
-        {/* Side-by-side comparison */}
-        <div className="grid md:grid-cols-2 gap-6">
+        {/* Mobile-stacked / Desktop side-by-side comparison */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
           {/* Keyword Search Results */}
           <div className="bg-white rounded-lg shadow-md">
             <div className="bg-gray-100 px-6 py-4 border-b border-gray-200">

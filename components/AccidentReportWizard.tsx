@@ -353,10 +353,11 @@ export default function AccidentReportWizard() {
   };
 
   return (
-    <div className="flex h-screen bg-gray-50">
-      {/* Left: Wizard Steps */}
+    <div className="flex flex-col md:flex-row h-screen bg-gray-50">
+      {/* Main Content - full width on mobile, flex-1 on desktop */}
       <div className="flex-1 flex flex-col overflow-hidden">
-        <div className="bg-white border-b p-4">
+        {/* Mobile-responsive stepper header */}
+        <div className="bg-white border-b p-3 md:p-4">
           <WorkflowStepper
             currentStep={currentStep}
             onStepChange={handleStepChange}
@@ -371,7 +372,7 @@ export default function AccidentReportWizard() {
           />
         </div>
 
-        <div className="flex-1 overflow-auto p-6">
+        <div className="flex-1 overflow-auto p-4 md:p-6">
           {currentStep === 1 && (
             <Step1Search
               criteria={sampleCriteria}
@@ -420,22 +421,24 @@ export default function AccidentReportWizard() {
           )}
         </div>
 
-        {/* Navigation buttons */}
-        <div className="bg-white border-t p-4 flex justify-between items-center gap-4">
+        {/* Mobile-responsive Navigation buttons */}
+        <div className="bg-white border-t p-3 md:p-4 flex justify-between items-center gap-2 md:gap-4 safe-area-bottom">
           <button
             onClick={handlePrevious}
             disabled={!canGoBack}
-            className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed transition-colors"
+            className="flex-1 md:flex-initial px-4 md:px-6 py-3 md:py-2 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300 active:bg-gray-400 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed transition-colors touch-manipulation text-sm md:text-base"
           >
-            前のステップに戻る
+            <span className="hidden sm:inline">前のステップに戻る</span>
+            <span className="sm:hidden">← 戻る</span>
           </button>
-          <div className="flex-1"></div>
+          <div className="flex-1 hidden md:block"></div>
           <button
             onClick={handleNext}
             disabled={!canGoForward}
-            className="px-6 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 disabled:bg-gray-300 disabled:text-gray-400 disabled:cursor-not-allowed transition-colors"
+            className="flex-1 md:flex-initial px-4 md:px-6 py-3 md:py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 active:bg-blue-800 disabled:bg-gray-300 disabled:text-gray-400 disabled:cursor-not-allowed transition-colors touch-manipulation text-sm md:text-base"
           >
-            次のステップへ
+            <span className="hidden sm:inline">次のステップへ</span>
+            <span className="sm:hidden">次へ →</span>
           </button>
         </div>
       </div>

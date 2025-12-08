@@ -748,37 +748,38 @@ export default function ChatWindow({
 
   return (
     <>
-      {/* Collapsed button on the right */}
+      {/* Mobile-responsive floating button */}
       {isCollapsed && (
         <button
           onClick={() => setIsCollapsed(false)}
-          className="fixed right-6 top-[140px] z-50 px-4 py-3 bg-blue-600 text-white rounded-lg shadow-lg hover:bg-blue-700 transition-colors flex items-center gap-2 md:top-[120px]"
+          className="fixed right-4 bottom-4 md:right-6 md:top-[120px] md:bottom-auto z-50 px-4 py-3 md:px-4 md:py-3 bg-blue-600 text-white rounded-full md:rounded-lg shadow-lg hover:bg-blue-700 active:bg-blue-800 transition-all flex items-center justify-center gap-2 touch-manipulation min-w-[56px] min-h-[56px] md:min-w-0 md:min-h-0"
           title="チャットを開く"
         >
-          <MessageSquare className="w-5 h-5" />
-          <span className="font-medium hidden sm:inline">チャット</span>
+          <MessageSquare className="w-6 h-6 md:w-5 md:h-5" />
+          <span className="font-medium hidden md:inline">チャット</span>
         </button>
       )}
 
-      {/* Sliding chat window */}
+      {/* Mobile-responsive chat window - full screen on mobile, sidebar on desktop */}
       {!isCollapsed && (
         <div
           data-testid="chat-window"
-          className="h-full bg-white border-l border-gray-200 shadow-2xl w-[400px] flex-shrink-0"
+          className="fixed inset-0 md:relative md:h-full bg-white border-l border-gray-200 shadow-2xl md:w-[400px] flex-shrink-0 z-50 md:z-auto"
         >
         <div className="flex flex-col h-full">
+          {/* Mobile-friendly header with larger touch target */}
           <button
             onClick={() => setIsCollapsed(true)}
-            className="p-4 border-b border-gray-200 bg-blue-50 hover:bg-blue-100 transition-colors flex items-center justify-between"
+            className="p-4 md:p-4 border-b border-gray-200 bg-blue-50 hover:bg-blue-100 active:bg-blue-200 transition-colors flex items-center justify-between touch-manipulation"
           >
-            <div className="flex items-center gap-2">
-              <MessageSquare className="w-5 h-5 text-blue-600" />
+            <div className="flex items-center gap-3">
+              <MessageSquare className="w-6 h-6 md:w-5 md:h-5 text-blue-600" />
               <div className="text-left">
-                <h3 className="font-semibold text-gray-900">アシスタントチャット</h3>
+                <h3 className="font-semibold text-base md:text-base text-gray-900">アシスタントチャット</h3>
                 <p className="text-sm text-gray-600">{stepName}</p>
               </div>
             </div>
-            <ChevronRight className="w-5 h-5 text-gray-600" />
+            <ChevronRight className="w-6 h-6 md:w-5 md:h-5 text-gray-600" />
           </button>
 
           <div className="flex-1 overflow-y-auto p-4 space-y-4">
@@ -874,31 +875,32 @@ export default function ChatWindow({
             <div ref={messagesEndRef} />
           </div>
 
-          <div className="p-4 border-t border-gray-200">
+          {/* Mobile-optimized input area */}
+          <div className="p-3 md:p-4 border-t border-gray-200 safe-area-bottom">
             {selectedImage && (
               <div className="relative inline-block mb-2">
-                <img src={selectedImage} alt="Selected" className="h-24 w-auto rounded-lg border border-gray-300 shadow-sm object-cover" />
+                <img src={selectedImage} alt="Selected" className="h-32 md:h-24 w-auto rounded-lg border border-gray-300 shadow-sm object-cover" />
                 <button
                   onClick={clearImage}
-                  className="absolute -top-2 -right-2 bg-gray-800 text-white rounded-full p-1 hover:bg-gray-700 shadow-md"
+                  className="absolute -top-2 -right-2 bg-gray-800 text-white rounded-full p-1.5 md:p-1 hover:bg-gray-700 active:bg-gray-600 shadow-md touch-manipulation"
                 >
-                  <X className="w-3 h-3" />
+                  <X className="w-4 h-4 md:w-3 md:h-3" />
                 </button>
               </div>
             )}
             {selectedAudio && (
               <div className="relative mb-2 p-3 bg-gray-50 rounded-lg border border-gray-300 shadow-sm">
                 <div className="flex items-center gap-2">
-                  <audio controls className="flex-1" style={{ height: '32px' }}>
+                  <audio controls className="flex-1" style={{ height: '40px' }}>
                     <source src={selectedAudio.url} type={selectedAudio.type} />
                   </audio>
-                  <span className="text-xs text-gray-600">{selectedAudio.name}</span>
+                  <span className="text-xs text-gray-600 hidden sm:inline">{selectedAudio.name}</span>
                 </div>
                 <button
                   onClick={() => setSelectedAudio(null)}
-                  className="absolute -top-2 -right-2 bg-gray-800 text-white rounded-full p-1 hover:bg-gray-700 shadow-md"
+                  className="absolute -top-2 -right-2 bg-gray-800 text-white rounded-full p-1.5 md:p-1 hover:bg-gray-700 active:bg-gray-600 shadow-md touch-manipulation"
                 >
-                  <X className="w-3 h-3" />
+                  <X className="w-4 h-4 md:w-3 md:h-3" />
                 </button>
               </div>
             )}
@@ -913,22 +915,22 @@ export default function ChatWindow({
               />
               <button
                 onClick={() => fileInputRef.current?.click()}
-                className={`p-2 rounded-full hover:bg-gray-100 text-gray-500 transition-colors ${selectedImage ? 'text-blue-600 bg-blue-50 ring-2 ring-blue-100' : ''}`}
+                className={`p-3 md:p-2 rounded-full hover:bg-gray-100 active:bg-gray-200 text-gray-500 transition-colors touch-manipulation ${selectedImage ? 'text-blue-600 bg-blue-50 ring-2 ring-blue-100' : ''}`}
                 title="画像をアップロード"
                 disabled={isLoading}
               >
-                <ImageIcon className="w-5 h-5" />
+                <ImageIcon className="w-6 h-6 md:w-5 md:h-5" />
               </button>
               <textarea
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder="質問を入力してください... (Shift+Enterで送信)"
-                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none overflow-y-auto"
+                placeholder="質問を入力... (Shift+Enter送信)"
+                className="flex-1 px-4 py-3 md:py-2 text-base md:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none overflow-y-auto"
                 style={{
-                  minHeight: "40px",
+                  minHeight: "48px",
                   maxHeight: "200px",
-                  height: input ? `${Math.min(input.split('\n').length * 24 + 16, 200)}px` : "40px"
+                  height: input ? `${Math.min(input.split('\n').length * 24 + 24, 200)}px` : "48px"
                 }}
                 disabled={isLoading}
                 rows={1}
@@ -936,12 +938,12 @@ export default function ChatWindow({
               <button
                 onClick={handleSend}
                 disabled={isLoading || (!input.trim() && !selectedImage)}
-                className="px-6 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex-shrink-0"
+                className="px-5 py-3 md:px-6 md:py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 active:bg-blue-800 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex-shrink-0 touch-manipulation"
               >
                 送信
               </button>
             </div>
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="text-xs text-gray-500 mt-1 hidden md:block">
               💡 <span className="font-medium">Shift+Enter</span>で送信、<span className="font-medium">Enter</span>で改行
             </p>
           </div>

@@ -296,20 +296,16 @@ export default function Step1Search({
           </p>
         </div>
 
-        {/* Tabs */}
-        <div className="mb-4 flex gap-2 border-b border-gray-200">
+        {/* Mobile-responsive Tabs */}
+        <div className="mb-4 grid grid-cols-2 gap-2 md:flex md:gap-2 border-b border-gray-200">
           <button
             type="button"
             onClick={() => {
-              // When switching to keyword search, don't clear attributes
-              // They should be preserved for when user switches back to structured search
               setUseStructuredSearch(false);
-              // Don't clear attributes - preserve them for structured search
-              // setAttributes({}); // Removed - preserve attributes
             }}
-            className={`px-4 py-2 font-medium transition-colors ${!useStructuredSearch
-              ? "text-blue-600 border-b-2 border-blue-600"
-              : "text-gray-500 hover:text-gray-700"
+            className={`px-4 py-3 md:py-2 font-medium transition-colors touch-manipulation text-sm md:text-base ${!useStructuredSearch
+              ? "text-blue-600 border-b-2 border-blue-600 bg-blue-50 md:bg-transparent"
+              : "text-gray-500 hover:text-gray-700 active:bg-gray-100"
               }`}
           >
             キーワード検索
@@ -317,13 +313,11 @@ export default function Step1Search({
           <button
             type="button"
             onClick={() => {
-              // When switching to structured search, inherit the attributes that were set
-              // (e.g., from AI search in keyword search)
               setUseStructuredSearch(true);
             }}
-            className={`px-4 py-2 font-medium transition-colors ${useStructuredSearch
-              ? "text-blue-600 border-b-2 border-blue-600"
-              : "text-gray-500 hover:text-gray-700"
+            className={`px-4 py-3 md:py-2 font-medium transition-colors touch-manipulation text-sm md:text-base ${useStructuredSearch
+              ? "text-blue-600 border-b-2 border-blue-600 bg-blue-50 md:bg-transparent"
+              : "text-gray-500 hover:text-gray-700 active:bg-gray-100"
               }`}
           >
             構造化検索
@@ -476,30 +470,33 @@ export default function Step1Search({
             >
               認定基準を検索
             </label>
-            <div className="relative flex gap-2">
-              <div className="relative flex-1">
-                <input
-                  type="text"
-                  id="search"
-                  value={searchTerm}
-                  onChange={(e) => handleSearchChange(e.target.value)}
-                  placeholder="例: 交差点、歩行者、駐車場など"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  // Removed onKeyDown - search now only triggers on button click
-                />
-              </div>
-              
+            
+            {/* Mobile-responsive search input */}
+            <div className="relative mb-2">
+              <input
+                type="text"
+                id="search"
+                value={searchTerm}
+                onChange={(e) => handleSearchChange(e.target.value)}
+                placeholder="例: 交差点、歩行者、駐車場など"
+                className="w-full px-4 py-3 md:py-2 text-base md:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+            
+            {/* Mobile-responsive button grid - 2x2 on mobile, horizontal on desktop */}
+            <div className="grid grid-cols-2 md:flex gap-2">
               <button
                 onClick={handleKeywordSearchClick}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors flex items-center gap-2 whitespace-nowrap"
+                className="px-4 py-3 md:py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 active:bg-blue-800 transition-colors flex items-center justify-center gap-2 text-sm md:text-base touch-manipulation"
               >
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="md:hidden"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
                 検索
               </button>
 
               <button
                 onClick={handleAiSearch}
                 disabled={isAiSearching || searchTerm.trim().length < 10}
-                className="px-4 py-2 bg-purple-600 text-white rounded-lg font-semibold hover:bg-purple-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center gap-2 whitespace-nowrap"
+                className="px-4 py-3 md:py-2 bg-purple-600 text-white rounded-lg font-semibold hover:bg-purple-700 active:bg-purple-800 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2 text-sm md:text-base touch-manipulation"
                 title="文章から条件を自動抽出します（10文字以上必要）"
               >
                 {isAiSearching ? (
@@ -508,17 +505,18 @@ export default function Step1Search({
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                   </svg>
                 ) : (
-                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-sparkles"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
                 )}
-                AI検索
+                <span className="hidden md:inline">AI検索</span>
+                <span className="md:hidden">AI</span>
               </button>
 
               <button
                 onClick={() => router.push('/search-comparison')}
-                className="px-4 py-2 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition-colors flex items-center gap-2 whitespace-nowrap"
+                className="col-span-2 md:col-span-1 px-4 py-3 md:py-2 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 active:bg-green-800 transition-colors flex items-center justify-center gap-2 text-sm md:text-base touch-manipulation"
                 title="キーワード検索とAI検索を同時実行して比較"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
                 </svg>
                 比較検索
@@ -527,17 +525,17 @@ export default function Step1Search({
           </div>
         )}
 
-        {/* Chapter hit count badges */}
+        {/* Mobile-responsive Chapter filters */}
         {(chapterHitCounts.length > 0) && (
           <div className="mb-4">
-            <div className="flex items-center gap-2 mb-2">
-              <span className="text-sm font-medium text-gray-700">章で絞り込み:</span>
+            <div className="flex items-center gap-2 mb-2 flex-wrap">
+              <span className="text-xs md:text-sm font-medium text-gray-700">章で絞り込み:</span>
               <button
                 type="button"
                 onClick={() => setSelectedChapter(null)}
-                className={`px-3 py-1 text-sm rounded-lg transition-colors ${selectedChapter === null
+                className={`px-3 py-1.5 md:py-1 text-xs md:text-sm rounded-lg transition-colors touch-manipulation ${selectedChapter === null
                   ? "bg-blue-600 text-white"
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  : "bg-gray-100 text-gray-700 hover:bg-gray-200 active:bg-gray-300"
                   }`}
               >
                 すべて
@@ -549,12 +547,13 @@ export default function Step1Search({
                   key={hit.chapter}
                   type="button"
                   onClick={() => setSelectedChapter(hit.chapter)}
-                  className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${selectedChapter === hit.chapter
+                  className={`px-3 py-1.5 md:py-1 rounded-full text-xs md:text-sm font-medium transition-colors touch-manipulation ${selectedChapter === hit.chapter
                     ? "bg-blue-600 text-white"
-                    : "bg-blue-100 text-blue-800 hover:bg-blue-200"
+                    : "bg-blue-100 text-blue-800 hover:bg-blue-200 active:bg-blue-300"
                     }`}
                 >
-                  {hit.chapterTitle}: {hit.count}件
+                  <span className="hidden sm:inline">{hit.chapterTitle}:</span>
+                  <span className="sm:hidden">{hit.chapter}:</span> {hit.count}件
                 </button>
               ))}
             </div>
@@ -613,7 +612,7 @@ export default function Step1Search({
                   <li
                     key={item.id}
                     onClick={() => handleSelect(item)}
-                    className={`p-4 cursor-pointer hover:bg-gray-50 transition-colors ${selectedCriteria?.id === item.id
+                    className={`p-4 md:p-4 cursor-pointer hover:bg-gray-50 active:bg-gray-100 transition-colors touch-manipulation ${selectedCriteria?.id === item.id
                       ? "bg-blue-50 border-l-4 border-blue-500"
                       : ""
                       }`}

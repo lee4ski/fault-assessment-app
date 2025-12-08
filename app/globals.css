@@ -2,6 +2,56 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Mobile-specific optimizations */
+@layer utilities {
+  /* Safe area for notched devices (iPhone X+) */
+  .safe-area-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  
+  .safe-area-top {
+    padding-top: env(safe-area-inset-top);
+  }
+  
+  /* Touch-friendly tap targets */
+  .touch-manipulation {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+  
+  /* Smooth scrolling for mobile */
+  .mobile-scroll {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+  }
+  
+  /* Prevent text selection on UI elements */
+  .no-select {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+  }
+  
+  /* Fixed viewport for preventing zoom on input focus */
+  @supports (-webkit-touch-callout: none) {
+    /* iOS Safari */
+    input[type="text"],
+    input[type="search"],
+    textarea {
+      font-size: 16px !important;
+    }
+  }
+}
+
+/* Mobile gestures */
+@media (hover: none) and (pointer: coarse) {
+  /* Remove hover effects on touch devices */
+  button:hover {
+    opacity: 1;
+  }
+}
+
 :root {
   --foreground-rgb: 0, 0, 0;
   --background-start-rgb: 214, 219, 220;
