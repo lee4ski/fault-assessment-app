@@ -244,7 +244,7 @@ export default function ChatWindow({
     // Detect if the message looks like an accident description
     const accidentKeywords = ["事故", "衝突", "接触", "横断", "信号", "交差点", "歩行者", "車両", "駐車場", "高速"];
     const hasKeyword = accidentKeywords.some(keyword => text.includes(keyword));
-    const isLongEnough = text.length > 30; // At least 30 characters
+    const isLongEnough = text.length > 10; // At least 10 characters (reduced from 30)
     return hasKeyword && isLongEnough;
   };
 
@@ -606,12 +606,17 @@ export default function ChatWindow({
       // Fall back to regular chat
       setMessages((prev) => prev.filter(msg => msg.id !== analyzingMessage.id));
     } finally {
-      setIsAnalyzing(false);
+      // For images, we keep isAnalyzing true so the Chat API block below can handle the state and replace the analyzing message
+      if (!currentImage) {
+        setIsAnalyzing(false);
+      }
     }
   }
 
-    // Always get chat response（ただし詳細質問フロー中はスキップ）
-    if (!isCollectingDetails) {
+    // Always get chat response（ただし詳細質問フロー中、または自動分析済みの場合はスキップ）
+    // If we already analyzed with shouldAnalyze, skip the chat API call to avoid duplicate responses
+    // EXCEPTION: If it's an image query, we MUST call /api/chat because /api/ai-analyze-accident doesn't handle images
+    if (!isCollectingDetails && (!shouldAnalyze || !!currentImage)) {
       try {
         const response = await fetch("/api/chat", {
           method: "POST",
@@ -632,7 +637,8 @@ export default function ChatWindow({
 
         if (response.ok) {
           // Check if response contains case recommendations
-          if (data.type === "case_recommendation" && data.recommendations) {
+          // BUT don't show recommendations if we already did auto-analysis
+          if (data.type === "case_recommendation" && data.recommendations && !shouldAnalyze) {
             const assistantMessage: ChatMessage = {
               id: (Date.now() + 1).toString(),
               role: "assistant",

@@ -55,30 +55,7 @@ export async function POST(request: NextRequest) {
 
     // Get the last user message
     const lastUserMessage = messages[messages.length - 1]?.content || "";
-
-    // First, try to find matching cases if the message is substantial (> 5 chars)
-    if (lastUserMessage.length > 5) {
-      const results = searchCriteria(sampleCriteria, lastUserMessage);
-      
-      // If we found matches, return them as recommendations
-      if (results.length > 0) {
-        const topResults = results.slice(0, 3).map((result) => ({
-          id: result.criteria.id,
-          title: result.criteria.title,
-          description: result.criteria.summary || result.criteria.description,
-          baseFaultPercentage: result.criteria.baseFaultPercentage,
-          confidence: Math.round(result.relevanceScore),
-          matchType: result.matchType,
-        }));
-
-        return NextResponse.json({
-          message: "以下の認定基準が見つかりました。該当するものを選択してください：",
-          recommendations: topResults,
-          type: "case_recommendation",
-        });
-      }
-    }
-
+    
     // Check if any message has an image
     const hasImage = messages.some((msg: any) => msg.image);
     

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import { AssessmentCriteria, SearchResult, ChapterHitCount, AccidentAttributes } from "@/types";
 import { searchCriteria, calculateChapterHitCounts, searchByAttributes } from "@/lib/calculator";
 import AccidentAttributesForm from "./AccidentAttributesForm";
@@ -35,6 +36,8 @@ export default function Step1Search({
   preservedState,
   onStateChange,
 }: Step1SearchProps) {
+  const router = useRouter();
+  
   // Use preserved state if available, otherwise initialize with defaults
   const [searchTerm, setSearchTerm] = useState(preservedState?.searchTerm || "");
   const [attributes, setAttributes] = useState<AccidentAttributes>(
@@ -508,6 +511,17 @@ export default function Step1Search({
                   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-sparkles"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
                 )}
                 AI検索
+              </button>
+
+              <button
+                onClick={() => router.push('/search-comparison')}
+                className="px-4 py-2 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition-colors flex items-center gap-2 whitespace-nowrap"
+                title="キーワード検索とAI検索を同時実行して比較"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+                </svg>
+                比較検索
               </button>
             </div>
           </div>
