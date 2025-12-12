@@ -36,6 +36,7 @@ interface ChatWindowProps {
   stepName: string;
   onAIAnalysis?: (analysis: any) => void;
   externalMessage?: string | null;
+  onNavigateToStep1?: () => void;
 }
 
 export default function ChatWindow({
@@ -43,6 +44,7 @@ export default function ChatWindow({
   stepName,
   onAIAnalysis,
   externalMessage,
+  onNavigateToStep1,
 }: ChatWindowProps) {
   const [isCollapsed, setIsCollapsed] = useState(true);
   const [messages, setMessages] = useState<ChatMessage[]>([
@@ -106,6 +108,19 @@ export default function ChatWindow({
     }
   };
 
+  const handleJumpToStep1 = () => {
+    // Re-apply the last analysis to ensure steps are filled
+    if (lastAnalysis && onAIAnalysis) {
+      onAIAnalysis(lastAnalysis);
+    }
+    // Navigate to step 1
+    if (onNavigateToStep1) {
+      onNavigateToStep1();
+    }
+    // Collapse chat on mobile after navigation
+    setIsCollapsed(true);
+  };
+
   const handleCaseSelect = async (caseId: string, caseTitle: string) => {
     // Add user selection message
     const selectionMessage: ChatMessage = {
@@ -147,6 +162,7 @@ export default function ChatWindow({
 
         if (onAIAnalysis) {
           onAIAnalysis(analysis);
+          setLastAnalysis(analysis);
         }
 
         const matchedCriteria = sampleCriteria.find(c => c.id === caseId);
@@ -360,6 +376,7 @@ export default function ChatWindow({
 
             if (onAIAnalysis) {
               onAIAnalysis(analysis);
+              setLastAnalysis(analysis);
             }
 
             const hasCriteria =
@@ -499,6 +516,7 @@ export default function ChatWindow({
           // Pass analysis to parent component
           if (onAIAnalysis) {
             onAIAnalysis(analysis);
+            setLastAnalysis(analysis);
           }
 
           const hasCriteria =
@@ -720,6 +738,7 @@ export default function ChatWindow({
                         // Pass analysis to parent to fill in steps
                         if (onAIAnalysis) {
                           onAIAnalysis(analysis);
+                          setLastAnalysis(analysis);
                         }
                         
                         // Update the analyzing message with success
@@ -842,6 +861,25 @@ export default function ChatWindow({
                   )}
                   
                   <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                  
+                  {/* Show "Jump to Step 1" button after AI analysis completion */}
+                  {message.role === "assistant" && 
+                   message.content.includes("AI分析が完了") && 
+                   lastAnalysis && 
+                   onNavigateToStep1 && (
+                    <div className="mt-3 pt-3 border-t border-gray-300">
+                      <button
+                        onClick={handleJumpToStep1}
+                        className="w-full px-4 py-2.5 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 active:bg-blue-800 transition-colors flex items-center justify-center gap-2 touch-manipulation text-sm"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                          <polyline points="9 22 9 12 15 12 15 22"/>
+                        </svg>
+                        ステップ1に移動して結果を確認
+                      </button>
+                    </div>
+                  )}
                   
                   {/* Render case recommendations if present */}
                   {message.recommendations && message.recommendations.length > 0 && (

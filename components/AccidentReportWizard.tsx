@@ -449,6 +449,7 @@ export default function AccidentReportWizard() {
         stepName={getStepName()}
         onAIAnalysis={handleAIAnalysis}
         externalMessage={aiSuggestion}
+        onNavigateToStep1={() => setCurrentStep(1)}
       />
       
       <AISuggestionsPanel 
