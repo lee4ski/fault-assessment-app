@@ -289,9 +289,9 @@ export default function Step1Search({
   return (
     <div className="min-h-[500px]">
       <div className="flex flex-col h-full">
-        <div className="mb-4">
-          <h2 className="text-2xl font-bold mb-2">ステップ1: 認定基準の検索</h2>
-          <p className="text-gray-600">
+        <div className="mb-3 md:mb-4">
+          <h2 className="text-lg md:text-2xl font-bold mb-1 md:mb-2">ステップ1: 認定基準の検索</h2>
+          <p className="text-sm md:text-base text-gray-600">
             事故の種類や状況を入力して、適切な認定基準を検索してください。
           </p>
         </div>
@@ -562,12 +562,12 @@ export default function Step1Search({
 
         <div className="flex-1 overflow-y-auto border border-gray-200 rounded-lg">
           {!hasSearched && !useStructuredSearch ? (
-             <div className="p-8 text-center">
-                <p className="text-gray-500 mb-4">キーワードを入力して検索してください</p>
+             <div className="p-4 md:p-8 text-center">
+                <p className="text-sm md:text-base text-gray-500 mb-4">キーワードを入力して検索してください</p>
              </div>
           ) : filteredResults.length === 0 ? (
-              <div className="p-8 text-center">
-                <p className="text-gray-500 mb-4">一致する認定基準が見つかりませんでした</p>
+              <div className="p-4 md:p-8 text-center">
+                <p className="text-sm md:text-base text-gray-500 mb-4">一致する認定基準が見つかりませんでした</p>
                 <div className="flex flex-col gap-4 items-center">
                    {!useStructuredSearch && searchTerm.length > 2 && (
                      <div className="bg-blue-50 p-4 rounded-lg border border-blue-200 max-w-md w-full">
@@ -618,25 +618,25 @@ export default function Step1Search({
                       }`}
                   >
                     <div className="flex items-start justify-between gap-2">
-                      <div className="flex-1">
-                        <div className="flex items-start justify-between gap-2 mb-1">
-                          <div className="flex flex-col">
-                            <h3 className="font-semibold text-gray-900 flex items-center gap-2">
-                              {item.title}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start justify-between gap-2 mb-1 flex-wrap">
+                          <div className="flex flex-col flex-1 min-w-0">
+                            <h3 className="font-semibold text-sm md:text-base text-gray-900 flex flex-wrap items-center gap-1 md:gap-2">
+                              <span className="break-words">{item.title}</span>
                               {aiRecommendation?.id === item.id && (
-                                <span className="px-2 py-0.5 rounded text-xs font-bold bg-blue-100 text-blue-700 border border-blue-200">
+                                <span className="px-1.5 md:px-2 py-0.5 rounded text-[10px] md:text-xs font-bold bg-blue-100 text-blue-700 border border-blue-200 whitespace-nowrap flex-shrink-0">
                                   AI推奨
                                 </span>
                               )}
                               {result.aiProbability !== undefined && (
-                                <span className={`px-2 py-0.5 rounded text-xs font-bold border ${
+                                <span className={`px-1.5 md:px-2 py-0.5 rounded text-[10px] md:text-xs font-bold border whitespace-nowrap flex-shrink-0 ${
                                   result.aiProbability >= 80 
                                     ? "bg-green-100 text-green-700 border-green-300" 
                                     : result.aiProbability >= 50
                                     ? "bg-yellow-100 text-yellow-700 border-yellow-300"
                                     : "bg-orange-100 text-orange-700 border-orange-300"
                                 }`}>
-                                  AI適合度: {result.aiProbability}%
+                                  AI: {result.aiProbability}%
                                 </span>
                               )}
                             </h3>
@@ -682,9 +682,9 @@ export default function Step1Search({
                           )}
                         </div>
                         {item.summary ? (
-                          <p className="text-sm text-gray-600 mt-1">{item.summary}</p>
+                          <p className="text-xs md:text-sm text-gray-600 mt-1 line-clamp-2">{item.summary}</p>
                         ) : (
-                          <p className="text-sm text-gray-600 mt-1">{item.description}</p>
+                          <p className="text-xs md:text-sm text-gray-600 mt-1 line-clamp-2">{item.description}</p>
                         )}
                       </div>
                       {searchTerm.trim() && (
@@ -705,12 +705,12 @@ export default function Step1Search({
                         </span>
                       )}
                     </div>
-                    <div className="mt-2 flex flex-wrap gap-2">
-                      <span className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded">
+                    <div className="mt-2 flex flex-wrap gap-1.5 md:gap-2">
+                      <span className="text-[10px] md:text-xs bg-gray-100 text-gray-700 px-1.5 md:px-2 py-0.5 md:py-1 rounded">
                         {item.chapterTitle}
                       </span>
-                      <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">
-                        基本過失割合: {item.baseFaultPercentage}%
+                      <span className="text-[10px] md:text-xs bg-blue-100 text-blue-700 px-1.5 md:px-2 py-0.5 md:py-1 rounded">
+                        過失: {item.baseFaultPercentage}%
                       </span>
                     </div>
                   </li>
