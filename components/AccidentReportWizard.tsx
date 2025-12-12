@@ -353,7 +353,19 @@ export default function AccidentReportWizard() {
   };
 
   return (
-    <div className="flex flex-col md:flex-row h-screen bg-gray-50">
+    <div 
+      className="flex flex-col md:flex-row h-screen bg-gray-50"
+      onContextMenu={(e) => {
+        // Allow context menu on input/textarea elements
+        const target = e.target as HTMLElement;
+        if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') {
+          // Don't prevent - allow native menu on text inputs
+          return;
+        }
+        // For other elements, prevent default to avoid unwanted menus
+        e.preventDefault();
+      }}
+    >
       {/* Main Content - full width on mobile, flex-1 on desktop */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Mobile-responsive stepper header */}
