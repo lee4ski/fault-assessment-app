@@ -248,10 +248,14 @@ export default function ChatWindow({
       }
       
       console.log("Starting analysis with description:", accidentDescription);
+      console.log("Description length:", accidentDescription.length);
       
-      // Add timeout to prevent infinite waiting
+      // Add timeout to prevent infinite waiting (35 seconds to allow API 25s + overhead)
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+      const timeoutId = setTimeout(() => {
+        console.error("Client-side timeout triggered after 35 seconds");
+        controller.abort();
+      }, 35000); // 35 second timeout
       
       try {
         const analysisResponse = await fetch("/api/ai-analyze-accident", {
@@ -294,8 +298,26 @@ export default function ChatWindow({
           }
         } else {
           const errorText = await analysisResponse.text();
-          console.error("Analysis API error:", errorText);
-          throw new Error(`分析に失敗しました: ${analysisResponse.status}`);
+          console.error("Analysis API error:", {
+            status: analysisResponse.status,
+            statusText: analysisResponse.statusText,
+            body: errorText
+          });
+          
+          let errorMessage = `分析に失敗しました (ステータス: ${analysisResponse.status})`;
+          try {
+            const errorJson = JSON.parse(errorText);
+            if (errorJson.error) {
+              errorMessage = errorJson.error;
+            }
+          } catch (e) {
+            // Not JSON, use text as is
+            if (errorText) {
+              errorMessage = errorText.substring(0, 200);
+            }
+          }
+          
+          throw new Error(errorMessage);
         }
       } catch (fetchError: any) {
         clearTimeout(timeoutId);

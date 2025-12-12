@@ -174,9 +174,16 @@ export interface AIAnalysisResult {
   summary: string;
 }
 
+// Configure timeout for Vercel (max 60 seconds for Hobby plan)
+export const maxDuration = 60;
+
 export async function POST(request: NextRequest) {
+  const startTime = Date.now();
+  console.log("[ai-analyze-accident] Starting analysis request");
+  
   try {
     const { accidentDescription } = await request.json();
+    console.log("[ai-analyze-accident] Received description length:", accidentDescription?.length || 0);
 
     if (!accidentDescription || accidentDescription.trim().length < 10) {
       return NextResponse.json(
@@ -299,6 +306,7 @@ ${JSON.stringify(
 
     const userPrompt = `以下の事故説明を分析してください：\n\n${accidentDescription}`;
 
+    console.log("[ai-analyze-accident] Calling OpenAI API...");
     const completion = await openai.chat.completions.create(
       {
         model: "gpt-4o-mini", // Faster model for Vercel production
@@ -310,8 +318,9 @@ ${JSON.stringify(
         temperature: 0.3,
         max_tokens: 1500, // Reduced for faster response
       },
-      { timeout: 18000 } // 18s timeout for Vercel compatibility
+      { timeout: 25000 } // 25s timeout (increased from 18s)
     );
+    console.log("[ai-analyze-accident] OpenAI API response received");
 
     const aiResponse = JSON.parse(completion.choices[0]?.message?.content || "{}");
 
@@ -409,12 +418,30 @@ ${JSON.stringify(
       summary: aiResponse.summary || "事故情報を分析しました。",
     };
 
+    const elapsed = Date.now() - startTime;
+    console.log(`[ai-analyze-accident] Analysis completed in ${elapsed}ms`);
     return NextResponse.json(result);
   } catch (error: any) {
-    console.error("AI analysis error:", error);
+    const elapsed = Date.now() - startTime;
+    console.error(`[ai-analyze-accident] Error after ${elapsed}ms:`, error);
+    console.error("[ai-analyze-accident] Error details:", {
+      name: error?.name,
+      message: error?.message,
+      stack: error?.stack?.substring(0, 500),
+    });
+    
+    // Return more detailed error information
+    const errorMessage = error?.message || "分析中にエラーが発生しました。";
+    const isTimeout = error?.name === 'AbortError' || errorMessage.includes('timeout') || elapsed > 25000;
+    
     return NextResponse.json(
-      { error: error.message || "分析中にエラーが発生しました。" },
-      { status: 500 }
+      { 
+        error: isTimeout 
+          ? "タイムアウト: 分析に時間がかかりすぎています。もう一度お試しください。" 
+          : errorMessage,
+        details: process.env.NODE_ENV === 'development' ? error?.stack : undefined
+      },
+      { status: isTimeout ? 408 : 500 }
     );
   }
 }
