@@ -99,23 +99,21 @@ export default function ChatWindow({
   }, [input]);
 
   // Ensure context menu works on textarea (works on both desktop and mobile)
+  // Note: Textareas should allow context menu by default, but we ensure it's not blocked
   useEffect(() => {
     const textarea = textareaRef.current;
     if (textarea) {
+      // Simple handler that just stops propagation to prevent parent from blocking
+      // We explicitly do NOT call preventDefault() to allow native menu
       const handleContextMenu = (e: MouseEvent) => {
-        // Explicitly allow context menu - don't prevent default
-        // This ensures right-click works on PC/Windows/Linux
-        // And two-finger click works on Mac
-        // stopPropagation prevents parent elements from blocking it
+        // Stop propagation so parent handlers don't interfere
         e.stopPropagation();
-        // Ensure default is NOT prevented (native menu should show)
-        if (e.cancelable) {
-          // Don't call preventDefault() - allow native context menu
-        }
+        // Do NOT call e.preventDefault() - we want the native menu!
       };
       
-      // Use capture phase to ensure we handle it before any parent handlers
+      // Use capture phase (true) to handle before any parent handlers
       textarea.addEventListener('contextmenu', handleContextMenu, true);
+      
       return () => {
         textarea.removeEventListener('contextmenu', handleContextMenu, true);
       };
