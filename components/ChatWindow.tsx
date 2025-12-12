@@ -242,17 +242,30 @@ export default function ChatWindow({
       analyzingMessageId = analyzingMessage.id;
       setMessages((prev) => [...prev, analyzingMessage]);
       
+      // Validate accident description
+      if (!accidentDescription || accidentDescription.trim().length < 10) {
+        throw new Error("事故の説明が不足しています。もう一度情報を入力してください。");
+      }
+      
       console.log("Starting analysis with description:", accidentDescription);
       
-      const analysisResponse = await fetch("/api/ai-analyze-accident", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ accidentDescription }),
-      });
+      // Add timeout to prevent infinite waiting
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
       
-      console.log("Analysis response status:", analysisResponse.status);
+      try {
+        const analysisResponse = await fetch("/api/ai-analyze-accident", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ accidentDescription }),
+          signal: controller.signal,
+        });
+        clearTimeout(timeoutId);
       
-      if (analysisResponse.ok) {
+        
+        console.log("Analysis response status:", analysisResponse.status);
+        
+        if (analysisResponse.ok) {
         const analysis = await analysisResponse.json();
         console.log("Analysis result:", analysis);
         setLastAnalysis(analysis);
@@ -278,11 +291,17 @@ export default function ChatWindow({
           setTimeout(() => {
             onNavigateToStep1();
           }, 500);
+        } else {
+          const errorText = await analysisResponse.text();
+          console.error("Analysis API error:", errorText);
+          throw new Error(`分析に失敗しました: ${analysisResponse.status}`);
         }
-      } else {
-        const errorText = await analysisResponse.text();
-        console.error("Analysis API error:", errorText);
-        throw new Error(`分析に失敗しました: ${analysisResponse.status}`);
+      } catch (fetchError: any) {
+        clearTimeout(timeoutId);
+        if (fetchError.name === 'AbortError') {
+          throw new Error("タイムアウト: 分析に時間がかかりすぎています。もう一度お試しください。");
+        }
+        throw fetchError;
       }
     } catch (error: any) {
       console.error("Analysis error:", error);
