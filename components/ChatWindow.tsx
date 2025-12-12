@@ -103,19 +103,36 @@ export default function ChatWindow({
   useEffect(() => {
     const textarea = textareaRef.current;
     if (textarea) {
-      // Simple handler that just stops propagation to prevent parent from blocking
-      // We explicitly do NOT call preventDefault() to allow native menu
+      // Remove any existing handlers that might block context menu
+      // Then add our handler that explicitly allows it
       const handleContextMenu = (e: MouseEvent) => {
-        // Stop propagation so parent handlers don't interfere
+        // CRITICAL: Do NOT prevent default - we want native menu!
+        // Only stop propagation to prevent parent handlers from interfering
         e.stopPropagation();
-        // Do NOT call e.preventDefault() - we want the native menu!
+        
+        // Ensure textarea allows text operations
+        textarea.style.userSelect = 'text';
+        textarea.style.webkitUserSelect = 'text';
       };
       
-      // Use capture phase (true) to handle before any parent handlers
-      textarea.addEventListener('contextmenu', handleContextMenu, true);
+      // Use capture phase to handle BEFORE any parent handlers
+      // This ensures our handler runs first
+      textarea.addEventListener('contextmenu', handleContextMenu, { capture: true, passive: false });
+      
+      // Also ensure keyboard shortcuts work (Ctrl+C, Ctrl+V, etc.)
+      const handleKeyDown = (e: KeyboardEvent) => {
+        // Allow all standard text editing shortcuts
+        if ((e.ctrlKey || e.metaKey) && ['c', 'v', 'x', 'a'].includes(e.key.toLowerCase())) {
+          // Don't prevent default - allow native behavior
+          e.stopPropagation();
+        }
+      };
+      
+      textarea.addEventListener('keydown', handleKeyDown, { capture: true });
       
       return () => {
-        textarea.removeEventListener('contextmenu', handleContextMenu, true);
+        textarea.removeEventListener('contextmenu', handleContextMenu, { capture: true } as EventListenerOptions);
+        textarea.removeEventListener('keydown', handleKeyDown, { capture: true } as EventListenerOptions);
       };
     }
   }, []);
@@ -1012,6 +1029,18 @@ export default function ChatWindow({
                   textarea.style.height = `${newHeight}px`;
                 }}
                 onKeyDown={handleKeyDown}
+                onPaste={(e) => {
+                  // Explicitly allow paste
+                  e.stopPropagation();
+                }}
+                onCut={(e) => {
+                  // Explicitly allow cut
+                  e.stopPropagation();
+                }}
+                onCopy={(e) => {
+                  // Explicitly allow copy
+                  e.stopPropagation();
+                }}
                 placeholder="質問を入力... (Shift+Enter送信)"
                 className="flex-1 px-4 py-3 md:py-2 text-base md:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none overflow-y-auto transition-all duration-150"
                 style={{
@@ -1021,7 +1050,8 @@ export default function ChatWindow({
                   userSelect: "text",
                   WebkitUserSelect: "text",
                   MozUserSelect: "text",
-                  msUserSelect: "text"
+                  msUserSelect: "text",
+                  touchAction: "manipulation" // Allow touch but don't block text operations
                 }}
                 disabled={isLoading}
                 rows={1}

@@ -478,8 +478,31 @@ export default function Step1Search({
                 id="search"
                 value={searchTerm}
                 onChange={(e) => handleSearchChange(e.target.value)}
+                onContextMenu={(e) => {
+                  // Explicitly allow context menu for cut/paste
+                  e.stopPropagation();
+                }}
+                onPaste={(e) => {
+                  // Explicitly allow paste
+                  e.stopPropagation();
+                }}
+                onCut={(e) => {
+                  // Explicitly allow cut
+                  e.stopPropagation();
+                }}
+                onCopy={(e) => {
+                  // Explicitly allow copy
+                  e.stopPropagation();
+                }}
                 placeholder="例: 交差点、歩行者、駐車場など"
                 className="w-full px-4 py-3 md:py-2 text-base md:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                style={{
+                  userSelect: "text",
+                  WebkitUserSelect: "text",
+                  MozUserSelect: "text",
+                  msUserSelect: "text",
+                  touchAction: "manipulation"
+                }}
               />
             </div>
             
