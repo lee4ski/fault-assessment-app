@@ -68,6 +68,7 @@ export default function ChatWindow({
   );
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [selectedAudio, setSelectedAudio] = useState<{ name: string; url: string; type: string } | null>(null);
+  const [lastAnalysis, setLastAnalysis] = useState<any>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
