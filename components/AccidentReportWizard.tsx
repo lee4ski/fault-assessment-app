@@ -334,16 +334,49 @@ export default function AccidentReportWizard() {
       })).filter((v: any) => v.make || v.model);
       setAiExpectedVehicles(expectations);
 
-      const vehicles: Vehicle[] = analysis.step3.extractedVehicles.map((v: any, index: number) => ({
-        id: `vehicle-${Date.now()}-${index}`,
-        make: v.make || "",
-        model: v.model || "",
-        year: v.year ? parseInt(v.year) : new Date().getFullYear(),
-        modelCode: v.modelCode || "",
-        engineSize: "",
-      }));
-      setSelectedVehicles(vehicles);
-      console.log("✅ Auto-filled Step 3: Vehicles extracted");
+      // Try to find matching vehicles in the database
+      const { searchByMakeAndModel } = await import("@/lib/vehicleData");
+      const foundVehicles: Vehicle[] = [];
+      
+      for (const v of analysis.step3.extractedVehicles) {
+        if (v.make && v.model) {
+          // Search for matching vehicles
+          const matches = searchByMakeAndModel(v.make, v.model);
+          if (matches.length > 0) {
+            // Use the first match (or best match if year is specified)
+            let bestMatch = matches[0];
+            if (v.year) {
+              const yearInt = parseInt(v.year);
+              const yearMatch = matches.find(m => m.year === yearInt);
+              if (yearMatch) bestMatch = yearMatch;
+            }
+            foundVehicles.push(bestMatch);
+          } else {
+            // No match found, create a custom vehicle entry
+            foundVehicles.push({
+              id: `vehicle-${Date.now()}-${foundVehicles.length}`,
+              make: v.make || "",
+              model: v.model || "",
+              year: v.year ? parseInt(v.year) : new Date().getFullYear(),
+              modelCode: v.modelCode || "",
+              engineSize: "",
+            });
+          }
+        } else {
+          // Partial info, create custom entry
+          foundVehicles.push({
+            id: `vehicle-${Date.now()}-${foundVehicles.length}`,
+            make: v.make || "",
+            model: v.model || "",
+            year: v.year ? parseInt(v.year) : new Date().getFullYear(),
+            modelCode: v.modelCode || "",
+            engineSize: "",
+          });
+        }
+      }
+      
+      setSelectedVehicles(foundVehicles);
+      console.log("✅ Auto-filled Step 3: Vehicles extracted and matched", foundVehicles);
     }
 
     // Optionally jump to Step 1 if analysis successful
