@@ -335,7 +335,6 @@ export default function AccidentReportWizard() {
       setAiExpectedVehicles(expectations);
 
       // Try to find matching vehicles in the database
-      const { searchByMakeAndModel } = await import("@/lib/vehicleData");
       const foundVehicles: Vehicle[] = [];
       
       for (const v of analysis.step3.extractedVehicles) {
