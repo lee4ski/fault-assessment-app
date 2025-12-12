@@ -68,6 +68,7 @@ export default function ChatWindow({
   const [selectedAudio, setSelectedAudio] = useState<{ name: string; url: string; type: string } | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     if (externalMessage) {
@@ -81,6 +82,18 @@ export default function ChatWindow({
       setIsCollapsed(false); // Auto-open chat on suggestion
     }
   }, [externalMessage]);
+
+  // Dynamic textarea height adjustment (like Slack)
+  useEffect(() => {
+    const textarea = textareaRef.current;
+    if (textarea) {
+      // Reset height to auto to get the correct scrollHeight
+      textarea.style.height = 'auto';
+      // Calculate new height based on scrollHeight
+      const newHeight = Math.min(Math.max(textarea.scrollHeight, 48), 200);
+      textarea.style.height = `${newHeight}px`;
+    }
+  }, [input]);
 
   const scrollToBottom = () => {
     if (messagesEndRef.current && !isCollapsed) {
@@ -268,6 +281,11 @@ export default function ChatWindow({
     setSelectedImage(null);
     setSelectedAudio(null);
     if (fileInputRef.current) fileInputRef.current.value = "";
+    
+    // Reset textarea height after sending
+    if (textareaRef.current) {
+      textareaRef.current.style.height = '48px';
+    }
     
     setIsLoading(true);
 
@@ -922,15 +940,23 @@ export default function ChatWindow({
                 <ImageIcon className="w-6 h-6 md:w-5 md:h-5" />
               </button>
               <textarea
+                ref={textareaRef}
                 value={input}
-                onChange={(e) => setInput(e.target.value)}
+                onChange={(e) => {
+                  setInput(e.target.value);
+                  // Auto-resize on input change
+                  const textarea = e.target;
+                  textarea.style.height = 'auto';
+                  const newHeight = Math.min(Math.max(textarea.scrollHeight, 48), 200);
+                  textarea.style.height = `${newHeight}px`;
+                }}
                 onKeyDown={handleKeyDown}
                 placeholder="質問を入力... (Shift+Enter送信)"
-                className="flex-1 px-4 py-3 md:py-2 text-base md:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none overflow-y-auto"
+                className="flex-1 px-4 py-3 md:py-2 text-base md:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none overflow-y-auto transition-all duration-150"
                 style={{
                   minHeight: "48px",
                   maxHeight: "200px",
-                  height: input ? `${Math.min(input.split('\n').length * 24 + 24, 200)}px` : "48px"
+                  height: "48px"
                 }}
                 disabled={isLoading}
                 rows={1}
