@@ -161,15 +161,22 @@ export default function ChatWindow({
     setIsCollapsed(true);
   };
 
-  const handleYesButton = async (messageContent: string) => {
+  const handleYesButton = async (messageContent: string, messageId: string) => {
     // Extract the accident description from the conversation history
-    // Look for the bullet points with accident details in the current message
+    // The confirmation message should contain bullet points with accident details
     const lines = messageContent.split('\n');
     let accidentDescription = '';
     
-    // Extract bullet points (lines starting with "-")
+    // First, try to extract bullet points from the current message
     const bulletPoints = lines
-      .filter(line => line.trim().startsWith('-') && !line.includes('✅') && !line.includes('❌'))
+      .filter(line => {
+        const trimmed = line.trim();
+        return trimmed.startsWith('-') && 
+               !trimmed.includes('✅') && 
+               !trimmed.includes('❌') &&
+               !trimmed.includes('この内容で') &&
+               !trimmed.includes('以下の理解で');
+      })
       .map(line => line.replace(/^-\s*/, '').trim())
       .filter(line => line.length > 0);
     
@@ -177,13 +184,28 @@ export default function ChatWindow({
       accidentDescription = bulletPoints.join('\n');
     } else {
       // Fallback: build from conversation history
-      // Get all user messages and assistant messages that contain accident details
-      const conversationHistory = messages
-        .filter(msg => msg.role === 'user' && msg.content.trim().length > 10)
+      // Get all user messages (excluding the confirmation message we just added)
+      const userMessages = messages
+        .filter(msg => msg.role === 'user' && msg.id !== `yes-${Date.now()}`)
         .map(msg => msg.content)
-        .join('\n');
+        .filter(content => content.trim().length > 10 && !content.includes('はい、分析を開始'));
       
-      if (conversationHistory) {
+      // Also get assistant messages that might contain accident details
+      const assistantMessages = messages
+        .filter(msg => msg.role === 'assistant' && msg.id !== messageId)
+        .map(msg => msg.content)
+        .filter(content => {
+          // Exclude confirmation questions and analysis completion messages
+          return !content.includes('この内容で過失割合の分析を開始') &&
+                 !content.includes('AI分析が完了') &&
+                 !content.includes('✅ はい、分析を開始') &&
+                 !content.includes('❌ いいえ、修正や追加情報があります');
+        });
+      
+      // Combine user and relevant assistant messages
+      const conversationHistory = [...userMessages, ...assistantMessages].join('\n');
+      
+      if (conversationHistory.trim().length > 20) {
         accidentDescription = conversationHistory;
       } else {
         // Last resort: use the message content minus the question part
@@ -331,7 +353,7 @@ export default function ChatWindow({
         <p className="text-sm whitespace-pre-wrap mb-3">{beforeButtons}</p>
         <div className="flex flex-col gap-2 mt-3">
           <button
-            onClick={() => handleYesButton(content)}
+            onClick={() => handleYesButton(content, messageId)}
             disabled={isAnalyzing || isLoading}
             className="w-full px-4 py-2.5 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 active:bg-green-800 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2 touch-manipulation text-sm"
           >
