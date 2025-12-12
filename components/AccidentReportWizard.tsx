@@ -10,6 +10,7 @@ import {
 } from "@/types";
 import { StepValidation } from "@/types/workflow";
 import { sampleCriteria } from "@/data/sampleCriteria";
+import { searchByMakeAndModel } from "@/lib/vehicleData";
 import WorkflowStepper from "./WorkflowStepper";
 import Step1Search, { Step1SearchState } from "./Step1Search";
 import Step2Calculate from "./Step2Calculate";
