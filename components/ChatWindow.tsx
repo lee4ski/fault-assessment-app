@@ -161,6 +161,201 @@ export default function ChatWindow({
     setIsCollapsed(true);
   };
 
+  const handleYesButton = async (messageContent: string) => {
+    // Extract the accident description from the conversation history
+    // Look for the bullet points with accident details in the current message
+    const lines = messageContent.split('\n');
+    let accidentDescription = '';
+    
+    // Extract bullet points (lines starting with "-")
+    const bulletPoints = lines
+      .filter(line => line.trim().startsWith('-') && !line.includes('✅') && !line.includes('❌'))
+      .map(line => line.replace(/^-\s*/, '').trim())
+      .filter(line => line.length > 0);
+    
+    if (bulletPoints.length > 0) {
+      accidentDescription = bulletPoints.join('\n');
+    } else {
+      // Fallback: build from conversation history
+      // Get all user messages and assistant messages that contain accident details
+      const conversationHistory = messages
+        .filter(msg => msg.role === 'user' && msg.content.trim().length > 10)
+        .map(msg => msg.content)
+        .join('\n');
+      
+      if (conversationHistory) {
+        accidentDescription = conversationHistory;
+      } else {
+        // Last resort: use the message content minus the question part
+        accidentDescription = messageContent
+          .replace(/✅.*/g, '')
+          .replace(/❌.*/g, '')
+          .replace(/この内容で.*/g, '')
+          .replace(/以下の理解で.*/g, '')
+          .replace(/この内容で過失割合の分析を開始.*/g, '')
+          .trim();
+      }
+    }
+    
+    // Add user confirmation message
+    const userMessage: ChatMessage = {
+      id: `yes-${Date.now()}`,
+      role: "user",
+      content: "はい、分析を開始",
+      timestamp: new Date(),
+    };
+    setMessages((prev) => [...prev, userMessage]);
+    
+    // Trigger analysis
+    try {
+      setIsAnalyzing(true);
+      
+      const analyzingMessage: ChatMessage = {
+        id: `analyzing-${Date.now()}`,
+        role: "assistant",
+        content: "✨ 収集した情報を基に事故を分析し、ステップを自動入力しています...",
+        timestamp: new Date(),
+      };
+      setMessages((prev) => [...prev, analyzingMessage]);
+      
+      const analysisResponse = await fetch("/api/ai-analyze-accident", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ accidentDescription }),
+      });
+      
+      if (analysisResponse.ok) {
+        const analysis = await analysisResponse.json();
+        setLastAnalysis(analysis);
+        
+        if (onAIAnalysis) {
+          onAIAnalysis(analysis);
+        }
+        
+        // Replace analyzing message with completion message
+        setMessages((prev) =>
+          prev.map((msg) =>
+            msg.id === analyzingMessage.id
+              ? {
+                  ...msg,
+                  content: "✅ **AI分析が完了しました！**\n\n左側のステップを確認してください。ステップ1に移動して結果を確認できます。",
+                }
+              : msg
+          )
+        );
+        
+        // Navigate to step 1
+        if (onNavigateToStep1) {
+          setTimeout(() => {
+            onNavigateToStep1();
+          }, 500);
+        }
+      } else {
+        throw new Error("分析に失敗しました");
+      }
+    } catch (error: any) {
+      console.error("Analysis error:", error);
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.id === analyzingMessage.id
+            ? { ...msg, content: "❌ 分析中にエラーが発生しました。もう一度お試しください。" }
+            : msg
+        )
+      );
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
+
+  const handleNoButton = async () => {
+    // Add user response
+    const userMessage: ChatMessage = {
+      id: `no-${Date.now()}`,
+      role: "user",
+      content: "いいえ、修正や追加情報があります",
+      timestamp: new Date(),
+    };
+    setMessages((prev) => [...prev, userMessage]);
+    
+    // Send to chat API to ask more questions
+    try {
+      setIsLoading(true);
+      const response = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          messages: [...messages, userMessage].map((msg) => ({
+            role: msg.role,
+            content: msg.content,
+            image: msg.image,
+          })),
+          step,
+        }),
+      });
+      
+      const data = await response.json();
+      if (response.ok) {
+        const assistantMessage: ChatMessage = {
+          id: (Date.now() + 1).toString(),
+          role: "assistant",
+          content: data.message,
+          timestamp: new Date(),
+        };
+        setMessages((prev) => [...prev, assistantMessage]);
+      }
+    } catch (error: any) {
+      console.error("Chat error:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Render message content with interactive buttons
+  const renderMessageContent = (content: string, messageId: string) => {
+    // Check if message contains the confirmation question
+    const hasConfirmationQuestion = content.includes('この内容で過失割合の分析を開始') || 
+                                    content.includes('✅ はい、分析を開始') ||
+                                    content.includes('❌ いいえ、修正や追加情報があります');
+    
+    if (!hasConfirmationQuestion) {
+      return <p className="text-sm whitespace-pre-wrap">{content}</p>;
+    }
+    
+    // Split content into parts before and after the buttons
+    const parts = content.split(/(✅.*|❌.*)/);
+    const beforeButtons = parts[0];
+    const buttonSection = parts.slice(1).join('\n');
+    
+    return (
+      <div>
+        <p className="text-sm whitespace-pre-wrap mb-3">{beforeButtons}</p>
+        <div className="flex flex-col gap-2 mt-3">
+          <button
+            onClick={() => handleYesButton(content)}
+            disabled={isAnalyzing || isLoading}
+            className="w-full px-4 py-2.5 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 active:bg-green-800 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2 touch-manipulation text-sm"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+            はい、分析を開始
+          </button>
+          <button
+            onClick={handleNoButton}
+            disabled={isAnalyzing || isLoading}
+            className="w-full px-4 py-2.5 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 active:bg-red-800 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2 touch-manipulation text-sm"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"/>
+              <line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+            いいえ、修正や追加情報があります
+          </button>
+        </div>
+      </div>
+    );
+  };
+
   const handleCaseSelect = async (caseId: string, caseTitle: string) => {
     // Add user selection message
     const selectionMessage: ChatMessage = {
@@ -900,7 +1095,7 @@ export default function ChatWindow({
                     </div>
                   )}
                   
-                  <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                  {renderMessageContent(message.content, message.id)}
                   
                   {/* Show "Jump to Step 1" button after AI analysis completion */}
                   {message.role === "assistant" && 
