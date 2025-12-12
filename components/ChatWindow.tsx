@@ -990,12 +990,20 @@ export default function ChatWindow({
                   textarea.style.height = `${newHeight}px`;
                 }}
                 onKeyDown={handleKeyDown}
+                onContextMenu={(e) => {
+                  // Explicitly allow context menu (right-click) for paste, cut, copy
+                  e.stopPropagation();
+                }}
                 placeholder="質問を入力... (Shift+Enter送信)"
                 className="flex-1 px-4 py-3 md:py-2 text-base md:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none overflow-y-auto transition-all duration-150"
                 style={{
                   minHeight: "48px",
                   maxHeight: "200px",
-                  height: "48px"
+                  height: "48px",
+                  userSelect: "text",
+                  WebkitUserSelect: "text",
+                  MozUserSelect: "text",
+                  msUserSelect: "text"
                 }}
                 disabled={isLoading}
                 rows={1}
