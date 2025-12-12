@@ -229,6 +229,7 @@ export default function ChatWindow({
     setMessages((prev) => [...prev, userMessage]);
     
     // Trigger analysis
+    let analyzingMessageId: string | null = null;
     try {
       setIsAnalyzing(true);
       
@@ -238,7 +239,10 @@ export default function ChatWindow({
         content: "✨ 収集した情報を基に事故を分析し、ステップを自動入力しています...",
         timestamp: new Date(),
       };
+      analyzingMessageId = analyzingMessage.id;
       setMessages((prev) => [...prev, analyzingMessage]);
+      
+      console.log("Starting analysis with description:", accidentDescription);
       
       const analysisResponse = await fetch("/api/ai-analyze-accident", {
         method: "POST",
@@ -246,8 +250,11 @@ export default function ChatWindow({
         body: JSON.stringify({ accidentDescription }),
       });
       
+      console.log("Analysis response status:", analysisResponse.status);
+      
       if (analysisResponse.ok) {
         const analysis = await analysisResponse.json();
+        console.log("Analysis result:", analysis);
         setLastAnalysis(analysis);
         
         if (onAIAnalysis) {
@@ -257,7 +264,7 @@ export default function ChatWindow({
         // Replace analyzing message with completion message
         setMessages((prev) =>
           prev.map((msg) =>
-            msg.id === analyzingMessage.id
+            msg.id === analyzingMessageId
               ? {
                   ...msg,
                   content: "✅ **AI分析が完了しました！**\n\n左側のステップを確認してください。ステップ1に移動して結果を確認できます。",
@@ -273,17 +280,33 @@ export default function ChatWindow({
           }, 500);
         }
       } else {
-        throw new Error("分析に失敗しました");
+        const errorText = await analysisResponse.text();
+        console.error("Analysis API error:", errorText);
+        throw new Error(`分析に失敗しました: ${analysisResponse.status}`);
       }
     } catch (error: any) {
       console.error("Analysis error:", error);
-      setMessages((prev) =>
-        prev.map((msg) =>
-          msg.id === analyzingMessage.id
-            ? { ...msg, content: "❌ 分析中にエラーが発生しました。もう一度お試しください。" }
-            : msg
-        )
-      );
+      if (analyzingMessageId) {
+        setMessages((prev) =>
+          prev.map((msg) =>
+            msg.id === analyzingMessageId
+              ? { 
+                  ...msg, 
+                  content: `❌ 分析中にエラーが発生しました: ${error.message || "不明なエラー"}。もう一度お試しください。` 
+                }
+              : msg
+          )
+        );
+      } else {
+        // If message wasn't created, add error message
+        const errorMessage: ChatMessage = {
+          id: `error-${Date.now()}`,
+          role: "assistant",
+          content: `❌ 分析中にエラーが発生しました: ${error.message || "不明なエラー"}。もう一度お試しください。`,
+          timestamp: new Date(),
+        };
+        setMessages((prev) => [...prev, errorMessage]);
+      }
     } finally {
       setIsAnalyzing(false);
     }
