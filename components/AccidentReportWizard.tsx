@@ -346,8 +346,8 @@ export default function AccidentReportWizard() {
             // Use the first match (or best match if year is specified)
             let bestMatch = matches[0];
             if (v.year) {
-              const yearInt = parseInt(v.year);
-              const yearMatch = matches.find(m => m.year === yearInt);
+              const yearStr = v.year.toString();
+              const yearMatch = matches.find(m => m.year === yearStr);
               if (yearMatch) bestMatch = yearMatch;
             }
             foundVehicles.push(bestMatch);
@@ -357,9 +357,8 @@ export default function AccidentReportWizard() {
               id: `vehicle-${Date.now()}-${foundVehicles.length}`,
               make: v.make || "",
               model: v.model || "",
-              year: v.year ? parseInt(v.year) : new Date().getFullYear(),
+              year: v.year || new Date().getFullYear().toString(),
               modelCode: v.modelCode || "",
-              engineSize: "",
             });
           }
         } else {
@@ -368,9 +367,8 @@ export default function AccidentReportWizard() {
             id: `vehicle-${Date.now()}-${foundVehicles.length}`,
             make: v.make || "",
             model: v.model || "",
-            year: v.year ? parseInt(v.year) : new Date().getFullYear(),
+            year: v.year || new Date().getFullYear().toString(),
             modelCode: v.modelCode || "",
-            engineSize: "",
           });
         }
       }

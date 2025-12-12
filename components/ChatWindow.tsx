@@ -266,31 +266,32 @@ export default function ChatWindow({
         console.log("Analysis response status:", analysisResponse.status);
         
         if (analysisResponse.ok) {
-        const analysis = await analysisResponse.json();
-        console.log("Analysis result:", analysis);
-        setLastAnalysis(analysis);
-        
-        if (onAIAnalysis) {
-          onAIAnalysis(analysis);
-        }
-        
-        // Replace analyzing message with completion message
-        setMessages((prev) =>
-          prev.map((msg) =>
-            msg.id === analyzingMessageId
-              ? {
-                  ...msg,
-                  content: "✅ **AI分析が完了しました！**\n\n左側のステップを確認してください。ステップ1に移動して結果を確認できます。",
-                }
-              : msg
-          )
-        );
-        
-        // Navigate to step 1
-        if (onNavigateToStep1) {
-          setTimeout(() => {
-            onNavigateToStep1();
-          }, 500);
+          const analysis = await analysisResponse.json();
+          console.log("Analysis result:", analysis);
+          setLastAnalysis(analysis);
+          
+          if (onAIAnalysis) {
+            onAIAnalysis(analysis);
+          }
+          
+          // Replace analyzing message with completion message
+          setMessages((prev) =>
+            prev.map((msg) =>
+              msg.id === analyzingMessageId
+                ? {
+                    ...msg,
+                    content: "✅ **AI分析が完了しました！**\n\n左側のステップを確認してください。ステップ1に移動して結果を確認できます。",
+                  }
+                : msg
+            )
+          );
+          
+          // Navigate to step 1
+          if (onNavigateToStep1) {
+            setTimeout(() => {
+              onNavigateToStep1();
+            }, 500);
+          }
         } else {
           const errorText = await analysisResponse.text();
           console.error("Analysis API error:", errorText);
