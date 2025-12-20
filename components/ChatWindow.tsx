@@ -58,6 +58,7 @@ export default function ChatWindow({
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const analysisTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [isCollectingDetails, setIsCollectingDetails] = useState(false);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [collectedDetails, setCollectedDetails] = useState<
@@ -85,6 +86,27 @@ export default function ChatWindow({
       setIsCollapsed(false); // Auto-open chat on suggestion
     }
   }, [externalMessage]);
+
+  // Safety timeout: reset isAnalyzing if stuck for more than 45 seconds
+  useEffect(() => {
+    if (isAnalyzing) {
+      analysisTimeoutRef.current = setTimeout(() => {
+        console.warn("[Safety] Resetting stuck isAnalyzing state after 45s");
+        setIsAnalyzing(false);
+        setIsLoading(false);
+      }, 45000);
+    } else {
+      if (analysisTimeoutRef.current) {
+        clearTimeout(analysisTimeoutRef.current);
+        analysisTimeoutRef.current = null;
+      }
+    }
+    return () => {
+      if (analysisTimeoutRef.current) {
+        clearTimeout(analysisTimeoutRef.current);
+      }
+    };
+  }, [isAnalyzing]);
 
   // Dynamic textarea height adjustment (like Slack)
   useEffect(() => {
@@ -162,6 +184,8 @@ export default function ChatWindow({
   };
 
   const handleYesButton = async (messageContent: string, messageId: string) => {
+    console.log("[handleYesButton] Button clicked");
+    
     // Extract the accident description from the conversation history
     // The confirmation message should contain bullet points with accident details
     const lines = messageContent.split('\n');
@@ -247,17 +271,18 @@ export default function ChatWindow({
         throw new Error("事故の説明が不足しています。もう一度情報を入力してください。");
       }
       
-      console.log("Starting analysis with description:", accidentDescription);
-      console.log("Description length:", accidentDescription.length);
+      console.log("[handleYesButton] Starting analysis with description:", accidentDescription);
+      console.log("[handleYesButton] Description length:", accidentDescription.length);
       
       // Add timeout to prevent infinite waiting (35 seconds to allow API 25s + overhead)
       const controller = new AbortController();
       const timeoutId = setTimeout(() => {
-        console.error("Client-side timeout triggered after 35 seconds");
+        console.error("[handleYesButton] Client-side timeout triggered after 35 seconds");
         controller.abort();
       }, 35000); // 35 second timeout
       
       try {
+        console.log("[handleYesButton] Sending fetch request...");
         const analysisResponse = await fetch("/api/ai-analyze-accident", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -265,9 +290,7 @@ export default function ChatWindow({
           signal: controller.signal,
         });
         clearTimeout(timeoutId);
-      
-        
-        console.log("Analysis response status:", analysisResponse.status);
+        console.log("[handleYesButton] Fetch completed, status:", analysisResponse.status);
         
         if (analysisResponse.ok) {
           const analysis = await analysisResponse.json();
@@ -435,6 +458,18 @@ export default function ChatWindow({
               </svg>
             )}
           </button>
+          {isAnalyzing && (
+            <button
+              onClick={() => {
+                console.log("[Reset] User clicked reset button");
+                setIsAnalyzing(false);
+                setIsLoading(false);
+              }}
+              className="text-xs text-red-500 hover:text-red-700 underline ml-2"
+            >
+              リセット
+            </button>
+          )}
           <button
             onClick={handleNoButton}
             disabled={isAnalyzing || isLoading}

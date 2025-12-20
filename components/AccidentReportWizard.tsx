@@ -42,6 +42,7 @@ export default function AccidentReportWizard() {
   const [aiPanelSuggestions, setAiPanelSuggestions] = useState<string[]>([]);
   const [step1SearchState, setStep1SearchState] = useState<Step1SearchState | null>(null);
   const [aiExpectedVehicles, setAiExpectedVehicles] = useState<Array<{make: string, model: string}>>([]);
+  const [aiExtractedVehicles, setAiExtractedVehicles] = useState<Array<{make?: string, model?: string, year?: string}>>([]);
 
   const handleSelectCriteria = (criteria: AssessmentCriteria) => {
     console.log("=== handleSelectCriteria ===");
@@ -276,7 +277,8 @@ export default function AccidentReportWizard() {
   };
 
   const handleAIAnalysis = (analysis: any) => {
-    console.log("AI Analysis result:", analysis);
+    console.log("=== handleAIAnalysis called in AccidentReportWizard ===");
+    console.log("Full analysis:", JSON.stringify(analysis, null, 2));
     
     // Update step validations
     const newValidations: Record<number, StepValidation> = {
@@ -284,6 +286,7 @@ export default function AccidentReportWizard() {
       2: analysis.step2.validation,
       3: analysis.step3.validation,
     };
+    console.log("Setting step validations:", newValidations);
     setStepValidations(newValidations);
 
     // Auto-fill Step 1: Structured Search Attributes
@@ -300,6 +303,11 @@ export default function AccidentReportWizard() {
 
     // Auto-fill Step 1: Select criteria
     if (analysis.step1.recommendedCriteriaId) {
+      console.log("Setting AI recommendation:", {
+        id: analysis.step1.recommendedCriteriaId,
+        confidence: analysis.step1.confidence || 0
+      });
+      
       setAiRecommendation({
         id: analysis.step1.recommendedCriteriaId,
         confidence: analysis.step1.confidence || 0
@@ -308,10 +316,20 @@ export default function AccidentReportWizard() {
       const recommendedCriteria = sampleCriteria.find(
         (c) => c.id === analysis.step1.recommendedCriteriaId
       );
+      
+      console.log("Searching for criteria with ID:", analysis.step1.recommendedCriteriaId);
+      console.log("Found criteria:", recommendedCriteria ? recommendedCriteria.title : "NOT FOUND");
+      
       if (recommendedCriteria) {
         setSelectedCriteria(recommendedCriteria);
-        console.log("✅ Auto-filled Step 1: Criteria selected");
+        console.log("✅ Auto-filled Step 1: Criteria selected:", recommendedCriteria.title);
+      } else {
+        console.error("❌ Recommended criteria not found in sampleCriteria!");
+        console.error("Looking for ID:", analysis.step1.recommendedCriteriaId);
+        console.error("Available IDs:", sampleCriteria.map(c => c.id).slice(0, 10));
       }
+    } else {
+      console.warn("⚠️ No recommended criteria ID in analysis");
     }
 
     // Auto-fill Step 2: store AI 推奨修正要素
@@ -328,6 +346,9 @@ export default function AccidentReportWizard() {
 
     // Auto-fill Step 3: Extract vehicles
     if (analysis.step3.extractedVehicles && analysis.step3.extractedVehicles.length > 0) {
+      // Store the raw extracted vehicle data for Step3 to use in search
+      setAiExtractedVehicles(analysis.step3.extractedVehicles);
+      
       // Store expectations for validation
       const expectations = analysis.step3.extractedVehicles.map((v: any) => ({
         make: v.make || "",
@@ -454,6 +475,7 @@ export default function AccidentReportWizard() {
             <Step3VehicleLookup
               onSelect={handleVehicleSelect}
               selectedVehicles={selectedVehicles}
+              aiExtractedVehicles={aiExtractedVehicles}
             />
           )}
           {currentStep === 4 && (

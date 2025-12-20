@@ -40,3 +40,6 @@ A dedicated, isolated page to demonstrate the difference between traditional Key
 - **Detailed Query:** "信号のある交差点で..." → Auto-analysis + Step population.
 - **Image Upload:** Triggers vision analysis correctly.
 - **Comparison Search:** Runs parallel searches and displays metrics accurately.
+
+
+

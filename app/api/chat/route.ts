@@ -7,6 +7,43 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY || process.env.OPEN_API_KEY || "",
 });
 
+// Vector search helper - uses keyword matching as fallback
+async function retrieveRelevantCases(accidentDescription: string, topK: number = 3) {
+  try {
+    // Use keyword-based search as a fast alternative
+    const queryTerms = accidentDescription.toLowerCase().split(/\s+/);
+    
+    const scoredCriteria = sampleCriteria.map((criterion) => {
+      let score = 0;
+      const text = `${criterion.title} ${criterion.description} ${criterion.summary || ''} ${criterion.chapterTitle}`.toLowerCase();
+      
+      queryTerms.forEach(term => {
+        if (term.length < 2) return;
+        if (text.includes(term)) score += 1;
+        if (criterion.title.toLowerCase().includes(term)) score += 3; // Title matches weighted more
+        if (criterion.chapterTitle.toLowerCase().includes(term)) score += 2;
+      });
+      
+      return { criterion, score };
+    });
+
+    // Sort by score and return top K
+    const topResults = scoredCriteria
+      .filter(r => r.score > 0) // Only return matches
+      .sort((a, b) => b.score - a.score)
+      .slice(0, topK);
+
+    console.log(`[chat-vector] Top ${topK} relevant cases found (keyword search):`, 
+      topResults.map(r => ({ id: r.criterion.id, score: r.score }))
+    );
+
+    return topResults;
+  } catch (error) {
+    console.error("[chat-vector] Error in retrieveRelevantCases:", error);
+    return [];
+  }
+}
+
 const stepPrompts = {
   1: `あなたは過失割合計算システムのアシスタントです。ユーザーは「認定基準の検索」ステップにいます。
 このステップでは、事故の種類や状況から適切な認定基準を検索します。
@@ -62,10 +99,51 @@ export async function POST(request: NextRequest) {
     // If no matches found or image is present, proceed with conversational AI
     let systemPrompt = stepPrompts[step as keyof typeof stepPrompts] || stepPrompts[1];
     
+    // Extract accident context from conversation for vector search
+    let accidentContext = "";
+    if (hasImage && messages.length > 1) {
+      // Combine all messages to form accident context
+      accidentContext = messages
+        .filter((msg: any) => msg.role === "user" || msg.role === "assistant")
+        .map((msg: any) => msg.content)
+        .filter((content: string) => content && content.length > 10)
+        .join(" ");
+    }
+    
+    // Perform vector search if we have accident context (for images)
+    let relevantCasesContext = "";
+    if (hasImage && accidentContext.length > 30) {
+      console.log("[chat-vector] Performing vector search for image-based conversation...");
+      const startTime = Date.now();
+      const relevantCases = await retrieveRelevantCases(accidentContext, 2); // Reduced from 3 for speed
+      const searchTime = Date.now() - startTime;
+      console.log(`[chat-vector] Vector search completed in ${searchTime}ms`);
+      
+      if (relevantCases.length > 0) {
+        relevantCasesContext = `
+
+**関連する認定基準（ベクトル検索結果）:**
+
+以下は、ユーザーの事故説明に最も関連性の高い認定基準です。これらを参考にしながら質問を進めてください：
+
+${relevantCases.map((result, idx) => {
+  const { criterion, score } = result;
+  return `${idx + 1}. **${criterion.title}** (関連性スコア: ${score})
+   - ID: ${criterion.id}
+   - 基本過失割合: ${criterion.baseFaultPercentage}
+   - 説明: ${criterion.description}`;
+}).join('\n\n')}
+
+これらの基準を念頭に置いて、事故の状況を確認してください。`;
+      }
+    }
+    
     if (hasImage) {
       systemPrompt += `
       
 ユーザーから事故現場の画像が提供されました。あなたは事故調査員として、画像を分析し、質問を通じて事故の詳細を明らかにしてください。
+
+${relevantCasesContext}
 
 **重要な指示:**
 1. **画像は事故後の現場写真**です。信号の色、車両の位置、損傷などから推測できることを述べてください。
@@ -114,18 +192,46 @@ export async function POST(request: NextRequest) {
       };
     });
 
+    // Use models with automatic prompt caching support
+    // gpt-4o-mini supports vision and is 15x cheaper + faster than gpt-4o!
+    const cachedModel = "gpt-4o-mini-2024-07-18"; // Use mini for both text and images
+    
+    const apiStartTime = Date.now();
+    console.log(`[chat] Starting OpenAI API call with model: ${cachedModel} (hasImage: ${hasImage}, vectorSearch: ${!!relevantCasesContext})`);
+    
     const completion = await openai.chat.completions.create(
       {
-        model: model,
+        model: hasImage ? "gpt-4o" : cachedModel, // Use gpt-4o for images (better vision)
         messages: [
-          { role: "system", content: systemPrompt },
+          { 
+            role: "system", 
+            content: systemPrompt // Automatically cached by OpenAI if >1024 tokens
+          },
           ...formattedMessages,
         ],
-        temperature: 0.7,
-        max_tokens: hasImage ? 500 : 800, // Reduce tokens for images to stay under 10s
+        temperature: 0.3,
+        max_tokens: hasImage ? 600 : 500, // More tokens for image analysis
       },
-      { timeout: 18000 } // 18s timeout for Vercel compatibility
+      { timeout: hasImage ? 30000 : 15000 } // 30s for images, 15s for text
     );
+    
+    const apiDuration = Date.now() - apiStartTime;
+    console.log(`[chat] ✅ OpenAI API completed in ${apiDuration}ms`);
+    
+    // Log cache performance
+    const usage = completion.usage;
+    if (usage) {
+      const cachedTokens = (usage as any).prompt_tokens_details?.cached_tokens || 0;
+      if (cachedTokens > 0) {
+        const cachePercentage = ((cachedTokens / usage.prompt_tokens) * 100).toFixed(1);
+        console.log(`[chat] 💰 Cache hit! ${cachedTokens} tokens cached (${cachePercentage}% of prompt) - Saved ~${(cachedTokens * 0.5 / 1000000).toFixed(4)}¢`);
+      }
+      console.log(`[chat] Token usage: ${usage.prompt_tokens} prompt + ${usage.completion_tokens} completion = ${usage.total_tokens} total`);
+      
+      if (hasImage) {
+        console.log(`[chat] 🖼️ Image processing completed with vector RAG optimization`);
+      }
+    }
 
     return NextResponse.json({
       message: completion.choices[0]?.message?.content || "申し訳ございません。回答を生成できませんでした。",

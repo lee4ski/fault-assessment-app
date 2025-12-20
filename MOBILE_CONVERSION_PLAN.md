@@ -146,3 +146,6 @@ xl: 1280px /* Extra large devices */
 - [ ] Keyboard doesn't obscure inputs
 - [ ] Images load and display correctly
 - [ ] Chat overlay animations smooth
+
+
+

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { AssessmentCriteria, SearchResult, ChapterHitCount, AccidentAttributes } from "@/types";
 import { searchCriteria, calculateChapterHitCounts, searchByAttributes } from "@/lib/calculator";
@@ -52,6 +52,9 @@ export default function Step1Search({
     title: string;
     probability: number;
   }>>(preservedState?.aiCandidates || []);
+  
+  // Track the last processed AI recommendation to avoid re-processing
+  const lastProcessedAiRecommendationRef = useRef<string | null>(null);
 
   // Notify parent component of state changes for preservation
   useEffect(() => {
@@ -84,6 +87,42 @@ export default function Step1Search({
     }
   }, [autoFilledAttributes, criteria]);
 
+  // Auto-display selected criteria in search results when AI selects it
+  useEffect(() => {
+    if (selectedCriteria && aiRecommendation && aiRecommendation.id !== lastProcessedAiRecommendationRef.current) {
+      console.log("[Step1Search] New AI recommendation detected:", selectedCriteria.title);
+      lastProcessedAiRecommendationRef.current = aiRecommendation.id;
+      
+      // Use functional setState to check current state and avoid duplicates
+      setDisplayedResults((currentResults) => {
+        // Check if the selected criteria is already in results
+        const isInResults = currentResults.some(
+          (result) => result.criteria.id === selectedCriteria.id
+        );
+
+        if (isInResults) {
+          // Already in results, don't add again
+          console.log("[Step1Search] AI-selected criteria already in results");
+          return currentResults;
+        }
+
+        // Not in results, add it to the beginning
+        console.log("[Step1Search] Auto-displaying AI-selected criteria:", selectedCriteria.title);
+        const newResult: SearchResult = {
+          criteria: selectedCriteria,
+          relevanceScore: 1.0,
+          matchType: "partial" as const,
+          matchField: "title" as const,
+          aiProbability: aiRecommendation.confidence ? Math.round(aiRecommendation.confidence * 100) : undefined,
+        };
+        
+        return [newResult, ...currentResults];
+      });
+      
+      setHasSearched(true);
+    }
+  }, [selectedCriteria, aiRecommendation]); // Removed displayedResults from deps
+
   const [selectedChapter, setSelectedChapter] = useState<number | null>(null);
 
   // Calculate hit counts based on CURRENT displayed results (ignoring chapter filter for the count itself?)
@@ -96,6 +135,17 @@ export default function Step1Search({
   // Filter displayed results by chapter
   const filteredResults = useMemo(() => {
     let results = displayedResults;
+
+    // CRITICAL: Remove duplicates based on criteria.id
+    const seenIds = new Set<string>();
+    results = results.filter((result) => {
+      if (seenIds.has(result.criteria.id)) {
+        console.warn("[Step1Search] Duplicate criteria detected and removed:", result.criteria.id);
+        return false;
+      }
+      seenIds.add(result.criteria.id);
+      return true;
+    });
 
     if (selectedChapter !== null) {
       results = results.filter((result) => result.criteria.chapter === selectedChapter);
@@ -584,6 +634,26 @@ export default function Step1Search({
         )}
 
         <div className="flex-1 overflow-y-auto border border-gray-200 rounded-lg">
+          {/* AI Recommendation Banner */}
+          {aiRecommendation && hasSearched && filteredResults.length > 0 && (
+            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-b-2 border-blue-300 p-4">
+              <div className="flex items-center gap-2 mb-1">
+                <svg className="w-5 h-5 text-blue-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                </svg>
+                <h4 className="font-bold text-blue-900 text-sm md:text-base">AIが認定基準を選択しました</h4>
+              </div>
+              <p className="text-xs md:text-sm text-blue-700 ml-7">
+                事故の状況から最適な認定基準を自動選択しました。内容を確認して、問題なければ次のステップへ進んでください。
+                {aiRecommendation.confidence && (
+                  <span className="ml-2 font-semibold">
+                    (信頼度: {Math.round(aiRecommendation.confidence)}%)
+                  </span>
+                )}
+              </p>
+            </div>
+          )}
+
           {!hasSearched && !useStructuredSearch ? (
              <div className="p-4 md:p-8 text-center">
                 <p className="text-sm md:text-base text-gray-500 mb-4">キーワードを入力して検索してください</p>
@@ -629,11 +699,11 @@ export default function Step1Search({
               </div>
           ) : (
             <ul className="divide-y divide-gray-200">
-              {filteredResults.slice(0, 10).map((result) => {
+              {filteredResults.slice(0, 10).map((result, index) => {
                 const item = result.criteria;
                 return (
                   <li
-                    key={item.id}
+                    key={`${item.id}-${index}`}
                     onClick={() => handleSelect(item)}
                     className={`p-4 md:p-4 cursor-pointer hover:bg-gray-50 active:bg-gray-100 transition-colors touch-manipulation ${selectedCriteria?.id === item.id
                       ? "bg-blue-50 border-l-4 border-blue-500"

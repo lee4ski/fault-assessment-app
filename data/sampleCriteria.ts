@@ -3,8 +3,8 @@ import { generatedCriteria } from "./generatedCriteria";
 
 // Sample assessment criteria based on the requirements
 // This represents a subset of the 300+ criteria from 別冊判例タイムズ
+// IMPORTANT: Manually curated criteria come FIRST for better vector search priority
 export const sampleCriteria: AssessmentCriteria[] = [
-  ...generatedCriteria,
   {
     id: "intersection-pedestrian-straight-1",
     chapter: 1,
@@ -234,5 +234,7 @@ export const sampleCriteria: AssessmentCriteria[] = [
       },
     ],
   },
+  // Generated criteria come LAST so manual criteria have priority in vector search
+  ...generatedCriteria,
 ];
 
