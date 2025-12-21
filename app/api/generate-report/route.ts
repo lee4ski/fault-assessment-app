@@ -6,6 +6,10 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY || process.env.OPEN_API_KEY || "",
 });
 
+// Disable caching to ensure fresh reports every time
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export async function POST(request: NextRequest) {
   try {
     const { reportData } = await request.json();
@@ -25,9 +29,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Generate AI-powered report
+    // Generate AI-powered report with timestamp to ensure uniqueness
+    const timestamp = new Date().toISOString();
+    console.log(`[generate-report] Creating NEW report at ${timestamp}`);
     const systemPrompt = `あなたは交通事故報告書を作成する専門家です。
 提供された事故情報に基づいて、詳細で専門的な事故報告書を日本語で作成してください。
+
+重要: 毎回、新しい視点から報告書を作成してください。同じ内容でも、表現や構成を変えて、ユニークな報告書を生成してください。
 
 報告書には以下を含めてください：
 1. 事故の概要
@@ -38,9 +46,10 @@ export async function POST(request: NextRequest) {
 6. 結論
 
 フォーマットはMarkdown形式で、見出しは ## を使用してください。
-専門的で正確な表現を使用し、法的根拠を明確にしてください。`;
+専門的で正確な表現を使用し、法的根拠を明確にしてください。
+表現や説明の仕方を毎回変えて、新鮮な視点で報告書を作成してください。`;
 
-    const userPrompt = buildPromptFromReportData(reportData);
+    const userPrompt = buildPromptFromReportData(reportData, timestamp);
 
     const completion = await openai.chat.completions.create({
       model: "gpt-4o",
@@ -48,13 +57,22 @@ export async function POST(request: NextRequest) {
         { role: "system", content: systemPrompt },
         { role: "user", content: userPrompt },
       ],
-      temperature: 0.7,
+      temperature: 0.9, // Increased for more variability
       max_tokens: 2000,
+      presence_penalty: 0.6, // Encourage new phrasings
+      frequency_penalty: 0.6, // Discourage repetition
     });
 
     const reportText = completion.choices[0]?.message?.content || generateTemplateReport(reportData);
 
-    return NextResponse.json({ reportText });
+    const response = NextResponse.json({ reportText });
+    
+    // Prevent caching at all levels
+    response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    response.headers.set('Pragma', 'no-cache');
+    response.headers.set('Expires', '0');
+    
+    return response;
   } catch (error: any) {
     console.error("Report generation error:", error);
     
@@ -67,8 +85,10 @@ export async function POST(request: NextRequest) {
   }
 }
 
-function buildPromptFromReportData(reportData: AccidentReportFull): string {
-  let prompt = "以下の情報に基づいて、詳細な交通事故報告書を作成してください:\n\n";
+function buildPromptFromReportData(reportData: AccidentReportFull, timestamp: string): string {
+  let prompt = `以下の情報に基づいて、詳細な交通事故報告書を作成してください。\n`;
+  prompt += `この報告書は ${new Date(timestamp).toLocaleString('ja-JP')} に作成される新しいレポートです。\n`;
+  prompt += `毎回異なる視点や表現で報告書を作成してください。\n\n`;
 
   if (reportData.selectedCriteria) {
     prompt += `### 認定基準\n`;

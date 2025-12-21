@@ -312,7 +312,7 @@ async function testCalculatorBasicCalculation() {
     
     const result = calculateFaultPercentage(
       50, // baseFault
-      [{ id: 'test', description: 'Test modifier', adjustment: 10, category: 'partyA' }] // modifiers
+      [{ factorId: 'test', factorDescription: 'Test modifier', adjustment: 10 }] // modifiers
     );
     
     if (typeof result !== 'number') {
@@ -342,8 +342,8 @@ async function testCalculatorMultipleModifiers() {
     const result = calculateFaultPercentage(
       50, // baseFault
       [
-        { id: 'test1', description: 'Modifier 1', adjustment: 10, category: 'partyA' },
-        { id: 'test2', description: 'Modifier 2', adjustment: -5, category: 'partyA' }
+        { factorId: 'test1', factorDescription: 'Modifier 1', adjustment: 10 },
+        { factorId: 'test2', factorDescription: 'Modifier 2', adjustment: -5 }
       ]
     );
     
@@ -373,7 +373,7 @@ async function testCalculatorBoundaryMax() {
     
     const result = calculateFaultPercentage(
       80,
-      [{ id: 'test', description: 'Large modifier', adjustment: 50, category: 'partyA' }]
+      [{ factorId: 'test', factorDescription: 'Large modifier', adjustment: 50 }]
     );
     
     if (typeof result !== 'number') {
@@ -403,7 +403,7 @@ async function testCalculatorBoundaryMin() {
     
     const result = calculateFaultPercentage(
       20,
-      [{ id: 'test', description: 'Large negative modifier', adjustment: -50, category: 'partyA' }]
+      [{ factorId: 'test', factorDescription: 'Large negative modifier', adjustment: -50 }]
     );
     
     if (typeof result !== 'number') {
@@ -578,10 +578,9 @@ async function testAIReportGenerationAPI() {
       },
       appliedModifications: [
         {
-          id: 'elderly-pedestrian',
-          description: '歩行者が高齢者の場合',
-          adjustment: -5,
-          category: 'pedestrian'
+          factorId: 'elderly-pedestrian',
+          factorDescription: '歩行者が高齢者の場合',
+          adjustment: -5
         }
       ],
       finalFaultPercentage: 5,
