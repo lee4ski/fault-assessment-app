@@ -1375,7 +1375,7 @@ export default function ChatWindow({
                   e.stopPropagation();
                 }}
                 placeholder="質問を入力... (Shift+Enter送信)"
-                className="flex-1 px-4 py-3 md:py-2 text-base md:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none overflow-y-auto transition-all duration-150"
+                className="flex-1 px-4 py-3 md:py-2 text-base md:text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none overflow-y-auto transition-all duration-150 text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800 placeholder:text-gray-500 dark:placeholder:text-gray-400"
                 style={{
                   minHeight: "48px",
                   maxHeight: "200px",

@@ -273,7 +273,7 @@ export default function Step3VehicleLookup({
                 value={modelCode}
                 onChange={(e) => setModelCode(e.target.value)}
                 placeholder="例: DAA-ZVW30, NHW20"
-                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white"
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800"
               />
             </div>
             <button
@@ -298,7 +298,7 @@ export default function Step3VehicleLookup({
                   setMake(e.target.value);
                   setModel("");
                 }}
-                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white"
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800"
               >
                 <option value="">メーカーを選択</option>
                 {modalMakes.map((m) => (
@@ -523,13 +523,13 @@ export default function Step3VehicleLookup({
       {/* Create Vehicle Modal */}
       {showCreateModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+          <div className="bg-white dark:bg-gray-900 rounded-lg p-6 max-w-md w-full mx-4">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
               {editingVehicleId ? "車両情報を編集" : "車両情報を手動入力"}
             </h3>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   メーカー <span className="text-red-500">*</span>
                 </label>
                 <select
@@ -537,7 +537,7 @@ export default function Step3VehicleLookup({
                   onChange={(e) =>
                     setNewVehicle({ ...newVehicle, make: e.target.value, model: "", year: "", modelCode: "" })
                   }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800"
                 >
                   <option value="">選択してください</option>
                   {modalMakes.map((m) => (
@@ -547,7 +547,7 @@ export default function Step3VehicleLookup({
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   車名 <span className="text-red-500">*</span>
                   {modalModels.length > 0 && (
                     <span className="ml-2 text-xs text-gray-500">({modalModels.length}件)</span>
@@ -558,7 +558,7 @@ export default function Step3VehicleLookup({
                   onChange={(e) =>
                     setNewVehicle({ ...newVehicle, model: e.target.value, year: "", modelCode: "" })
                   }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800"
                   disabled={!newVehicle.make}
                 >
                   <option value="">選択してください</option>
@@ -575,7 +575,7 @@ export default function Step3VehicleLookup({
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   年式 <span className="text-red-500">*</span>
                   {modalYears.length > 0 && (
                     <span className="ml-2 text-xs text-gray-500">({modalYears.length}件)</span>
@@ -587,7 +587,7 @@ export default function Step3VehicleLookup({
                     onChange={(e) =>
                       setNewVehicle({ ...newVehicle, year: e.target.value, modelCode: "" })
                     }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800"
                     disabled={!newVehicle.model}
                   >
                     <option value="">選択してください</option>
@@ -602,7 +602,7 @@ export default function Step3VehicleLookup({
                     onChange={(e) =>
                       setNewVehicle({ ...newVehicle, year: e.target.value, modelCode: "" })
                     }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800"
                     placeholder="例: 2020"
                     min="1900"
                     max="2099"
@@ -616,7 +616,7 @@ export default function Step3VehicleLookup({
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   型式コード <span className="text-red-500">*</span>
                   {modalModelCodes.length > 0 && (
                     <span className="ml-2 text-xs text-gray-500">({modalModelCodes.length}件)</span>
@@ -626,7 +626,7 @@ export default function Step3VehicleLookup({
                   <select
                     value={newVehicle.modelCode}
                     onChange={(e) => setNewVehicle({ ...newVehicle, modelCode: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800"
                     disabled={!newVehicle.year}
                   >
                     <option value="">選択してください</option>
@@ -639,7 +639,7 @@ export default function Step3VehicleLookup({
                     type="text"
                     value={newVehicle.modelCode}
                     onChange={(e) => setNewVehicle({ ...newVehicle, modelCode: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800"
                     placeholder="例: TA-NZE120"
                     autoComplete="off"
                   />

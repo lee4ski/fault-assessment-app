@@ -545,7 +545,7 @@ export default function Step1Search({
                   e.stopPropagation();
                 }}
                 placeholder="例: 交差点、歩行者、駐車場など"
-                className="w-full px-4 py-3 md:py-2 text-base md:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-3 md:py-2 text-base md:text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800 placeholder:text-gray-500 dark:placeholder:text-gray-400"
                 style={{
                   userSelect: "text",
                   WebkitUserSelect: "text",
