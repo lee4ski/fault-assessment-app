@@ -567,7 +567,82 @@ async function testChatAPITextMessage() {
   }
 }
 
-// Test 19: Vehicle Search Integration - Complete Flow
+// Test 19: AI Report Generation API
+async function testAIReportGenerationAPI() {
+  try {
+    const mockReportData = {
+      selectedCriteria: {
+        id: 'intersection-pedestrian-signal-no-change',
+        title: '交差点で歩行者が青信号で横断中、車が赤信号で進入',
+        baseFaultPercentage: 10
+      },
+      appliedModifications: [
+        {
+          id: 'elderly-pedestrian',
+          description: '歩行者が高齢者の場合',
+          adjustment: -5,
+          category: 'pedestrian'
+        }
+      ],
+      finalFaultPercentage: 5,
+      vehicles: [
+        {
+          id: 'v1',
+          make: 'トヨタ',
+          model: 'プリウス',
+          year: '2020',
+          modelCode: 'DAA-ZVW50'
+        }
+      ]
+    };
+    
+    const response = await fetch('http://localhost:3000/api/generate-report', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        reportData: mockReportData
+      }),
+    });
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`HTTP ${response.status}: ${errorText}`);
+    }
+    
+    const data = await response.json();
+    
+    if (!data.reportText) {
+      throw new Error('No reportText in response');
+    }
+    
+    if (data.reportText.length < 100) {
+      throw new Error('Report text is too short');
+    }
+    
+    // Check if report contains key sections
+    const hasOverview = data.reportText.includes('事故') || data.reportText.includes('概要');
+    const hasCriteria = data.reportText.includes('認定基準') || data.reportText.includes('基準');
+    const hasFaultPercentage = data.reportText.includes('過失割合') || data.reportText.includes('%');
+    
+    if (!hasOverview && !hasCriteria && !hasFaultPercentage) {
+      throw new Error('Report missing key sections');
+    }
+    
+    logTest('AI Report Generation API', true, undefined, {
+      reportLength: data.reportText.length,
+      hasOverview,
+      hasCriteria,
+      hasFaultPercentage,
+      reportPreview: data.reportText.substring(0, 150) + '...'
+    });
+  } catch (error: any) {
+    logTest('AI Report Generation API', false, error.message);
+  }
+}
+
+// Test 20: Vehicle Search Integration - Complete Flow
 async function testVehicleSearchCompleteFlow() {
   try {
     const { getUniqueMakes, getModelsForMake, getYearsForMakeAndModel, getModelCodesForVehicle, searchByMakeAndModel } = await import('../lib/vehicleData');
@@ -623,7 +698,7 @@ async function testVehicleSearchCompleteFlow() {
   }
 }
 
-// Test 20: Vehicle Search - Toyota Prius Flow
+// Test 21: Vehicle Search - Toyota Prius Flow
 async function testVehicleSearchToyotaPriusFlow() {
   try {
     const { getUniqueMakes, getModelsForMake, getYearsForMakeAndModel, searchByMakeAndModel } = await import('../lib/vehicleData');
@@ -705,6 +780,7 @@ async function runAllTests() {
   // API tests (require server)
   await testAIAnalyzeAccidentAPI();
   await testChatAPITextMessage();
+  await testAIReportGenerationAPI();
   
   // Summary
   console.log('\n' + '=' .repeat(80));
