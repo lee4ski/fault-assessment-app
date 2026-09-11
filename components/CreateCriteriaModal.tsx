@@ -3,6 +3,7 @@
 
 import { useState, useEffect } from "react";
 import { AssessmentCriteria, AccidentAttributes } from "@/types";
+import { useLocale } from "@/components/LocaleProvider";
 
 interface CreateCriteriaModalProps {
   isOpen: boolean;
@@ -19,6 +20,7 @@ export default function CreateCriteriaModal({
   initialAttributes,
   description,
 }: CreateCriteriaModalProps) {
+  const { t } = useLocale();
   const [title, setTitle] = useState("");
   const [baseFault, setBaseFault] = useState<number>(50);
   const [summary, setSummary] = useState("");
@@ -48,8 +50,14 @@ export default function CreateCriteriaModal({
       if (initialAttributes) {
         const partyA = initialAttributes.partyTypes?.[0] || "A";
         const partyB = initialAttributes.partyTypes?.[1] || "B";
-        const loc = initialAttributes.location || "場所不明";
-        setTitle(`${loc}での${partyA}と${partyB}の事故`);
+        const loc = initialAttributes.location || t("createCriteriaModal.unknownLocation");
+        setTitle(
+          t("createCriteriaModal.generatedTitle", {
+            location: loc,
+            partyA,
+            partyB,
+          })
+        );
       }
     } catch (e) {
       console.error(e);
@@ -63,12 +71,12 @@ export default function CreateCriteriaModal({
       id: `custom-${Date.now()}`,
       title,
       chapter: 99, // Custom chapter
-      chapterTitle: "カスタム認定基準",
+      chapterTitle: t("createCriteriaModal.customChapterTitle"),
       description: summary || title,
       summary,
       baseFaultPercentage: baseFault,
       modificationFactors: [], // Start empty
-      sourceBook: "ユーザー作成",
+      sourceBook: t("createCriteriaModal.userCreatedSource"),
     };
     onSave(newCriteria);
     onClose();
@@ -79,25 +87,25 @@ export default function CreateCriteriaModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
       <div className="bg-white rounded-lg p-6 w-full max-w-lg shadow-xl">
-        <h2 className="text-xl font-bold mb-4">新規認定基準の作成</h2>
-        
+        <h2 className="text-xl font-bold mb-4">{t("createCriteriaModal.modalTitle")}</h2>
+
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              タイトル
+              {t("createCriteriaModal.titleLabel")}
             </label>
             <input
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-              placeholder="例: 交差点での右折車と直進車の事故"
+              placeholder={t("createCriteriaModal.titlePlaceholder")}
             />
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              基本過失割合 (Aの過失)
+              {t("createCriteriaModal.baseFaultLabel")}
             </label>
             <div className="flex items-center gap-4">
               <input
@@ -115,13 +123,13 @@ export default function CreateCriteriaModal({
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              概要・説明
+              {t("createCriteriaModal.summaryLabel")}
             </label>
             <textarea
               value={summary}
               onChange={(e) => setSummary(e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 h-24 resize-none"
-              placeholder="基準の詳細説明..."
+              placeholder={t("createCriteriaModal.summaryPlaceholder")}
             />
           </div>
         </div>
@@ -131,14 +139,14 @@ export default function CreateCriteriaModal({
             onClick={onClose}
             className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
           >
-            キャンセル
+            {t("createCriteriaModal.cancel")}
           </button>
           <button
             onClick={handleSave}
             disabled={!title}
             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
           >
-            作成して適用
+            {t("createCriteriaModal.createAndApply")}
           </button>
         </div>
       </div>

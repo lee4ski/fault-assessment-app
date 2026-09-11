@@ -1,0 +1,102 @@
+{
+  "header": {
+    "title": "ステップ4: AI報告書作成・編集",
+    "description": "AIが報告書を生成します。内容を確認・編集して、承認を依頼できます。"
+  },
+  "status": {
+    "draft": "📝 下書き",
+    "pending": "⏳ 承認待ち",
+    "approved": "✅ 承認済み",
+    "rejected": "❌ 却下"
+  },
+  "summary": {
+    "title": "報告書サマリー",
+    "criteriaLabel": "認定基準:",
+    "finalPercentageLabel": "最終過失割合:",
+    "modificationsLabel": "修正要素:",
+    "modificationsApplied": "{count}件適用",
+    "vehiclesLabel": "関係車両:",
+    "vehiclesCount": "{count}台"
+  },
+  "structure": {
+    "title": "報告書の構成（キーワード）",
+    "description": "以下のキーワードとセクションを含む報告書が生成されます：",
+    "section1": {
+      "title": "1. 事故の概要",
+      "tagDateTime": "事故発生日時",
+      "tagLocation": "事故場所",
+      "tagType": "事故類型",
+      "tagParties": "当事者"
+    },
+    "section2": {
+      "title": "2. 認定基準",
+      "basePercentage": "基本過失割合: {percentage}%",
+      "source": "出典: {source}",
+      "defaultSource": "判例タイムズ",
+      "notSelected": "⚠️ 認定基準が未選択"
+    },
+    "section3": {
+      "title": "3. 適用された修正要素"
+    },
+    "section4": {
+      "title": "4. 最終過失割合",
+      "finalPercentage": "最終過失割合: {percentage}%",
+      "base": "基本: {percentage}%",
+      "modification": "修正: "
+    },
+    "section5": {
+      "title": "5. 関係車両情報",
+      "notEntered": "未入力",
+      "vehicleFormat": "{make} {model} ({year}年)"
+    },
+    "section6": {
+      "title": "6. 結論",
+      "tagEvaluation": "総合評価",
+      "tagLegalBasis": "法的根拠",
+      "tagReason": "認定理由"
+    }
+  },
+  "generateButton": {
+    "generating": "🤖 生成中...",
+    "generate": "✨ AI報告書を生成する"
+  },
+  "loading": {
+    "title": "AIが専門的な報告書を自動生成中...",
+    "description": "認定基準、修正要素、車両情報から、詳細で正確な事故報告書を作成しています"
+  },
+  "editor": {
+    "label": "📄 報告書本文",
+    "previewTab": "👁️ プレビュー",
+    "editTab": "✏️ 編集",
+    "regenerating": "再生成中...",
+    "regenerate": "🔄 AIで再生成",
+    "placeholder": "AIが報告書を生成するか、ここに直接入力してください...",
+    "previewHint": "👁️ プレビューモード - 編集するには「✏️ 編集」をクリック",
+    "editHint": "💡 ヒント: Markdown形式で記述できます。プレビューで確認できます。"
+  },
+  "approvalHistory": {
+    "title": "承認履歴",
+    "currentUser": "現在のユーザー",
+    "actionSubmit": "✉️ 承認依頼",
+    "actionApprove": "✅ 承認",
+    "actionReject": "❌ 却下",
+    "actionComment": "💬 コメント"
+  },
+  "actions": {
+    "saving": "💾 保存中...",
+    "saveDraft": "💾 下書きを保存",
+    "requestApproval": "✅ 承認を依頼",
+    "exportPDF": "📄 PDF出力"
+  },
+  "alerts": {
+    "needCriteria": "報告書を生成するには、まず認定基準と過失割合を設定してください",
+    "generateSuccess": "✨ AI報告書を生成しました！内容を確認・編集してください。",
+    "generateError": "報告書の生成中にエラーが発生しました。もう一度お試しください。",
+    "draftSaved": "💾 下書きを保存しました",
+    "saveFailed": "保存に失敗しました",
+    "needReportText": "報告書本文を入力してください",
+    "approvalRequested": "✅ 承認を依頼しました",
+    "approvalFailed": "承認依頼に失敗しました",
+    "exportedPDF": "📄 報告書をエクスポートしました\n（PDF機能は今後実装予定です。現在はテキストファイルとして保存されます）"
+  }
+}

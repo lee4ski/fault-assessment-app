@@ -1,0 +1,5 @@
+{
+  "stepFallback": "Step {number}",
+  "incomplete": "Incomplete",
+  "validEmpty": "Not Applicable"
+}

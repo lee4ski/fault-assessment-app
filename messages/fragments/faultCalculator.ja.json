@@ -1,0 +1,10 @@
+{
+  "heading": "過失割合計算",
+  "selectedCriteriaHeading": "選択された認定基準",
+  "baseFaultPercentage": "基本過失割合",
+  "selectModificationsHeading": "修正要素を選択",
+  "baseFaultShort": "基本過失割合:",
+  "modificationsShort": "修正要素:",
+  "finalFaultPercentage": "最終過失割合:",
+  "saveResult": "計算結果を保存"
+}

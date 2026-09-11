@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { AssessmentCriteria } from "@/types";
 import { searchCriteria } from "@/lib/calculator";
+import { useLocale } from "@/components/LocaleProvider";
+import { localize } from "@/lib/i18n-simple";
 
 interface SearchCriteriaProps {
   criteria: AssessmentCriteria[];
@@ -15,6 +17,7 @@ export default function SearchCriteria({
   onSelect,
   selectedCriteria,
 }: SearchCriteriaProps) {
+  const { t, locale } = useLocale();
   const [searchTerm, setSearchTerm] = useState("");
   const [results, setResults] = useState<AssessmentCriteria[]>(criteria);
 
@@ -35,14 +38,14 @@ export default function SearchCriteria({
           htmlFor="search"
           className="block text-sm font-medium text-gray-700 mb-2"
         >
-          認定基準を検索
+          {t("searchCriteria.searchLabel")}
         </label>
         <input
           type="text"
           id="search"
           value={searchTerm}
           onChange={(e) => handleSearch(e.target.value)}
-          placeholder="事故の種類や状況を入力してください（例: 交差点、歩行者）"
+          placeholder={t("searchCriteria.searchPlaceholder")}
           className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white"
         />
       </div>
@@ -50,7 +53,7 @@ export default function SearchCriteria({
       <div className="max-h-96 overflow-y-auto border border-gray-200 rounded-lg">
         {results.length === 0 ? (
           <div className="p-4 text-center text-gray-500">
-            検索結果が見つかりませんでした
+            {t("searchCriteria.noResults")}
           </div>
         ) : (
           <ul className="divide-y divide-gray-200">
@@ -66,16 +69,20 @@ export default function SearchCriteria({
               >
                 <div className="flex justify-between items-start">
                   <div className="flex-1">
-                    <h3 className="font-semibold text-gray-900">{item.title}</h3>
+                    <h3 className="font-semibold text-gray-900">
+                      {localize(locale, item.title, item.titleEn)}
+                    </h3>
                     <p className="text-sm text-gray-600 mt-1">
-                      {item.description}
+                      {localize(locale, item.description, item.descriptionEn)}
                     </p>
                     <div className="mt-2 flex gap-2">
                       <span className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded">
-                        {item.chapterTitle}
+                        {localize(locale, item.chapterTitle, item.chapterTitleEn)}
                       </span>
                       <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">
-                        基本過失割合: {item.baseFaultPercentage}%
+                        {t("searchCriteria.baseFaultPercentage", {
+                          percentage: item.baseFaultPercentage,
+                        })}
                       </span>
                     </div>
                   </div>

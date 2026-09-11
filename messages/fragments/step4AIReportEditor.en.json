@@ -1,0 +1,102 @@
+{
+  "header": {
+    "title": "Step 4: AI Report Creation & Editing",
+    "description": "The AI generates the report. Review and edit the content, then submit it for approval."
+  },
+  "status": {
+    "draft": "📝 Draft",
+    "pending": "⏳ Pending Approval",
+    "approved": "✅ Approved",
+    "rejected": "❌ Rejected"
+  },
+  "summary": {
+    "title": "Report Summary",
+    "criteriaLabel": "Criteria:",
+    "finalPercentageLabel": "Final Fault Ratio:",
+    "modificationsLabel": "Modifiers:",
+    "modificationsApplied": "{count} applied",
+    "vehiclesLabel": "Vehicles:",
+    "vehiclesCount": "{count}"
+  },
+  "structure": {
+    "title": "Report Structure (Keywords)",
+    "description": "The generated report will include the following keywords and sections:",
+    "section1": {
+      "title": "1. Accident Overview",
+      "tagDateTime": "Date/Time of Accident",
+      "tagLocation": "Accident Location",
+      "tagType": "Accident Type",
+      "tagParties": "Parties Involved"
+    },
+    "section2": {
+      "title": "2. Assessment Criteria",
+      "basePercentage": "Base Fault Ratio: {percentage}%",
+      "source": "Source: {source}",
+      "defaultSource": "Hanrei Times",
+      "notSelected": "⚠️ No criteria selected"
+    },
+    "section3": {
+      "title": "3. Applied Modification Factors"
+    },
+    "section4": {
+      "title": "4. Final Fault Ratio",
+      "finalPercentage": "Final Fault Ratio: {percentage}%",
+      "base": "Base: {percentage}%",
+      "modification": "Modification: "
+    },
+    "section5": {
+      "title": "5. Vehicle Information",
+      "notEntered": "Not entered",
+      "vehicleFormat": "{make} {model} ({year})"
+    },
+    "section6": {
+      "title": "6. Conclusion",
+      "tagEvaluation": "Overall Assessment",
+      "tagLegalBasis": "Legal Basis",
+      "tagReason": "Reason for Determination"
+    }
+  },
+  "generateButton": {
+    "generating": "🤖 Generating...",
+    "generate": "✨ Generate AI Report"
+  },
+  "loading": {
+    "title": "AI is automatically generating a professional report...",
+    "description": "Creating a detailed and accurate accident report from the assessment criteria, modification factors, and vehicle information"
+  },
+  "editor": {
+    "label": "📄 Report Body",
+    "previewTab": "👁️ Preview",
+    "editTab": "✏️ Edit",
+    "regenerating": "Regenerating...",
+    "regenerate": "🔄 Regenerate with AI",
+    "placeholder": "Let the AI generate the report, or type it directly here...",
+    "previewHint": "👁️ Preview mode - click \"✏️ Edit\" to make changes",
+    "editHint": "💡 Tip: You can write in Markdown format. Check the preview to see how it looks."
+  },
+  "approvalHistory": {
+    "title": "Approval History",
+    "currentUser": "Current User",
+    "actionSubmit": "✉️ Submitted for Approval",
+    "actionApprove": "✅ Approved",
+    "actionReject": "❌ Rejected",
+    "actionComment": "💬 Comment"
+  },
+  "actions": {
+    "saving": "💾 Saving...",
+    "saveDraft": "💾 Save Draft",
+    "requestApproval": "✅ Request Approval",
+    "exportPDF": "📄 Export PDF"
+  },
+  "alerts": {
+    "needCriteria": "To generate a report, please set the assessment criteria and fault ratio first",
+    "generateSuccess": "✨ AI report generated! Please review and edit the content.",
+    "generateError": "An error occurred while generating the report. Please try again.",
+    "draftSaved": "💾 Draft saved",
+    "saveFailed": "Failed to save",
+    "needReportText": "Please enter the report body",
+    "approvalRequested": "✅ Approval requested",
+    "approvalFailed": "Failed to request approval",
+    "exportedPDF": "📄 Report exported\n(PDF export is planned for a future release. For now it is saved as a text file.)"
+  }
+}

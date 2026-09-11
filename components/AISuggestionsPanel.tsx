@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Lightbulb, X, ArrowRight } from "lucide-react";
+import { useLocale } from "@/components/LocaleProvider";
 
 interface AISuggestionsPanelProps {
   suggestions: string[];
@@ -14,6 +15,7 @@ export default function AISuggestionsPanel({
   isVisible,
   onClose,
 }: AISuggestionsPanelProps) {
+  const { t } = useLocale();
   const [isExpanded, setIsExpanded] = useState(true);
 
   if (!isVisible || suggestions.length === 0) return null;
@@ -25,14 +27,14 @@ export default function AISuggestionsPanel({
           <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-3 flex justify-between items-center text-white">
             <div className="flex items-center gap-2">
               <Lightbulb className="w-4 h-4" />
-              <span className="font-semibold text-sm">AI インサイト</span>
+              <span className="font-semibold text-sm">{t("aiSuggestionsPanel.heading")}</span>
             </div>
             <div className="flex items-center gap-2">
               <button 
                 onClick={() => setIsExpanded(false)}
                 className="hover:bg-white/20 rounded p-1 transition-colors"
               >
-                <span className="text-xs">最小化</span>
+                <span className="text-xs">{t("aiSuggestionsPanel.minimizeLabel")}</span>
               </button>
               <button 
                 onClick={onClose}

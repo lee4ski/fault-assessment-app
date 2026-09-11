@@ -1,0 +1,31 @@
+{
+  "missingFieldsWarning": "Some information is missing. Please fill in the highlighted fields.",
+  "accidentType": {
+    "label": "Accident Type"
+  },
+  "location": {
+    "label": "Location"
+  },
+  "required": "⚠️ Required",
+  "selectPlaceholder": "Please select",
+  "partiesAndSignal": {
+    "label": "Parties & Signal",
+    "partyA": "Party A",
+    "partyB": "Party B",
+    "typeSelectPlaceholder": "Select type...",
+    "signalLabel": "Signal:",
+    "signalUnspecified": "Unknown / Not specified",
+    "actionLabel": "Action:",
+    "actionUnspecified": "Not specified",
+    "multiPartyQuestion": "Accident with 3 or more parties?",
+    "multiPartyAlert": "For accidents with 3 or more parties, please search separately for each main collision, or use AI Search."
+  },
+  "aiSearchMissingInfoAlert": "To run an AI search, location or party information is required.",
+  "buttons": {
+    "search": "Search",
+    "aiSearch": "AI Search",
+    "aiSearching": "Searching...",
+    "reset": "Reset"
+  },
+  "aiSearchButtonTitle": "Runs a probability-based AI search using the conditions you set"
+}

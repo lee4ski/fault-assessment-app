@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor } from "./test-utils";
 import userEvent from "@testing-library/user-event";
 import Step1Search from "../Step1Search";
 import { AssessmentCriteria } from "@/types";
@@ -7,6 +7,16 @@ import { AssessmentCriteria } from "@/types";
 // Mock ChatWindow to avoid rendering issues in tests
 vi.mock("../ChatWindow", () => ({
   default: () => <div data-testid="chat-window">Chat Window</div>,
+}));
+
+// Step1Search calls useRouter(); mock it since tests don't run inside an app router.
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({
+    push: vi.fn(),
+    replace: vi.fn(),
+    prefetch: vi.fn(),
+    back: vi.fn(),
+  }),
 }));
 
 const mockCriteria: AssessmentCriteria[] = [

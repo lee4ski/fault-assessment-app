@@ -7,6 +7,8 @@ import {
   AccidentReport,
 } from "@/types";
 import { calculateFaultPercentage } from "@/lib/calculator";
+import { useLocale } from "@/components/LocaleProvider";
+import { localize } from "@/lib/i18n-simple";
 
 interface Step2CalculateProps {
   criteria: AssessmentCriteria;
@@ -23,6 +25,8 @@ export default function Step2Calculate({
   initialSelectedModificationIds,
   previouslyAppliedModificationIds,
 }: Step2CalculateProps) {
+  const { t, locale } = useLocale();
+
   // Ensure modificationFactors is always an array
   // CRITICAL: Get factors directly from criteria, don't use useMemo which might cache incorrectly
   // Use criteria.modificationFactors directly if it exists and is an array, otherwise empty array
@@ -89,7 +93,7 @@ export default function Step2Calculate({
     .filter((factor) => selectedModifications.has(factor.id))
     .map((factor) => ({
       factorId: factor.id,
-      factorDescription: factor.description,
+      factorDescription: localize(locale, factor.description, factor.descriptionEn),
       adjustment: factor.adjustment,
     }));
 
@@ -129,37 +133,41 @@ export default function Step2Calculate({
     }
 
     onCalculate(report);
-    alert(`計算が完了しました。\n最終過失割合: ${report.finalFaultPercentage}%`);
+    alert(
+      t("step2Calculate.calculationCompleteAlert", {
+        percentage: report.finalFaultPercentage ?? 0,
+      })
+    );
   };
 
   // AI-generated explanation based on criteria
   const generateExplanation = (criteria: AssessmentCriteria): string => {
-    const chapter = criteria.chapterTitle;
+    const chapter = localize(locale, criteria.chapterTitle, criteria.chapterTitleEn);
     const basePercentage = criteria.baseFaultPercentage;
     const modCount = modificationFactors.length;
 
-    let explanation = `この認定基準は「${chapter}」に分類されており、`;
+    let explanation = t("step2Calculate.explanationIntro", { chapter });
 
     if (basePercentage === 0) {
-      explanation += `基本的に過失がないケースです。`;
+      explanation += t("step2Calculate.explanationBaseZero");
     } else if (basePercentage <= 20) {
-      explanation += `比較的軽微な過失が認められるケースです。`;
+      explanation += t("step2Calculate.explanationBaseLow");
     } else if (basePercentage <= 50) {
-      explanation += `一定の過失が認められるケースです。`;
+      explanation += t("step2Calculate.explanationBaseMid");
     } else if (basePercentage <= 80) {
-      explanation += `相当程度の過失が認められるケースです。`;
+      explanation += t("step2Calculate.explanationBaseHigh");
     } else {
-      explanation += `重大な過失が認められるケースです。`;
+      explanation += t("step2Calculate.explanationBaseSevere");
     }
 
     if (modCount > 0) {
-      explanation += ` ${modCount}個の修正要素が適用可能で、事故の具体的な状況に応じて過失割合を調整できます。`;
+      explanation += " " + t("step2Calculate.explanationModsAvailable", { count: modCount });
     } else {
-      explanation += ` このケースでは修正要素がないため、基本過失割合がそのまま適用されます。`;
+      explanation += " " + t("step2Calculate.explanationNoMods");
     }
 
     if (criteria.description) {
-      explanation += ` ${criteria.description}`;
+      explanation += " " + localize(locale, criteria.description, criteria.descriptionEn);
     }
 
     return explanation;
@@ -168,16 +176,18 @@ export default function Step2Calculate({
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold mb-2">ステップ2: 修正要素の適用と計算</h2>
+        <h2 className="text-2xl font-bold mb-2">{t("step2Calculate.heading")}</h2>
         <p className="text-gray-600">
-          基本過失割合に対して修正要素を適用して、最終過失割合を計算します。
+          {t("step2Calculate.subheading")}
         </p>
       </div>
 
       <div className="bg-blue-50 p-4 rounded-lg">
-        <p className="text-sm text-gray-600 mb-1">選択された認定基準</p>
-        <p className="font-semibold text-gray-900 mb-2">{criteria?.title || 'No title'}</p>
-        <p className="text-sm text-gray-600 mb-1">基本過失割合</p>
+        <p className="text-sm text-gray-600 mb-1">{t("step2Calculate.selectedCriteriaLabel")}</p>
+        <p className="font-semibold text-gray-900 mb-2">
+          {(criteria && localize(locale, criteria.title, criteria.titleEn)) || t("step2Calculate.noTitle")}
+        </p>
+        <p className="text-sm text-gray-600 mb-1">{t("step2Calculate.baseFaultPercentageLabel")}</p>
         <p className="text-3xl font-bold text-blue-600">
           {criteria?.baseFaultPercentage || 0}%
         </p>
@@ -190,7 +200,7 @@ export default function Step2Calculate({
             <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z" />
           </svg>
           <div className="flex-1">
-            <h3 className="text-sm font-semibold text-purple-900 mb-2">AI による説明</h3>
+            <h3 className="text-sm font-semibold text-purple-900 mb-2">{t("step2Calculate.aiExplanationHeading")}</h3>
             <p className="text-sm text-gray-700 leading-relaxed">
               {generateExplanation(criteria)}
             </p>
@@ -202,7 +212,7 @@ export default function Step2Calculate({
       <div className="bg-white border-2 border-blue-200 rounded-lg p-4">
 
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-gray-900">修正要素を選択</h3>
+            <h3 className="text-lg font-semibold text-gray-900">{t("step2Calculate.selectModificationFactors")}</h3>
             {modificationFactors.length > 0 && (
               <button
                 onClick={() => {
@@ -217,8 +227,8 @@ export default function Step2Calculate({
                 className="text-sm text-blue-600 hover:text-blue-700 font-medium"
               >
                 {selectedModifications.size === modificationFactors.length
-                  ? "すべて解除"
-                  : "すべて選択"}
+                  ? t("step2Calculate.deselectAll")
+                  : t("step2Calculate.selectAll")}
               </button>
             )}
           </div>
@@ -231,9 +241,9 @@ export default function Step2Calculate({
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
-              <p className="font-semibold mb-2 text-lg text-gray-900">この認定基準には修正要素がありません</p>
+              <p className="font-semibold mb-2 text-lg text-gray-900">{t("step2Calculate.noModificationFactorsTitle")}</p>
               <p className="text-sm text-gray-600">
-                基本過失割合 <span className="font-bold text-blue-600">{criteria?.baseFaultPercentage || 0}%</span> がそのまま最終過失割合として適用されます。
+                {t("step2Calculate.noModFactorsBefore")} <span className="font-bold text-blue-600">{criteria?.baseFaultPercentage || 0}%</span> {t("step2Calculate.noModFactorsAfter")}
               </p>
             </div>
           ) : (
@@ -250,15 +260,15 @@ export default function Step2Calculate({
                   <div key={category || `category-${index}`} className="mb-3">
                     <div className="text-xs font-medium text-gray-500 mb-2">
                       {category === "pedestrian"
-                        ? "歩行者関連"
+                        ? t("step2Calculate.categoryPedestrian")
                         : category === "vehicle"
-                          ? "車両関連"
+                          ? t("step2Calculate.categoryVehicle")
                           : category === "road"
-                            ? "道路関連"
+                            ? t("step2Calculate.categoryRoad")
                             : category === "signal-green"
-                              ? "🟢 青信号横断ケース"
+                              ? t("step2Calculate.categorySignalGreen")
                               : category === "signal-yellow"
-                                ? "🟡 黄信号横断ケース"
+                                ? t("step2Calculate.categorySignalYellow")
                                 : category}
                     </div>
                     <div className="flex flex-wrap gap-2">
@@ -290,7 +300,7 @@ export default function Step2Calculate({
                                 : `${adjustmentColor} hover:shadow-sm`
                             }`}
                           >
-                            <span className="mr-1">{factor.description}</span>
+                            <span className="mr-1">{localize(locale, factor.description, factor.descriptionEn)}</span>
                             <span className="font-bold">
                               {factor.adjustment > 0 ? "+" : ""}
                               {factor.adjustment}%
@@ -315,7 +325,7 @@ export default function Step2Calculate({
       <div className="p-4 bg-gray-50 rounded-lg border-2 border-gray-200">
           <div className="space-y-3">
             <div className="flex justify-between items-center">
-              <span className="text-gray-700 font-medium">基本過失割合:</span>
+              <span className="text-gray-700 font-medium">{t("step2Calculate.baseFaultPercentageColon")}</span>
               <span className="text-xl font-bold text-gray-900">
                 {criteria.baseFaultPercentage}%
               </span>
@@ -325,7 +335,7 @@ export default function Step2Calculate({
               <>
                 <div className="border-t border-gray-300 pt-3">
                   <div className="text-sm font-medium text-gray-600 mb-2">
-                    適用された修正要素 ({appliedMods.length}件):
+                    {t("step2Calculate.appliedModificationsCount", { count: appliedMods.length })}
                   </div>
                   <div className="space-y-2">
                     {appliedMods.map((mod) => (
@@ -349,7 +359,7 @@ export default function Step2Calculate({
                 </div>
                 <div className="border-t-2 border-gray-400 pt-3 flex justify-between items-center">
                   <span className="text-lg font-semibold text-gray-900">
-                    最終過失割合:
+                    {t("step2Calculate.finalFaultPercentageLabel")}
                   </span>
                   <span className="text-4xl font-bold text-blue-600">
                     {finalPercentage}%
@@ -361,7 +371,7 @@ export default function Step2Calculate({
                       {finalPercentage > criteria.baseFaultPercentage
                         ? `+${finalPercentage - criteria.baseFaultPercentage}%`
                         : `${finalPercentage - criteria.baseFaultPercentage}%`}{" "}
-                      の調整
+                      {t("step2Calculate.adjustmentSuffix")}
                     </span>
                   )}
                 </div>
@@ -369,11 +379,11 @@ export default function Step2Calculate({
             ) : (
               <div className="border-t border-gray-300 pt-3">
                 <div className="text-center text-gray-500 text-sm py-2">
-                  修正要素を選択すると、ここに計算結果が表示されます
+                  {t("step2Calculate.noModificationsSelectedHint")}
                 </div>
                 <div className="border-t border-gray-300 pt-3 flex justify-between items-center">
                   <span className="text-lg font-semibold text-gray-900">
-                    最終過失割合:
+                    {t("step2Calculate.finalFaultPercentageLabel")}
                   </span>
                   <span className="text-4xl font-bold text-blue-600">
                     {finalPercentage}%
@@ -389,7 +399,7 @@ export default function Step2Calculate({
           onClick={handleCalculate}
           className="flex-1 bg-blue-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
         >
-          計算結果を保存して次へ
+          {t("step2Calculate.saveAndContinueButton")}
         </button>
       </div>
     </div>

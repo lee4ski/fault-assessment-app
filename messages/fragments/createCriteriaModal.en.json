@@ -1,0 +1,14 @@
+{
+  "modalTitle": "Create New Criteria",
+  "titleLabel": "Title",
+  "titlePlaceholder": "e.g. Intersection accident between a right-turning car and a straight-ahead car",
+  "baseFaultLabel": "Base Fault Percentage (Party A)",
+  "summaryLabel": "Summary / Description",
+  "summaryPlaceholder": "Detailed description of the criteria...",
+  "cancel": "Cancel",
+  "createAndApply": "Create and Apply",
+  "unknownLocation": "Unknown location",
+  "generatedTitle": "Accident between {partyA} and {partyB} at {location}",
+  "customChapterTitle": "Custom Criteria",
+  "userCreatedSource": "User created"
+}

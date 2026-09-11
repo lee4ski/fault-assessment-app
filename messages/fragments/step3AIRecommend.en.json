@@ -1,0 +1,22 @@
+{
+  "enterAccidentReportAlert": "Please enter an accident report",
+  "recommendationReason": "Based on the content of the accident report, this assessment criterion may be relevant.",
+  "heading": "Step 3: Review AI-Recommended Criteria",
+  "subheading": "Enter an accident report and AI will recommend an appropriate assessment criterion.",
+  "calculationCompleteLabel": "Calculation complete",
+  "finalFaultPercentageLabel": "Final fault percentage:",
+  "accidentReportLabel": "Enter Accident Report",
+  "accidentReportPlaceholder": "e.g. A pedestrian and a car collided at an intersection. The signal was green. The pedestrian was a young child.",
+  "generatingLabel": "Generating AI recommendations...",
+  "getRecommendationsButton": "Get AI-Recommended Criteria",
+  "recommendationsHeading": "AI-Recommended Criteria (Top 3)",
+  "recommendationBadge": "Recommendation {number}",
+  "matchScoreLabel": "Match score: {score}%",
+  "baseFaultPercentageLabel": "Base fault percentage: {percentage}%",
+  "differentFromAIHeading": "A criterion different from the AI recommendation has been selected",
+  "feedbackPrompt": "To help us improve quality, please tell us why you didn't select the AI recommendation (Recommendation 1).",
+  "feedbackPlaceholder": "e.g. Chose this criterion instead because it better fits the specific circumstances of the accident",
+  "feedbackSentAlert": "Your feedback has been sent. Thank you for your cooperation.",
+  "submitButton": "Submit",
+  "emptyStateHint": "Enter an accident report to get AI recommendations"
+}

@@ -1,0 +1,10 @@
+{
+  "heading": "Fault Percentage Calculation",
+  "selectedCriteriaHeading": "Selected Criteria",
+  "baseFaultPercentage": "Base Fault Percentage",
+  "selectModificationsHeading": "Select Modification Factors",
+  "baseFaultShort": "Base fault percentage:",
+  "modificationsShort": "Modification factors:",
+  "finalFaultPercentage": "Final fault percentage:",
+  "saveResult": "Save Calculation Result"
+}

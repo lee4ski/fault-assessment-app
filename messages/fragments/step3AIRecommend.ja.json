@@ -1,0 +1,22 @@
+{
+  "enterAccidentReportAlert": "事故報告を入力してください",
+  "recommendationReason": "事故報告の内容から、この認定基準が関連している可能性があります。",
+  "heading": "ステップ3: AI推奨基準の確認",
+  "subheading": "事故報告を入力すると、AIが適切な認定基準を推奨します。",
+  "calculationCompleteLabel": "計算が完了しました",
+  "finalFaultPercentageLabel": "最終過失割合:",
+  "accidentReportLabel": "事故報告を入力",
+  "accidentReportPlaceholder": "例: 交差点で歩行者と車が衝突。信号は青だった。歩行者は幼児だった。",
+  "generatingLabel": "AI推奨を生成中...",
+  "getRecommendationsButton": "AI推奨基準を取得",
+  "recommendationsHeading": "AI推奨基準 (Top 3)",
+  "recommendationBadge": "推奨 {number}",
+  "matchScoreLabel": "適合スコア: {score}%",
+  "baseFaultPercentageLabel": "基本過失割合: {percentage}%",
+  "differentFromAIHeading": "AI推奨と異なる基準が選択されています",
+  "feedbackPrompt": "品質改善のため、AI推奨（推奨1）を選択しなかった理由を教えてください。",
+  "feedbackPlaceholder": "例: 事故状況の特殊性により、こちらの基準の方が適切と判断したため",
+  "feedbackSentAlert": "フィードバックを送信しました。ご協力ありがとうございます。",
+  "submitButton": "送信",
+  "emptyStateHint": "事故報告を入力してAI推奨を取得してください"
+}

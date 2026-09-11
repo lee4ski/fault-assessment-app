@@ -1,0 +1,6 @@
+{
+  "searchLabel": "Search Criteria",
+  "searchPlaceholder": "Enter the type or situation of the accident (e.g. intersection, pedestrian)",
+  "noResults": "No search results found",
+  "baseFaultPercentage": "Base fault percentage: {percentage}%"
+}

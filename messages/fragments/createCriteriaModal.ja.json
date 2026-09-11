@@ -1,0 +1,14 @@
+{
+  "modalTitle": "新規認定基準の作成",
+  "titleLabel": "タイトル",
+  "titlePlaceholder": "例: 交差点での右折車と直進車の事故",
+  "baseFaultLabel": "基本過失割合 (Aの過失)",
+  "summaryLabel": "概要・説明",
+  "summaryPlaceholder": "基準の詳細説明...",
+  "cancel": "キャンセル",
+  "createAndApply": "作成して適用",
+  "unknownLocation": "場所不明",
+  "generatedTitle": "{location}での{partyA}と{partyB}の事故",
+  "customChapterTitle": "カスタム認定基準",
+  "userCreatedSource": "ユーザー作成"
+}

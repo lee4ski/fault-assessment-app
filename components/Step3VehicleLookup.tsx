@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { Vehicle } from "@/types";
+import { useLocale } from "@/components/LocaleProvider";
 import {
   searchByModelCode,
   searchByMakeAndModel,
@@ -10,6 +11,8 @@ import {
   createCustomVehicle,
   getYearsForMakeAndModel,
   getModelCodesForVehicle,
+  getMakeLabel,
+  getModelLabel,
 } from "@/lib/vehicleData";
 
 interface Step3VehicleLookupProps {
@@ -21,6 +24,7 @@ export default function Step3VehicleLookup({
   onSelect,
   selectedVehicles = [],
 }: Step3VehicleLookupProps) {
+  const { t, locale } = useLocale();
   const [searchMode, setSearchMode] = useState<"modelCode" | "makeModel">("modelCode");
   const [modelCode, setModelCode] = useState("");
   const [make, setMake] = useState("");
@@ -113,7 +117,7 @@ export default function Step3VehicleLookup({
       !newVehicle.model ||
       !newVehicle.year
     ) {
-      alert("必須項目を入力してください");
+      alert(t("step3VehicleLookup.modal.requiredFieldsAlert"));
       return;
     }
 
@@ -140,7 +144,8 @@ export default function Step3VehicleLookup({
         newVehicle.make,
         newVehicle.model,
         newVehicle.year,
-        newVehicle.modelCode
+        newVehicle.modelCode,
+        locale
       );
       handleApplyVehicle(vehicle);
     }
@@ -170,7 +175,7 @@ export default function Step3VehicleLookup({
       {/* Search Mode Selector */}
       <div className="bg-white rounded-lg shadow-md p-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">
-          車両検索
+          {t("step3VehicleLookup.searchModeCard.heading")}
         </h3>
         <div className="flex space-x-4 mb-6">
           <button
@@ -181,7 +186,7 @@ export default function Step3VehicleLookup({
                 : "bg-gray-100 text-gray-700 hover:bg-gray-200"
             }`}
           >
-            型式コードで検索
+            {t("step3VehicleLookup.searchModeCard.modelCodeTab")}
           </button>
           <button
             onClick={() => setSearchMode("makeModel")}
@@ -191,7 +196,7 @@ export default function Step3VehicleLookup({
                 : "bg-gray-100 text-gray-700 hover:bg-gray-200"
             }`}
           >
-            メーカー・車名で検索
+            {t("step3VehicleLookup.searchModeCard.makeModelTab")}
           </button>
         </div>
 
@@ -200,13 +205,13 @@ export default function Step3VehicleLookup({
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                型式コード
+                {t("step3VehicleLookup.modelCodeSearch.label")}
               </label>
               <input
                 type="text"
                 value={modelCode}
                 onChange={(e) => setModelCode(e.target.value)}
-                placeholder="例: DAA-ZVW30, NHW20"
+                placeholder={t("step3VehicleLookup.modelCodeSearch.placeholder")}
                 className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white"
               />
             </div>
@@ -214,7 +219,7 @@ export default function Step3VehicleLookup({
               onClick={handleModelCodeSearch}
               className="w-full px-6 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors font-medium"
             >
-              型式コードで検索
+              {t("step3VehicleLookup.modelCodeSearch.searchButton")}
             </button>
           </div>
         )}
@@ -224,7 +229,7 @@ export default function Step3VehicleLookup({
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                メーカー選択
+                {t("step3VehicleLookup.makeModelSearch.makeLabel")}
               </label>
               <select
                 value={make}
@@ -234,10 +239,10 @@ export default function Step3VehicleLookup({
                 }}
                 className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white"
               >
-                <option value="">メーカーを選択</option>
+                <option value="">{t("step3VehicleLookup.makeModelSearch.makePlaceholder")}</option>
                 {modalMakes.map((m) => (
                   <option key={m} value={m}>
-                    {m}
+                    {getMakeLabel(m, locale)}
                   </option>
                 ))}
               </select>
@@ -245,7 +250,7 @@ export default function Step3VehicleLookup({
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                車名選択
+                {t("step3VehicleLookup.makeModelSearch.modelLabel")}
               </label>
               <select
                 value={model}
@@ -253,10 +258,10 @@ export default function Step3VehicleLookup({
                 disabled={!make}
                 className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 text-gray-900 bg-white"
               >
-                <option value="">車種を選択</option>
+                <option value="">{t("step3VehicleLookup.makeModelSearch.modelPlaceholder")}</option>
                 {searchModels.map((m) => (
                   <option key={m} value={m}>
-                    {m}
+                    {getModelLabel(m, locale)}
                   </option>
                 ))}
               </select>
@@ -267,7 +272,7 @@ export default function Step3VehicleLookup({
               disabled={!make && !model}
               className="w-full px-6 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors font-medium disabled:bg-gray-400 disabled:cursor-not-allowed"
             >
-              メーカー・車名で検索
+              {t("step3VehicleLookup.makeModelSearch.searchButton")}
             </button>
           </div>
         )}
@@ -277,26 +282,26 @@ export default function Step3VehicleLookup({
       {searchResults.length > 0 && (
         <div className="bg-white rounded-lg shadow-md p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">
-            検索結果 ({searchResults.length}件)
+            {t("step3VehicleLookup.searchResults.heading", { count: searchResults.length })}
           </h3>
           <div className="overflow-x-auto">
             <table className="min-w-full">
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    型式コード
+                    {t("step3VehicleLookup.table.modelCode")}
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    メーカー
+                    {t("step3VehicleLookup.table.make")}
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    車名
+                    {t("step3VehicleLookup.table.model")}
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    年式
+                    {t("step3VehicleLookup.table.year")}
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    操作
+                    {t("step3VehicleLookup.table.actions")}
                   </th>
                 </tr>
               </thead>
@@ -307,15 +312,15 @@ export default function Step3VehicleLookup({
                       {vehicle.modelCode}
                     </td>
                     <td className="px-4 py-3 text-sm text-gray-900">
-                      {vehicle.make}
+                      {getMakeLabel(vehicle.make, locale)}
                     </td>
                     <td className="px-4 py-3 text-sm text-gray-900">
-                      {vehicle.model}
+                      {getModelLabel(vehicle.model, locale)}
                     </td>
                     <td className="px-4 py-3 text-sm text-gray-900">
-                      {vehicle.year}年
-                      {vehicle.releaseDate && vehicle.releaseDate.includes("/") 
-                        ? ` (${vehicle.releaseDate})` 
+                      {vehicle.year}{t("step3VehicleLookup.table.yearSuffix")}
+                      {vehicle.releaseDate && vehicle.releaseDate.includes("/")
+                        ? ` (${vehicle.releaseDate})`
                         : ""}
                     </td>
                     <td className="px-4 py-3 text-sm">
@@ -325,8 +330,8 @@ export default function Step3VehicleLookup({
                         className="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-xs"
                       >
                         {selectedVehicles.some((v) => v.id === vehicle.id)
-                          ? "適用済"
-                          : "適用"}
+                          ? t("step3VehicleLookup.table.appliedButton")
+                          : t("step3VehicleLookup.table.applyButton")}
                       </button>
                     </td>
                   </tr>
@@ -341,26 +346,26 @@ export default function Step3VehicleLookup({
       {selectedVehicles.length > 0 && (
         <div className="bg-white rounded-lg shadow-md p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">
-            選択された車両 ({selectedVehicles.length}件)
+            {t("step3VehicleLookup.selectedVehicles.heading", { count: selectedVehicles.length })}
           </h3>
           <div className="overflow-x-auto">
             <table className="min-w-full">
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    型式コード
+                    {t("step3VehicleLookup.table.modelCode")}
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    メーカー
+                    {t("step3VehicleLookup.table.make")}
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    車名
+                    {t("step3VehicleLookup.table.model")}
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    年式
+                    {t("step3VehicleLookup.table.year")}
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    操作
+                    {t("step3VehicleLookup.table.actions")}
                   </th>
                 </tr>
               </thead>
@@ -371,15 +376,15 @@ export default function Step3VehicleLookup({
                       {vehicle.modelCode}
                     </td>
                     <td className="px-4 py-3 text-sm text-gray-900">
-                      {vehicle.make}
+                      {getMakeLabel(vehicle.make, locale)}
                     </td>
                     <td className="px-4 py-3 text-sm text-gray-900">
-                      {vehicle.model}
+                      {getModelLabel(vehicle.model, locale)}
                     </td>
                     <td className="px-4 py-3 text-sm text-gray-900">
-                      {vehicle.year}年
-                      {vehicle.releaseDate && vehicle.releaseDate.includes("/") 
-                        ? ` (${vehicle.releaseDate})` 
+                      {vehicle.year}{t("step3VehicleLookup.table.yearSuffix")}
+                      {vehicle.releaseDate && vehicle.releaseDate.includes("/")
+                        ? ` (${vehicle.releaseDate})`
                         : ""}
                     </td>
                     <td className="px-4 py-3 text-sm">
@@ -388,13 +393,13 @@ export default function Step3VehicleLookup({
                           onClick={() => handleEditVehicle(vehicle)}
                           className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 text-xs"
                         >
-                          編集
+                          {t("step3VehicleLookup.selectedVehicles.editButton")}
                         </button>
                         <button
                           onClick={() => handleRemoveVehicle(vehicle.id)}
                           className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 text-xs"
                         >
-                          削除
+                          {t("step3VehicleLookup.selectedVehicles.deleteButton")}
                         </button>
                       </div>
                     </td>
@@ -420,7 +425,7 @@ export default function Step3VehicleLookup({
         }}
         className="w-full px-6 py-3 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors font-medium"
       >
-        + 手動で車両情報を入力
+        {t("step3VehicleLookup.manualEntryButton")}
       </button>
 
       {/* Create Vehicle Modal */}
@@ -428,12 +433,12 @@ export default function Step3VehicleLookup({
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">
-              {editingVehicleId ? "車両情報を編集" : "車両情報を手動入力"}
+              {editingVehicleId ? t("step3VehicleLookup.modal.editHeading") : t("step3VehicleLookup.modal.createHeading")}
             </h3>
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  メーカー <span className="text-red-500">*</span>
+                  {t("step3VehicleLookup.modal.makeLabel")} <span className="text-red-500">{t("step3VehicleLookup.modal.requiredMark")}</span>
                 </label>
                 <div className="relative">
                   <input
@@ -444,7 +449,7 @@ export default function Step3VehicleLookup({
                     }
                     list="modal-makes"
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white"
-                    placeholder="例: トヨタ"
+                    placeholder={t("step3VehicleLookup.modal.makePlaceholder")}
                   />
                   <datalist id="modal-makes">
                     {modalMakes.map((m) => (
@@ -456,7 +461,7 @@ export default function Step3VehicleLookup({
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  車名 <span className="text-red-500">*</span>
+                  {t("step3VehicleLookup.modal.modelLabel")} <span className="text-red-500">{t("step3VehicleLookup.modal.requiredMark")}</span>
                 </label>
                 <div className="relative">
                   <input
@@ -467,7 +472,7 @@ export default function Step3VehicleLookup({
                     }
                     list="modal-models"
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white"
-                    placeholder="例: カローラ"
+                    placeholder={t("step3VehicleLookup.modal.modelPlaceholder")}
                     disabled={!newVehicle.make}
                   />
                   <datalist id="modal-models">
@@ -480,7 +485,7 @@ export default function Step3VehicleLookup({
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  年式 <span className="text-red-500">*</span>
+                  {t("step3VehicleLookup.modal.yearLabel")} <span className="text-red-500">{t("step3VehicleLookup.modal.requiredMark")}</span>
                 </label>
                 <div className="relative">
                   <input
@@ -491,7 +496,7 @@ export default function Step3VehicleLookup({
                     }
                     list="modal-years"
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white"
-                    placeholder="例: 2020"
+                    placeholder={t("step3VehicleLookup.modal.yearPlaceholder")}
                     min="1900"
                     max="2099"
                   />
@@ -505,7 +510,7 @@ export default function Step3VehicleLookup({
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  型式コード <span className="text-red-500">*</span>
+                  {t("step3VehicleLookup.modal.modelCodeLabel")} <span className="text-red-500">{t("step3VehicleLookup.modal.requiredMark")}</span>
                 </label>
                 <div className="relative">
                   <input
@@ -518,7 +523,7 @@ export default function Step3VehicleLookup({
                     onFocus={() => setShowModelCodeSuggestions(true)}
                     onBlur={() => setTimeout(() => setShowModelCodeSuggestions(false), 200)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white"
-                    placeholder="例: TA-NZE120"
+                    placeholder={t("step3VehicleLookup.modal.modelCodePlaceholder")}
                     autoComplete="off"
                   />
                   {showModelCodeSuggestions && modalModelCodes.length > 0 && (
@@ -540,7 +545,7 @@ export default function Step3VehicleLookup({
                 </div>
                 {modalModelCodes.length > 0 && (
                   <p className="text-xs text-gray-500 mt-1">
-                    ※ 選択した車種・年式に関連する型式コードが候補として表示されます
+                    {t("step3VehicleLookup.modal.modelCodeHint")}
                   </p>
                 )}
               </div>
@@ -560,13 +565,13 @@ export default function Step3VehicleLookup({
                 }}
                 className="flex-1 px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition-colors"
               >
-                キャンセル
+                {t("step3VehicleLookup.modal.cancelButton")}
               </button>
               <button
                 onClick={handleCreateVehicle}
                 className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
               >
-                {editingVehicleId ? "更新" : "追加"}
+                {editingVehicleId ? t("step3VehicleLookup.modal.updateButton") : t("step3VehicleLookup.modal.addButton")}
               </button>
             </div>
           </div>

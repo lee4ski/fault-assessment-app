@@ -1,5 +1,39 @@
 // Vehicle data structure and search functions
 import { Vehicle } from "@/types";
+import { Locale } from "@/lib/i18n-simple";
+
+// The vehicle master data below (makers/models) is real-world Japanese
+// automotive data, stored and matched by its Japanese name (searchByMakeAndModel,
+// getModelsForMake, etc. all key off this exact string). These dictionaries
+// provide an English display label for well-known brand/model names without
+// changing the underlying value used for search/matching.
+const MAKE_LABELS_EN: Record<string, string> = {
+  "トヨタ": "Toyota",
+  "ホンダ": "Honda",
+  "日産": "Nissan",
+};
+
+const MODEL_LABELS_EN: Record<string, string> = {
+  "カローラ": "Corolla",
+  "シビック": "Civic",
+  "セレナ": "Serena",
+  "プリウス": "Prius",
+  "ハリアー": "Harrier",
+};
+
+// Display label for a vehicle maker name, translated when locale is "en"
+// (falls back to the original Japanese name if no translation is known).
+export function getMakeLabel(make: string, locale: Locale = "ja"): string {
+  if (locale === "en" && MAKE_LABELS_EN[make]) return MAKE_LABELS_EN[make];
+  return make;
+}
+
+// Display label for a vehicle model name, translated when locale is "en"
+// (falls back to the original Japanese name if no translation is known).
+export function getModelLabel(model: string, locale: Locale = "ja"): string {
+  if (locale === "en" && MODEL_LABELS_EN[model]) return MODEL_LABELS_EN[model];
+  return model;
+}
 
 // Vehicle database with releases and model codes
 interface VehicleRelease {
@@ -295,13 +329,14 @@ export function createCustomVehicle(
   make: string,
   model: string,
   year: string,
-  modelCode?: string
+  modelCode?: string,
+  locale: Locale = "ja"
 ): Vehicle {
   return {
     id: `custom-${Date.now()}`,
     make,
     model,
     year,
-    modelCode: modelCode || "不明",
+    modelCode: modelCode || (locale === "en" ? "Unknown" : "不明"),
   };
 }

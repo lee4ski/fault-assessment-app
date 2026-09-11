@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { AssessmentCriteria, AccidentReport } from "@/types";
+import { useLocale } from "@/components/LocaleProvider";
+import { localize } from "@/lib/i18n-simple";
 
 interface Step3AIRecommendProps {
   report?: AccidentReport;
@@ -14,6 +16,7 @@ export default function Step3AIRecommend({
   criteria,
   onSelectCriteria,
 }: Step3AIRecommendProps) {
+  const { t, locale } = useLocale();
   const [accidentText, setAccidentText] = useState("");
   const [aiRecommendations, setAiRecommendations] = useState<
     Array<{ criteria: AssessmentCriteria; score: number; reason: string }>
@@ -23,7 +26,7 @@ export default function Step3AIRecommend({
   // Simulate AI recommendations (in real implementation, this would call an AI API)
   const handleGetRecommendations = async () => {
     if (!accidentText.trim()) {
-      alert("事故報告を入力してください");
+      alert(t("step3AIRecommend.enterAccidentReportAlert"));
       return;
     }
 
@@ -47,7 +50,7 @@ export default function Step3AIRecommend({
           return {
             criteria: c,
             score,
-            reason: `事故報告の内容から、この認定基準が関連している可能性があります。`,
+            reason: t("step3AIRecommend.recommendationReason"),
           };
         })
         .filter((r) => r.score > 0)
@@ -63,19 +66,19 @@ export default function Step3AIRecommend({
     <div className="h-[calc(100vh-300px)]">
       <div className="flex flex-col h-full">
         <div className="mb-4">
-          <h2 className="text-2xl font-bold mb-2">ステップ3: AI推奨基準の確認</h2>
+          <h2 className="text-2xl font-bold mb-2">{t("step3AIRecommend.heading")}</h2>
           <p className="text-gray-600">
-            事故報告を入力すると、AIが適切な認定基準を推奨します。
+            {t("step3AIRecommend.subheading")}
           </p>
         </div>
 
         {report && (
           <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg">
             <p className="text-sm text-green-800 font-semibold mb-2">
-              計算が完了しました
+              {t("step3AIRecommend.calculationCompleteLabel")}
             </p>
             <p className="text-sm text-gray-700">
-              最終過失割合: <span className="font-bold">{report.finalFaultPercentage}%</span>
+              {t("step3AIRecommend.finalFaultPercentageLabel")} <span className="font-bold">{report.finalFaultPercentage}%</span>
             </p>
           </div>
         )}
@@ -85,13 +88,13 @@ export default function Step3AIRecommend({
             htmlFor="accident-report"
             className="block text-sm font-medium text-gray-700 mb-2"
           >
-            事故報告を入力
+            {t("step3AIRecommend.accidentReportLabel")}
           </label>
           <textarea
             id="accident-report"
             value={accidentText}
             onChange={(e) => setAccidentText(e.target.value)}
-            placeholder="例: 交差点で歩行者と車が衝突。信号は青だった。歩行者は幼児だった。"
+            placeholder={t("step3AIRecommend.accidentReportPlaceholder")}
             rows={4}
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           />
@@ -102,12 +105,12 @@ export default function Step3AIRecommend({
           disabled={isLoading || !accidentText.trim()}
           className="mb-4 w-full bg-blue-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
         >
-          {isLoading ? "AI推奨を生成中..." : "AI推奨基準を取得"}
+          {isLoading ? t("step3AIRecommend.generatingLabel") : t("step3AIRecommend.getRecommendationsButton")}
         </button>
 
         {aiRecommendations.length > 0 && (
           <div className="flex-1 overflow-y-auto">
-            <h3 className="text-lg font-semibold mb-4">AI推奨基準 (Top 3)</h3>
+            <h3 className="text-lg font-semibold mb-4">{t("step3AIRecommend.recommendationsHeading")}</h3>
             <div className="space-y-4 mb-6">
               {aiRecommendations.map((rec, index) => (
                 <div
@@ -120,25 +123,25 @@ export default function Step3AIRecommend({
                 >
                   <div className="flex justify-between items-start mb-2">
                     <span className="text-xs bg-blue-600 text-white px-2 py-1 rounded">
-                      推奨 {index + 1}
+                      {t("step3AIRecommend.recommendationBadge", { number: index + 1 })}
                     </span>
                     <span className="text-sm font-semibold text-blue-700">
-                      適合スコア: {rec.score}%
+                      {t("step3AIRecommend.matchScoreLabel", { score: rec.score })}
                     </span>
                   </div>
                   <h4 className="font-semibold text-gray-900 mb-1">
-                    {rec.criteria.title}
+                    {localize(locale, rec.criteria.title, rec.criteria.titleEn)}
                   </h4>
                   <p className="text-sm text-gray-600 mb-2">
-                    {rec.criteria.description}
+                    {localize(locale, rec.criteria.description, rec.criteria.descriptionEn)}
                   </p>
                   <p className="text-xs text-gray-500 mb-2">{rec.reason}</p>
                   <div className="flex gap-2">
                     <span className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded">
-                      {rec.criteria.chapterTitle}
+                      {localize(locale, rec.criteria.chapterTitle, rec.criteria.chapterTitleEn)}
                     </span>
                     <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">
-                      基本過失割合: {rec.criteria.baseFaultPercentage}%
+                      {t("step3AIRecommend.baseFaultPercentageLabel", { percentage: rec.criteria.baseFaultPercentage })}
                     </span>
                   </div>
                 </div>
@@ -151,15 +154,15 @@ export default function Step3AIRecommend({
               report.selectedCriteria.id !== aiRecommendations[0].criteria.id && (
                 <div className="p-4 border border-yellow-200 bg-yellow-50 rounded-lg">
                   <h4 className="font-semibold text-yellow-800 mb-2">
-                    AI推奨と異なる基準が選択されています
+                    {t("step3AIRecommend.differentFromAIHeading")}
                   </h4>
                   <p className="text-sm text-yellow-700 mb-3">
-                    品質改善のため、AI推奨（推奨1）を選択しなかった理由を教えてください。
+                    {t("step3AIRecommend.feedbackPrompt")}
                   </p>
                   <div className="flex gap-2">
                     <input
                       type="text"
-                      placeholder="例: 事故状況の特殊性により、こちらの基準の方が適切と判断したため"
+                      placeholder={t("step3AIRecommend.feedbackPlaceholder")}
                       className="flex-1 px-3 py-2 border border-yellow-300 rounded text-sm focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
                       onKeyDown={async (e) => {
                         if (e.key === "Enter") {
@@ -181,7 +184,7 @@ export default function Step3AIRecommend({
                                 overrideReason: reason,
                               }),
                             });
-                            alert("フィードバックを送信しました。ご協力ありがとうございます。");
+                            alert(t("step3AIRecommend.feedbackSentAlert"));
                             input.value = "";
                           } catch (error) {
                             console.error("Failed to send feedback:", error);
@@ -209,7 +212,7 @@ export default function Step3AIRecommend({
                               overrideReason: reason,
                             }),
                           });
-                          alert("フィードバックを送信しました。ご協力ありがとうございます。");
+                          alert(t("step3AIRecommend.feedbackSentAlert"));
                           input.value = "";
                         } catch (error) {
                           console.error("Failed to send feedback:", error);
@@ -217,7 +220,7 @@ export default function Step3AIRecommend({
                       }}
                       className="px-4 py-2 bg-yellow-600 text-white text-sm font-semibold rounded hover:bg-yellow-700 transition-colors"
                     >
-                      送信
+                      {t("step3AIRecommend.submitButton")}
                     </button>
                   </div>
                 </div>
@@ -227,7 +230,7 @@ export default function Step3AIRecommend({
 
         {aiRecommendations.length === 0 && !isLoading && (
           <div className="flex-1 flex items-center justify-center text-gray-500">
-            <p>事故報告を入力してAI推奨を取得してください</p>
+            <p>{t("step3AIRecommend.emptyStateHint")}</p>
           </div>
         )}
       </div>
