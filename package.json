@@ -12,6 +12,7 @@
     "test:ci": "vitest run --no-coverage",
     "test:ui": "vitest --ui",
     "test:coverage": "vitest --coverage",
+    "test:e2e": "playwright test",
     "test:mcp": "node scripts/run-mcp-visual-tests.js",
     "test:mcp:auto": "node scripts/run-mcp-automated-tests.js",
     "test:mcp:check": "node tests/mcp-test-checker.js",
@@ -42,6 +43,7 @@
     "typescript": "^5.9.3"
   },
   "devDependencies": {
+    "@playwright/test": "^1.63.0",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.0",
     "@testing-library/user-event": "^14.6.1",
