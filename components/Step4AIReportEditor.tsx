@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { AccidentReportFull, ApprovalStatus } from "@/types";
 import { useLocale } from "@/components/LocaleProvider";
 import { localize } from "@/lib/i18n-simple";
+import { getMakeLabel, getModelLabel } from "@/lib/vehicleData";
 
 // Simple Markdown to HTML converter
 function renderMarkdown(markdown: string): string {
@@ -346,8 +347,10 @@ export default function Step4AIReportEditor({
                       {reportData.vehicles.map((vehicle, idx) => (
                         <span key={idx} className="px-2 py-1 bg-indigo-100 text-indigo-800 text-xs rounded">
                           {t("step4AIReportEditor.structure.section5.vehicleFormat", {
-                            make: vehicle.make || t("step4AIReportEditor.structure.section5.notEntered"),
-                            model: vehicle.model || "",
+                            make: vehicle.make
+                              ? getMakeLabel(vehicle.make, locale)
+                              : t("step4AIReportEditor.structure.section5.notEntered"),
+                            model: vehicle.model ? getModelLabel(vehicle.model, locale) : "",
                             year: vehicle.year || "?",
                           })}
                         </span>

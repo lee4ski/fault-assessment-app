@@ -11,6 +11,8 @@ import {
   createCustomVehicle,
   getYearsForMakeAndModel,
   getModelCodesForVehicle,
+  getMakeLabel,
+  getModelLabel,
 } from "@/lib/vehicleData";
 
 interface Step3VehicleLookupProps {
@@ -22,7 +24,7 @@ export default function Step3VehicleLookup({
   onSelect,
   selectedVehicles = [],
 }: Step3VehicleLookupProps) {
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
   const [searchMode, setSearchMode] = useState<"modelCode" | "makeModel">("modelCode");
   const [modelCode, setModelCode] = useState("");
   const [make, setMake] = useState("");
@@ -142,7 +144,8 @@ export default function Step3VehicleLookup({
         newVehicle.make,
         newVehicle.model,
         newVehicle.year,
-        newVehicle.modelCode
+        newVehicle.modelCode,
+        locale
       );
       handleApplyVehicle(vehicle);
     }
@@ -239,7 +242,7 @@ export default function Step3VehicleLookup({
                 <option value="">{t("step3VehicleLookup.makeModelSearch.makePlaceholder")}</option>
                 {modalMakes.map((m) => (
                   <option key={m} value={m}>
-                    {m}
+                    {getMakeLabel(m, locale)}
                   </option>
                 ))}
               </select>
@@ -258,7 +261,7 @@ export default function Step3VehicleLookup({
                 <option value="">{t("step3VehicleLookup.makeModelSearch.modelPlaceholder")}</option>
                 {searchModels.map((m) => (
                   <option key={m} value={m}>
-                    {m}
+                    {getModelLabel(m, locale)}
                   </option>
                 ))}
               </select>
@@ -309,10 +312,10 @@ export default function Step3VehicleLookup({
                       {vehicle.modelCode}
                     </td>
                     <td className="px-4 py-3 text-sm text-gray-900">
-                      {vehicle.make}
+                      {getMakeLabel(vehicle.make, locale)}
                     </td>
                     <td className="px-4 py-3 text-sm text-gray-900">
-                      {vehicle.model}
+                      {getModelLabel(vehicle.model, locale)}
                     </td>
                     <td className="px-4 py-3 text-sm text-gray-900">
                       {vehicle.year}{t("step3VehicleLookup.table.yearSuffix")}
@@ -373,10 +376,10 @@ export default function Step3VehicleLookup({
                       {vehicle.modelCode}
                     </td>
                     <td className="px-4 py-3 text-sm text-gray-900">
-                      {vehicle.make}
+                      {getMakeLabel(vehicle.make, locale)}
                     </td>
                     <td className="px-4 py-3 text-sm text-gray-900">
-                      {vehicle.model}
+                      {getModelLabel(vehicle.model, locale)}
                     </td>
                     <td className="px-4 py-3 text-sm text-gray-900">
                       {vehicle.year}{t("step3VehicleLookup.table.yearSuffix")}

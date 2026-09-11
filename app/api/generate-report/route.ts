@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import OpenAI from "openai";
 import { AccidentReportFull } from "@/types";
 import { localize } from "@/lib/i18n-simple";
+import { getMakeLabel, getModelLabel } from "@/lib/vehicleData";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY || process.env.OPEN_API_KEY || "",
@@ -130,7 +131,7 @@ function buildPromptFromReportData(reportData: AccidentReportFull, locale: Repor
     if (reportData.vehicles && reportData.vehicles.length > 0) {
       prompt += `### Vehicles Involved\n`;
       reportData.vehicles.forEach((vehicle, index) => {
-        prompt += `Vehicle ${index + 1}: ${vehicle.make} ${vehicle.model} (model year ${vehicle.year})\n`;
+        prompt += `Vehicle ${index + 1}: ${getMakeLabel(vehicle.make, locale)} ${getModelLabel(vehicle.model, locale)} (model year ${vehicle.year})\n`;
         prompt += `Model code: ${vehicle.modelCode}\n`;
         prompt += `\n`;
       });
@@ -237,8 +238,8 @@ function generateTemplateReport(reportData: AccidentReportFull, locale: ReportLo
           text += `> ⚠️ **This vehicle's information is incomplete**. Please add further details.\n\n`;
         }
 
-        text += `- **Make**: ${vehicle.make || "❌ *Not entered*"}\n`;
-        text += `- **Model**: ${vehicle.model || "❌ *Not entered*"}\n`;
+        text += `- **Make**: ${vehicle.make ? getMakeLabel(vehicle.make, locale) : "❌ *Not entered*"}\n`;
+        text += `- **Model**: ${vehicle.model ? getModelLabel(vehicle.model, locale) : "❌ *Not entered*"}\n`;
         text += `- **Model year**: ${vehicle.year ? `${vehicle.year}` : "❌ *Not entered*"}\n`;
         text += `- **Model code**: ${vehicle.modelCode || "❌ *Not entered*"}\n`;
         text += `\n`;
