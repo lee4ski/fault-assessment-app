@@ -51,8 +51,8 @@
   "analyzingStatus": "AI分析中...",
   "thinkingStatus": "考えています...",
   "uploadImage": "画像をアップロード",
-  "inputPlaceholder": "質問を入力してください... (Shift+Enterで送信)",
+  "inputPlaceholder": "質問を入力してください...",
   "sendButton": "送信",
-  "shortcutSendSuffix": "で送信、",
-  "shortcutNewlineSuffix": "で改行"
+  "enterToSend": "Enter で送信",
+  "shiftEnterNewline": "Shift+Enter で改行"
 }

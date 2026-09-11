@@ -3,7 +3,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { ChatMessage } from "@/types/workflow";
 import { sampleCriteria } from "@/data/sampleCriteria";
-import { MessageSquare, Sparkles, ChevronRight, Image as ImageIcon, X } from "lucide-react";
+import { MessageSquare, Sparkles, ChevronRight, Image as ImageIcon, X, ArrowUp, Loader2 } from "lucide-react";
 import VoiceUpload from "./VoiceUpload";
 import { useLocale } from "@/components/LocaleProvider";
 
@@ -47,6 +47,7 @@ export default function ChatWindow({
   const [selectedAudio, setSelectedAudio] = useState<{ name: string; url: string; type: string } | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const detailQuestions: { id: DetailKey; text: string }[] = [
     { id: "location", text: t("chatWindow.questions.location") },
@@ -167,13 +168,32 @@ export default function ChatWindow({
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    // Shift+Enter sends the message
-    if (e.key === "Enter" && e.shiftKey) {
+    // Enter sends the message; Shift+Enter inserts a new line.
+    // Skip while an IME composition is in progress (e.g. converting kanji),
+    // so pressing Enter to confirm a candidate doesn't send the message early.
+    if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
       e.preventDefault();
       handleSend();
     }
-    // Enter adds a new line (default behavior)
+    // Shift+Enter falls through to the textarea's default behavior (new line).
   };
+
+  // Auto-resize the composer as the user types, up to a max height (then it scrolls).
+  useEffect(() => {
+    const el = textareaRef.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = `${Math.min(el.scrollHeight, 200)}px`;
+  }, [input]);
+
+  // Keep focus in the composer: when the panel opens, and again after a
+  // response finishes loading, so the user can keep typing without reaching
+  // for the mouse.
+  useEffect(() => {
+    if (!isCollapsed && !isLoading) {
+      textareaRef.current?.focus();
+    }
+  }, [isCollapsed, isLoading]);
 
   useEffect(() => {
     if (!isCollapsed) {
@@ -885,47 +905,62 @@ export default function ChatWindow({
                 </button>
               </div>
             )}
-            <div className="flex gap-2 items-end">
-              <VoiceUpload onTranscriptionComplete={handleTranscription} disabled={isLoading} />
-              <input
-                type="file"
-                accept="image/*"
-                className="hidden"
-                ref={fileInputRef}
-                onChange={handleImageSelect}
-              />
-              <button
-                onClick={() => fileInputRef.current?.click()}
-                className={`p-2 rounded-full hover:bg-gray-100 text-gray-500 transition-colors ${selectedImage ? 'text-blue-600 bg-blue-50 ring-2 ring-blue-100' : ''}`}
-                title={t("chatWindow.uploadImage")}
-                disabled={isLoading}
-              >
-                <ImageIcon className="w-5 h-5" />
-              </button>
+            <div
+              className={`rounded-2xl border bg-white transition-colors ${
+                isLoading
+                  ? "border-gray-200"
+                  : "border-gray-300 focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-100"
+              }`}
+            >
               <textarea
+                ref={textareaRef}
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
                 placeholder={t("chatWindow.inputPlaceholder")}
-                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none overflow-y-auto"
-                style={{
-                  minHeight: "40px",
-                  maxHeight: "200px",
-                  height: input ? `${Math.min(input.split('\n').length * 24 + 16, 200)}px` : "40px"
-                }}
+                className="w-full resize-none bg-transparent px-4 pt-3 pb-1 text-sm text-gray-900 placeholder-gray-400 focus:outline-none disabled:cursor-not-allowed"
+                style={{ minHeight: "24px", maxHeight: "200px" }}
                 disabled={isLoading}
                 rows={1}
               />
-              <button
-                onClick={handleSend}
-                disabled={isLoading || (!input.trim() && !selectedImage)}
-                className="px-6 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex-shrink-0"
-              >
-                {t("chatWindow.sendButton")}
-              </button>
+              <div className="flex items-center justify-between gap-2 px-2 pb-2">
+                <div className="flex items-center gap-0.5">
+                  <VoiceUpload onTranscriptionComplete={handleTranscription} disabled={isLoading} />
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    ref={fileInputRef}
+                    onChange={handleImageSelect}
+                  />
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    className={`p-2 rounded-full hover:bg-gray-100 text-gray-500 transition-colors ${selectedImage ? 'text-blue-600 bg-blue-50 ring-2 ring-blue-100' : ''}`}
+                    title={t("chatWindow.uploadImage")}
+                    disabled={isLoading}
+                  >
+                    <ImageIcon className="w-5 h-5" />
+                  </button>
+                </div>
+                <button
+                  onClick={handleSend}
+                  disabled={isLoading || (!input.trim() && !selectedImage)}
+                  className="flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-full bg-blue-600 text-white hover:bg-blue-700 disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed transition-colors"
+                  title={t("chatWindow.sendButton")}
+                  aria-label={t("chatWindow.sendButton")}
+                >
+                  {isLoading ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <ArrowUp className="w-4 h-4" />
+                  )}
+                </button>
+              </div>
             </div>
-            <p className="text-xs text-gray-500 mt-1">
-              💡 <span className="font-medium">Shift+Enter</span>{t("chatWindow.shortcutSendSuffix")}<span className="font-medium">Enter</span>{t("chatWindow.shortcutNewlineSuffix")}
+            <p className="text-xs text-gray-400 mt-1.5 px-1">
+              <span className="font-medium text-gray-500">{t("chatWindow.enterToSend")}</span>
+              {" · "}
+              <span className="font-medium text-gray-500">{t("chatWindow.shiftEnterNewline")}</span>
             </p>
           </div>
         </div>

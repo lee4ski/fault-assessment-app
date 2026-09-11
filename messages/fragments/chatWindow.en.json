@@ -51,8 +51,8 @@
   "analyzingStatus": "AI analyzing...",
   "thinkingStatus": "Thinking...",
   "uploadImage": "Upload image",
-  "inputPlaceholder": "Type your question... (Shift+Enter to send)",
+  "inputPlaceholder": "Type your question...",
   "sendButton": "Send",
-  "shortcutSendSuffix": " to send, ",
-  "shortcutNewlineSuffix": " for a new line"
+  "enterToSend": "Enter to send",
+  "shiftEnterNewline": "Shift+Enter for a new line"
 }
