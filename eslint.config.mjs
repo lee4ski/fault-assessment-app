@@ -27,12 +27,20 @@ const eslintConfig = [
   },
   {
     // This is lint's first real run on this codebase (`next lint` was
-    // broken and silently never ran in CI). `no-explicit-any` catches
-    // years of pre-existing `any` usage across the app — real cleanup work,
-    // not something to block every PR on right away, so it's a warning
-    // rather than a hard error until that debt is paid down deliberately.
+    // broken and silently never ran in CI). These catch years of
+    // pre-existing patterns across the app — real cleanup work, not
+    // something to block every PR on right away, so they're warnings
+    // rather than hard errors until that debt is paid down deliberately:
+    // - no-explicit-any: widespread pre-existing `any` usage.
+    // - set-state-in-effect: several components call setState inside a
+    //   useEffect to sync from a prop/async result — a legitimate, common
+    //   pattern in plenty of these cases, not necessarily the "derived
+    //   state" anti-pattern this rule targets. Worth auditing each one
+    //   deliberately rather than reflexively silencing or restructuring
+    //   them all right now.
     rules: {
       "@typescript-eslint/no-explicit-any": "warn",
+      "react-hooks/set-state-in-effect": "warn",
     },
   },
   {

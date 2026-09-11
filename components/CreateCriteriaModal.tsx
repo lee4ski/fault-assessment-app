@@ -26,26 +26,19 @@ export default function CreateCriteriaModal({
   const [summary, setSummary] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
 
-  // Auto-generate draft if description provided
-  useEffect(() => {
-    if (isOpen && description && !title) {
-      generateDraft();
-    }
-  }, [isOpen, description]);
-
   const generateDraft = async () => {
     if (!description) return;
-    
+
     setIsGenerating(true);
     try {
-      // We can reuse the analyze endpoint or a new one. 
+      // We can reuse the analyze endpoint or a new one.
       // For simplicity, let's assume we ask the AI to format it as a criteria title/summary
       // Or simply infer from attributes
-      
+
       // Simple inference for now to avoid another API call unless requested
       // Actually, let's use a simple heuristic or placeholder
       // If we wanted real AI generation, we'd hit an endpoint.
-      
+
       // Let's just set a placeholder title based on attributes if available
       if (initialAttributes) {
         const partyA = initialAttributes.partyTypes?.[0] || "A";
@@ -65,6 +58,13 @@ export default function CreateCriteriaModal({
       setIsGenerating(false);
     }
   };
+
+  // Auto-generate draft if description provided
+  useEffect(() => {
+    if (isOpen && description && !title) {
+      generateDraft();
+    }
+  }, [isOpen, description]);
 
   const handleSave = () => {
     const newCriteria: AssessmentCriteria = {

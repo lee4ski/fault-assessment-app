@@ -5,7 +5,12 @@ import { localize } from "@/lib/i18n-simple";
 import { getMakeLabel, getModelLabel } from "@/lib/vehicleData";
 
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY || process.env.OPEN_API_KEY || "",
+  apiKey: process.env.OPENAI_API_KEY || process.env.OPEN_API_KEY || "missing-openai-api-key",
+  // A real empty string makes the SDK throw at module load (during `next build`
+  // page-data collection, or if OPENAI_API_KEY is unset/misconfigured at runtime),
+  // crashing the whole build/route instead of the graceful "not configured" JSON
+  // error each handler below already returns. This placeholder just avoids that;
+  // the actual env var (not this client) is what every handler checks.
 });
 
 type ReportLocale = "ja" | "en";
