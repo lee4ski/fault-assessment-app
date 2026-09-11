@@ -19,9 +19,15 @@ export function LocaleProvider({ children }: { children: ReactNode }) {
   const [locale, setLocaleState] = useState<Locale>(defaultLocale);
 
   useEffect(() => {
+    // Deliberately reading localStorage post-mount (not via a lazy useState
+    // initializer) so the server-rendered and first client render both use
+    // `defaultLocale` and match — reading it during the initializer would
+    // also run on the server, where `localStorage` doesn't exist, and would
+    // otherwise cause a hydration mismatch on the client's first paint.
     try {
       const saved = window.localStorage.getItem(STORAGE_KEY);
       if (saved === "en" || saved === "ja") {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setLocaleState(saved);
       }
     } catch {

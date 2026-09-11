@@ -55,11 +55,11 @@ describe("Step2Calculate", () => {
     const user = userEvent.setup();
     const onCalculate = vi.fn();
     render(<Step2Calculate criteria={mockCriteria} onCalculate={onCalculate} />);
-    
-    // Select first modification (-5%)
-    const checkbox1 = screen.getByLabelText(/歩行者が幼児の場合/);
-    await user.click(checkbox1);
-    
+
+    // Modification factors are toggle-chip buttons, not checkboxes.
+    const factor1 = screen.getByRole("button", { name: /歩行者が幼児の場合/ });
+    await user.click(factor1);
+
     // Final should be 10 - 5 = 5%
     expect(screen.getByText("5%")).toBeInTheDocument();
   });
@@ -68,14 +68,14 @@ describe("Step2Calculate", () => {
     const user = userEvent.setup();
     const onCalculate = vi.fn();
     render(<Step2Calculate criteria={mockCriteria} onCalculate={onCalculate} />);
-    
+
     // Select both modifications: 10 - 5 + 10 = 15%
-    const checkbox1 = screen.getByLabelText(/歩行者が幼児の場合/);
-    const checkbox2 = screen.getByLabelText(/車両が速度違反をしていた場合/);
-    
-    await user.click(checkbox1);
-    await user.click(checkbox2);
-    
+    const factor1 = screen.getByRole("button", { name: /歩行者が幼児の場合/ });
+    const factor2 = screen.getByRole("button", { name: /車両が速度違反をしていた場合/ });
+
+    await user.click(factor1);
+    await user.click(factor2);
+
     expect(screen.getByText("15%")).toBeInTheDocument();
   });
 
@@ -83,10 +83,10 @@ describe("Step2Calculate", () => {
     const user = userEvent.setup();
     const onCalculate = vi.fn();
     render(<Step2Calculate criteria={mockCriteria} onCalculate={onCalculate} />);
-    
-    const saveButton = screen.getByRole("button", { name: "計算結果を保存" });
+
+    const saveButton = screen.getByRole("button", { name: "計算結果を保存して次へ" });
     await user.click(saveButton);
-    
+
     expect(onCalculate).toHaveBeenCalled();
     const callArgs = onCalculate.mock.calls[0][0];
     expect(callArgs.baseFaultPercentage).toBe(10);
@@ -97,10 +97,10 @@ describe("Step2Calculate", () => {
     const user = userEvent.setup();
     const onCalculate = vi.fn();
     render(<Step2Calculate criteria={mockCriteria} onCalculate={onCalculate} />);
-    
-    const checkbox = screen.getByLabelText(/歩行者が幼児の場合/);
-    await user.click(checkbox);
-    
+
+    const factor = screen.getByRole("button", { name: /歩行者が幼児の場合/ });
+    await user.click(factor);
+
     // Check that the modification appears in the summary section
     const summarySection = screen.getByText("最終過失割合:").closest("div");
     expect(summarySection).toBeInTheDocument();

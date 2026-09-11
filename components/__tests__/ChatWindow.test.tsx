@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent, waitFor } from "./test-utils";
+import { render, screen, waitFor } from "./test-utils";
 import userEvent from "@testing-library/user-event";
 import ChatWindow from "../ChatWindow";
 
@@ -12,15 +12,29 @@ vi.mock("lucide-react", () => ({
   ChevronUp: () => <div data-testid="chevron-up">▲</div>,
   MessageSquare: () => <div data-testid="message-square">💬</div>,
   ChevronRight: () => <div data-testid="chevron-right">▶</div>,
+  Sparkles: () => <div data-testid="sparkles">✨</div>,
+  Image: () => <div data-testid="image-icon">🖼️</div>,
+  X: () => <div data-testid="x-icon">✕</div>,
+  ArrowUp: () => <div data-testid="arrow-up">↑</div>,
+  Loader2: () => <div data-testid="loader">⟳</div>,
 }));
+
+// The chat panel starts collapsed (just a floating "Open chat" button), so
+// every test below opens it first before interacting with the composer.
+const openChat = async (user: ReturnType<typeof userEvent.setup>) => {
+  await user.click(screen.getByTitle("チャットを開く"));
+};
 
 describe("ChatWindow", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it("renders chat window with initial message", () => {
+  it("renders chat window with initial message", async () => {
+    const user = userEvent.setup();
     render(<ChatWindow step={1} stepName="認定基準の検索" />);
+
+    await openChat(user);
 
     expect(screen.getByText("アシスタントチャット")).toBeInTheDocument();
     expect(screen.getByText("認定基準の検索")).toBeInTheDocument();
@@ -31,30 +45,27 @@ describe("ChatWindow", () => {
     const user = userEvent.setup();
     render(<ChatWindow step={1} stepName="認定基準の検索" />);
 
-    const collapseButton = screen.getByRole("button", { name: /アシスタントチャット/i });
-
-    // Initially visible
-    expect(screen.getByPlaceholderText("質問を入力してください...")).toBeInTheDocument();
-
-    // Collapse
-    await user.click(collapseButton);
-    const chatWindow = screen.getByTestId("chat-window");
-    expect(chatWindow).toHaveClass("w-0");
-    expect(chatWindow).toHaveClass("overflow-hidden");
+    // Starts collapsed: only the floating open button exists, no panel yet.
+    expect(screen.queryByTestId("chat-window")).not.toBeInTheDocument();
 
     // Expand
-    const expandButton = screen.getByTitle("チャットを開く");
-    await user.click(expandButton);
-    expect(chatWindow).not.toHaveClass("w-0");
-    expect(chatWindow).toHaveClass("w-[400px]");
+    await openChat(user);
+    expect(screen.getByTestId("chat-window")).toBeInTheDocument();
     expect(screen.getByPlaceholderText("質問を入力してください...")).toBeInTheDocument();
+
+    // Collapse again via the panel header
+    const collapseButton = screen.getByRole("button", { name: /アシスタントチャット/i });
+    await user.click(collapseButton);
+    expect(screen.queryByTestId("chat-window")).not.toBeInTheDocument();
+    expect(screen.getByTitle("チャットを開く")).toBeInTheDocument();
   });
 
   it("allows user to type in input field", async () => {
     const user = userEvent.setup();
     render(<ChatWindow step={1} stepName="認定基準の検索" />);
+    await openChat(user);
 
-    const input = screen.getByPlaceholderText("質問を入力してください...") as HTMLInputElement;
+    const input = screen.getByPlaceholderText("質問を入力してください...") as HTMLTextAreaElement;
 
     await user.type(input, "テストメッセージ");
     expect(input.value).toBe("テストメッセージ");
@@ -68,6 +79,7 @@ describe("ChatWindow", () => {
     });
 
     render(<ChatWindow step={1} stepName="認定基準の検索" />);
+    await openChat(user);
 
     const input = screen.getByPlaceholderText("質問を入力してください...");
     const sendButton = screen.getByRole("button", { name: "送信" });
@@ -92,9 +104,11 @@ describe("ChatWindow", () => {
     });
 
     render(<ChatWindow step={1} stepName="認定基準の検索" />);
+    await openChat(user);
 
     const input = screen.getByPlaceholderText("質問を入力してください...");
 
+    // Enter sends the message (Shift+Enter inserts a newline instead).
     await user.type(input, "Enterキーテスト{Enter}");
 
     await waitFor(() => {
@@ -102,8 +116,10 @@ describe("ChatWindow", () => {
     });
   });
 
-  it("disables send button when input is empty", () => {
+  it("disables send button when input is empty", async () => {
+    const user = userEvent.setup();
     render(<ChatWindow step={1} stepName="認定基準の検索" />);
+    await openChat(user);
 
     const sendButton = screen.getByRole("button", { name: "送信" });
     expect(sendButton).toBeDisabled();
@@ -119,6 +135,7 @@ describe("ChatWindow", () => {
     );
 
     render(<ChatWindow step={1} stepName="認定基準の検索" />);
+    await openChat(user);
 
     const input = screen.getByPlaceholderText("質問を入力してください...");
     const sendButton = screen.getByRole("button", { name: "送信" });
@@ -135,6 +152,7 @@ describe("ChatWindow", () => {
     (global.fetch as any).mockRejectedValueOnce(new Error("Network error"));
 
     render(<ChatWindow step={1} stepName="認定基準の検索" />);
+    await openChat(user);
 
     const input = screen.getByPlaceholderText("質問を入力してください...");
     const sendButton = screen.getByRole("button", { name: "送信" });
@@ -147,4 +165,3 @@ describe("ChatWindow", () => {
     });
   });
 });
-
