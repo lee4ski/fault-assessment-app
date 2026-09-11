@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import { render, screen, fireEvent, waitFor } from "./test-utils";
+import { render, screen, fireEvent } from "./test-utils";
 import userEvent from "@testing-library/user-event";
 import Step1Search from "../Step1Search";
 import { AssessmentCriteria } from "@/types";
@@ -40,45 +40,55 @@ const mockCriteria: AssessmentCriteria[] = [
   },
 ];
 
+// Step1Search only searches on demand (typing alone doesn't filter the
+// list) — a "検索" button click commits the current search box value and
+// reveals the results. Clicking it with an empty box shows the full list.
+const runSearch = async (user: ReturnType<typeof userEvent.setup>) => {
+  await user.click(screen.getByRole("button", { name: "検索" }));
+};
+
 describe("Step1Search", () => {
-  it("renders search input and criteria list", () => {
+  it("renders search input and criteria list", async () => {
+    const user = userEvent.setup();
     const onSelect = vi.fn();
     render(<Step1Search criteria={mockCriteria} onSelect={onSelect} />);
-    
+
     expect(screen.getByPlaceholderText(/例: 交差点、歩行者、駐車場など/)).toBeInTheDocument();
+
+    await runSearch(user);
+
     expect(screen.getByText("交差点での歩行者と直進車との事故")).toBeInTheDocument();
     expect(screen.getByText("駐車場での出庫車と走行車との事故")).toBeInTheDocument();
   });
 
   it("filters criteria when searching", async () => {
+    const user = userEvent.setup();
     const onSelect = vi.fn();
     render(<Step1Search criteria={mockCriteria} onSelect={onSelect} />);
-    
+
     const searchInput = screen.getByPlaceholderText(/例: 交差点、歩行者、駐車場など/);
     fireEvent.change(searchInput, { target: { value: "交差点" } });
-    
-    // Wait for debounce (150ms) plus a small buffer
-    await waitFor(
-      () => {
-        expect(screen.getByText("交差点での歩行者と直進車との事故")).toBeInTheDocument();
-        expect(screen.queryByText("駐車場での出庫車と走行車との事故")).not.toBeInTheDocument();
-      },
-      { timeout: 300 }
-    );
+    await runSearch(user);
+
+    expect(screen.getByText("交差点での歩行者と直進車との事故")).toBeInTheDocument();
+    expect(screen.queryByText("駐車場での出庫車と走行車との事故")).not.toBeInTheDocument();
   });
 
   it("calls onSelect when criteria is clicked", async () => {
     const user = userEvent.setup();
     const onSelect = vi.fn();
     render(<Step1Search criteria={mockCriteria} onSelect={onSelect} />);
-    
+
+    await runSearch(user);
+
     const criteriaItem = screen.getByText("交差点での歩行者と直進車との事故");
     await user.click(criteriaItem);
-    
+
     expect(onSelect).toHaveBeenCalledWith(mockCriteria[0]);
   });
 
-  it("highlights selected criteria", () => {
+  it("highlights selected criteria", async () => {
+    const user = userEvent.setup();
     const onSelect = vi.fn();
     render(
       <Step1Search
@@ -87,26 +97,24 @@ describe("Step1Search", () => {
         selectedCriteria={mockCriteria[0]}
       />
     );
-    
+
+    await runSearch(user);
+
     const selectedItem = screen.getByText("交差点での歩行者と直進車との事故").closest("li");
     expect(selectedItem).toHaveClass("bg-blue-50");
   });
 
   it("shows no results message when search returns empty", async () => {
+    const user = userEvent.setup();
     const onSelect = vi.fn();
     render(<Step1Search criteria={mockCriteria} onSelect={onSelect} />);
-    
+
     const searchInput = screen.getByPlaceholderText(/例: 交差点、歩行者、駐車場など/);
     fireEvent.change(searchInput, { target: { value: "存在しないキーワード" } });
-    
-    // Wait for debounce (150ms) plus a small buffer
-    await waitFor(
-      () => {
-        expect(screen.getByText("検索結果が見つかりませんでした")).toBeInTheDocument();
-        expect(screen.getByText("フィルタを解除")).toBeInTheDocument();
-      },
-      { timeout: 300 }
-    );
+    await runSearch(user);
+
+    expect(screen.getByText("一致する認定基準が見つかりませんでした")).toBeInTheDocument();
+    expect(screen.getByText("条件をリセット")).toBeInTheDocument();
   });
 });
 

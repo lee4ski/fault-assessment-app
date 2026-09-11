@@ -136,7 +136,7 @@ export default function AccidentReportWizard() {
     if (vehicles.length > 0) {
       let status: "complete" | "incomplete" | "valid-empty" = "complete";
       let color: "green" | "red" | "yellow" = "green";
-      let missingItems: string[] = [];
+      const missingItems: string[] = [];
       let reason = t("accidentReportWizard.vehicleReason.selected", { count: vehicles.length });
 
       // Check 1: Count mismatch (if AI expected something)
