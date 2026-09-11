@@ -1,0 +1,30 @@
+{
+  "steps": {
+    "search": "Search Assessment Criteria",
+    "modify": "Apply Modification Factors",
+    "vehicle": "Vehicle Information Search",
+    "report": "AI Report Creation"
+  },
+  "vehicleReason": {
+    "selected": "{count} vehicle(s) selected",
+    "countMismatch": "AI detected {expected} vehicle(s), but only {selected} were selected",
+    "makeMismatch": "The selected vehicles don't match the AI analysis result ({issues})",
+    "notRegistered": "No vehicle information has been registered"
+  },
+  "missingItems": {
+    "vehicleCountMismatch": "Vehicle count mismatch",
+    "vehicleInfoMismatch": "Vehicle information mismatch",
+    "vehicleInfo": "Vehicle information"
+  },
+  "aiSuggestionPrefix": "💡 **AI Suggestion**: ",
+  "aiWarningPrefix": "⚠️ **AI Note**: ",
+  "aiSuggestion": {
+    "elderlyChild": "A modification factor related to elderly persons or young children was applied. In Step 3, we recommend checking whether the other vehicle is equipped with pedestrian safety features or automatic braking.",
+    "heavyOrSevere": "A modification factor related to large vehicles or gross negligence was applied. In Step 3, please check the vehicle's specific size, load capacity, and maintenance condition.",
+    "noVehicleInfo": "No vehicle information has been registered. To improve the accuracy of the report, we recommend identifying at least the make and model."
+  },
+  "selectCriteriaFirst": "Please select an assessment criterion in Step 1",
+  "backToStep1": "Back to Step 1",
+  "previousStep": "Back to Previous Step",
+  "nextStep": "Next Step"
+}

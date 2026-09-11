@@ -2,6 +2,7 @@
 "use client";
 
 import { useState, useRef } from "react";
+import { useLocale } from "@/components/LocaleProvider";
 
 interface VoiceUploadProps {
   onTranscriptionComplete: (text: string, audioData?: { name: string; url: string; type: string }) => void;
@@ -9,6 +10,7 @@ interface VoiceUploadProps {
 }
 
 export default function VoiceUpload({ onTranscriptionComplete, disabled = false }: VoiceUploadProps) {
+  const { t, locale } = useLocale();
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -18,13 +20,14 @@ export default function VoiceUpload({ onTranscriptionComplete, disabled = false 
 
     // Validate file type (audio/video)
     if (!file.type.startsWith("audio/") && !file.type.startsWith("video/")) {
-      alert("音声または動画ファイルを選択してください。");
+      alert(t("voiceUpload.invalidFileType"));
       return;
     }
 
     setIsUploading(true);
     const formData = new FormData();
     formData.append("file", file);
+    formData.append("locale", locale);
 
     try {
       const response = await fetch("/api/transcribe", {
@@ -49,7 +52,7 @@ export default function VoiceUpload({ onTranscriptionComplete, disabled = false 
       }
     } catch (error) {
       console.error("Upload failed:", error);
-      alert("音声認識に失敗しました。もう一度お試しください。");
+      alert(t("voiceUpload.transcriptionFailed"));
     } finally {
       setIsUploading(false);
       // Reset input
@@ -82,7 +85,7 @@ export default function VoiceUpload({ onTranscriptionComplete, disabled = false 
             ? "bg-gray-100 text-gray-400 cursor-wait" 
             : "bg-blue-50 text-blue-600 hover:bg-blue-100 border border-blue-200"
         }`}
-        title="音声ファイルをアップロードしてテキストに変換"
+        title={t("voiceUpload.buttonTitle")}
       >
         {isUploading ? (
           <>
@@ -90,7 +93,7 @@ export default function VoiceUpload({ onTranscriptionComplete, disabled = false 
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
             </svg>
-            <span className="text-sm font-medium">変換中...</span>
+            <span className="text-sm font-medium">{t("voiceUpload.converting")}</span>
           </>
         ) : (
           <>
@@ -100,7 +103,7 @@ export default function VoiceUpload({ onTranscriptionComplete, disabled = false 
               <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
               <line x1="12" x2="12" y1="19" y2="22"/>
             </svg>
-            <span className="text-sm font-medium">音声→文字</span>
+            <span className="text-sm font-medium">{t("voiceUpload.voiceToText")}</span>
           </>
         )}
       </button>

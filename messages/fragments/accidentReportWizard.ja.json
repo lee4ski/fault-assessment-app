@@ -1,0 +1,30 @@
+{
+  "steps": {
+    "search": "認定基準の検索",
+    "modify": "修正要素の適用",
+    "vehicle": "車両情報検索",
+    "report": "AI報告書作成"
+  },
+  "vehicleReason": {
+    "selected": "{count}台の車両情報が選択されました",
+    "countMismatch": "AIは{expected}台の車両を検出しましたが、{selected}台しか選択されていません",
+    "makeMismatch": "選択された車両がAI分析結果（{issues}）と一致しません",
+    "notRegistered": "車両情報が登録されていません"
+  },
+  "missingItems": {
+    "vehicleCountMismatch": "車両台数の不一致",
+    "vehicleInfoMismatch": "車両情報の不一致",
+    "vehicleInfo": "車両情報"
+  },
+  "aiSuggestionPrefix": "💡 **AI提案**: ",
+  "aiWarningPrefix": "⚠️ **AI注意**: ",
+  "aiSuggestion": {
+    "elderlyChild": "高齢者・幼児に関する修正要素が適用されました。Step 3で、相手車両に「対歩行者安全装置」や「自動ブレーキ」が装備されているか確認することをお勧めします。",
+    "heavyOrSevere": "大型車や著しい過失に関する修正要素が適用されました。Step 3で、車両の具体的なサイズや積載量、整備状況を確認してください。",
+    "noVehicleInfo": "車両情報が登録されていません。報告書の精度を上げるため、少なくともメーカーと車種名は特定しておくことをお勧めします。"
+  },
+  "selectCriteriaFirst": "ステップ1で認定基準を選択してください",
+  "backToStep1": "ステップ1に戻る",
+  "previousStep": "前のステップに戻る",
+  "nextStep": "次のステップへ"
+}

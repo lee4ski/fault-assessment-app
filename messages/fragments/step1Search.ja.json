@@ -1,0 +1,62 @@
+{
+  "heading": "ステップ1: 認定基準の検索",
+  "description": "事故の種類や状況を入力して、適切な認定基準を検索してください。",
+  "tabs": {
+    "keyword": "キーワード検索",
+    "structured": "構造化検索"
+  },
+  "keywordSearch": {
+    "label": "認定基準を検索",
+    "placeholder": "例: 交差点、歩行者、駐車場など",
+    "searchButton": "検索",
+    "aiButton": "AI検索",
+    "aiButtonTitle": "文章から条件を自動抽出します（10文字以上必要）",
+    "compareButton": "比較検索",
+    "compareButtonTitle": "キーワード検索とAI検索を同時実行して比較"
+  },
+  "chapterFilter": {
+    "label": "章で絞り込み:",
+    "all": "すべて",
+    "hitCount": "{chapterTitle}: {count}件"
+  },
+  "emptyState": {
+    "promptSearch": "キーワードを入力して検索してください",
+    "noResults": "一致する認定基準が見つかりませんでした",
+    "aiSuggestTitle": "💡 AIを使って詳細な条件で検索しますか？",
+    "aiSuggestDescription": "入力された文章から、「場所」「当事者」「信号」などの条件を自動で設定して検索します。",
+    "aiSuggestButton": "AI検索で構造化検索へ移動",
+    "tryInstead": "または次を試してください：",
+    "resetButton": "条件をリセット"
+  },
+  "result": {
+    "aiRecommended": "AI推奨",
+    "aiConfidence": "AI信頼度: {confidence}%",
+    "aiMatchScore": "AI適合度: {probability}%",
+    "vectorSimilarity": "ベクトル検索類似度:",
+    "source": "出典",
+    "baseFaultPercentage": "基本過失割合: {percentage}%",
+    "matchTypeTitle": "{matchType} ({matchField})",
+    "matchType": {
+      "prefix": "前方一致",
+      "partial": "部分一致",
+      "suffix": "後方一致"
+    },
+    "matchTypeShort": {
+      "prefix": "前方",
+      "partial": "部分",
+      "suffix": "後方"
+    },
+    "matchField": {
+      "title": "タイトル",
+      "description": "説明",
+      "chapter": "章"
+    }
+  },
+  "alerts": {
+    "aiNoResults": "AI検索の結果、該当する認定基準が見つかりませんでした。別のキーワードで検索してください。",
+    "aiSearchFailed": "AI検索に失敗しました: {error}",
+    "aiSearchFailedGeneric": "AI検索に失敗しました",
+    "genericError": "エラーが発生しました",
+    "unknownError": "エラーが発生しました"
+  }
+}

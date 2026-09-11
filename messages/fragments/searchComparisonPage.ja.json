@@ -1,0 +1,112 @@
+{
+  "duration": {
+    "seconds": "{value}秒"
+  },
+  "alertMinLength": "検索キーワードを5文字以上入力してください",
+  "backToStep1": "Step 1に戻る",
+  "pageTitle": "検索方法の比較デモ",
+  "inputLabel": "事故状況を入力してください",
+  "inputPlaceholder": "例：交差点で歩行者と車が衝突、信号機のある横断歩道",
+  "searching": "検索中...",
+  "runSearchButton": "比較検索を実行",
+  "keywordSearchLabel": "キーワード検索",
+  "aiSearchLabel": "AI検索",
+  "explanation": {
+    "title": "AI適合度とは？",
+    "introTerm": "AI適合度",
+    "introPart1": "は、あなたの検索内容と各ケースの",
+    "introSemanticTerm": "「意味的な近さ」",
+    "introPart2": "を示す数値です（0-100%）。",
+    "keywordCard": {
+      "matchPart1": "単純な",
+      "matchTerm": "単語の一致",
+      "matchPart2": "を確認します",
+      "example": "例：「交差点」という文字が含まれるか？",
+      "speedLabel": "速い（数十ミリ秒）"
+    },
+    "aiCard": {
+      "meaningTerm": "意味を理解",
+      "meaningPart2": "して検索します",
+      "example": "例：「横断歩道」と「交差点の横断」は似た意味",
+      "speedLabel": "遅い（数秒）が賢い"
+    },
+    "calcMethodTitle": "AI適合度の計算方法（ステップバイステップ）",
+    "vector": {
+      "heading": "まず「意味のベクトル」って何？",
+      "lead": "言葉を数字のリストに変換したものです：",
+      "appleWord": "「りんご」",
+      "orangeWord": "「みかん」",
+      "carWord": "「自動車」",
+      "notRandomWarning": "⚠️ この数字はデタラメではありません！",
+      "mapHeading": "AIが数えきれない学習から「意味の地図」を自分で作る",
+      "mapBullet1": "AIは何億もの文章を読んで学習",
+      "mapBullet2Part1": "「りんご」と「みかん」が一緒に使われることが多い → ",
+      "mapBullet2Strong": "近くに配置",
+      "mapBullet3Part1": "「りんご」と「自動車」が一緒に使われることは少ない → ",
+      "mapBullet3Strong": "遠くに配置",
+      "mapBullet4Part1": "人間が教えなくても、",
+      "mapBullet4Strong": "AIが自動的に「意味の地図」を作り上げる",
+      "andConnector": "と",
+      "closeApple": "りんご",
+      "closeOrange": "みかん",
+      "closeArrowText": "→ 意味が近いので",
+      "closeStrong": "数字も似ている",
+      "closeNumbers": "（0.3 ≈ 0.28、1.2 ≈ 1.1、-0.8 ≈ -0.75）",
+      "farApple": "りんご",
+      "farCar": "自動車",
+      "farArrowText": "→ 意味が遠いので",
+      "farStrong": "数字もぜんぜん違う",
+      "farNumbers": "（0.3 vs -1.0、1.2 vs 0.4、-0.8 vs 2.3）",
+      "summaryQuote": "\"意味が似ているほど数字も似るように作られたデータ\"",
+      "summaryFooter": "これが「意味のベクトル」です。"
+    },
+    "steps": {
+      "step1": {
+        "title": "あなたの質問を「意味のベクトル」に変換",
+        "exampleText": "「交差点で衝突」→ ",
+        "note": "※ 実際は1536次元の数値リスト"
+      },
+      "step2": {
+        "title": "各ケースも「意味のベクトル」として事前に保存",
+        "desc": "データベース内の1000件すべてがベクトル化済み",
+        "caseLabel": "💾 ケース[1]: "
+      },
+      "step3": {
+        "title": "ベクトル同士の角度を測定",
+        "yourQuestion": "あなたの質問",
+        "case1Close": "ケース1 (近い)",
+        "case2Far": "ケース2 (遠い)",
+        "angleSmall": "角度が小さい = 意味が近い",
+        "angleLarge": "角度が大きい = 意味が遠い"
+      },
+      "step4": {
+        "title": "類似度を0-100%で表示",
+        "case1Label": "ケース1:",
+        "case2Label": "ケース2:"
+      }
+    },
+    "conclusion": {
+      "prefixStrong": "つまり：",
+      "text1": "あなたの質問と各ケースの「意味の方向」がどれだけ一致しているかを数値化したものが",
+      "highlightTerm": "AI適合度",
+      "text2": "です。言葉が違っても、意味が似ていれば高いスコアになります！"
+    }
+  },
+  "results": {
+    "idlePrompt": "検索を実行してください",
+    "noResults": "該当する結果が見つかりませんでした",
+    "resultsLabel": "📊 結果: ",
+    "resultsCount": "{count}件",
+    "baseFaultLabel": "基本過失割合: {value}%",
+    "aiAnalyzing": "AI分析中...",
+    "aiScoreLabel": "🎯 AI適合度: {value}%"
+  },
+  "performance": {
+    "title": "パフォーマンス比較",
+    "ratioLine1": "AIはキーワードより",
+    "ratioLine2": "遅いが精度が高い",
+    "keywordLabelLine1": "キーワード検索",
+    "durationLine2": "実行時間",
+    "aiLabelLine1": "AI検索"
+  }
+}

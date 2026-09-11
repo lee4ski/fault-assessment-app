@@ -1,0 +1,112 @@
+{
+  "duration": {
+    "seconds": "{value}s"
+  },
+  "alertMinLength": "Please enter at least 5 characters for your search.",
+  "backToStep1": "Back to Step 1",
+  "pageTitle": "Search Method Comparison Demo",
+  "inputLabel": "Describe the accident",
+  "inputPlaceholder": "e.g., A pedestrian and a car collided at a signaled intersection crosswalk",
+  "searching": "Searching...",
+  "runSearchButton": "Run Comparison Search",
+  "keywordSearchLabel": "Keyword Search",
+  "aiSearchLabel": "AI Search",
+  "explanation": {
+    "title": "What Is the AI Match Score?",
+    "introTerm": "AI Match Score",
+    "introPart1": " is a number (0-100%) that shows how ",
+    "introSemanticTerm": "\"semantically close\"",
+    "introPart2": " your search is to each case.",
+    "keywordCard": {
+      "matchPart1": "Checks for a simple ",
+      "matchTerm": "word match",
+      "matchPart2": ".",
+      "example": "Example: Does the text contain \"intersection\"?",
+      "speedLabel": "Fast (tens of milliseconds)"
+    },
+    "aiCard": {
+      "meaningTerm": "Understands the meaning",
+      "meaningPart2": " and searches accordingly.",
+      "example": "Example: \"crosswalk\" and \"crossing at an intersection\" have similar meanings",
+      "speedLabel": "Slower (a few seconds), but smarter"
+    },
+    "calcMethodTitle": "How the AI Match Score Is Calculated (Step by Step)",
+    "vector": {
+      "heading": "First, what is a \"meaning vector\"?",
+      "lead": "It's a word converted into a list of numbers:",
+      "appleWord": "\"Apple\"",
+      "orangeWord": "\"Orange\"",
+      "carWord": "\"Car\"",
+      "notRandomWarning": "⚠️ These numbers aren't arbitrary!",
+      "mapHeading": "AI builds its own \"map of meaning\" from countless examples",
+      "mapBullet1": "AI learns by reading hundreds of millions of sentences",
+      "mapBullet2Part1": "\"Apple\" and \"orange\" often appear together → ",
+      "mapBullet2Strong": "placed close together",
+      "mapBullet3Part1": "\"Apple\" and \"car\" rarely appear together → ",
+      "mapBullet3Strong": "placed far apart",
+      "mapBullet4Part1": "Without anyone teaching it, ",
+      "mapBullet4Strong": "the AI automatically builds this \"map of meaning\"",
+      "andConnector": " and ",
+      "closeApple": "Apple",
+      "closeOrange": "Orange",
+      "closeArrowText": " → similar meaning, so ",
+      "closeStrong": "the numbers are similar too",
+      "closeNumbers": "(0.3 ≈ 0.28, 1.2 ≈ 1.1, -0.8 ≈ -0.75)",
+      "farApple": "Apple",
+      "farCar": "Car",
+      "farArrowText": " → different meaning, so ",
+      "farStrong": "the numbers are completely different",
+      "farNumbers": "(0.3 vs -1.0, 1.2 vs 0.4, -0.8 vs 2.3)",
+      "summaryQuote": "\"Data built so that similar meanings get similar numbers\"",
+      "summaryFooter": "This is what a \"meaning vector\" is."
+    },
+    "steps": {
+      "step1": {
+        "title": "Convert your question into a \"meaning vector\"",
+        "exampleText": "\"Collision at an intersection\" → ",
+        "note": "* In practice, this is a list of 1,536 numbers"
+      },
+      "step2": {
+        "title": "Each case is also pre-stored as a \"meaning vector\"",
+        "desc": "All 1,000 cases in the database are already vectorized",
+        "caseLabel": "💾 Case [1]: "
+      },
+      "step3": {
+        "title": "Measure the angle between vectors",
+        "yourQuestion": "Your question",
+        "case1Close": "Case 1 (close)",
+        "case2Far": "Case 2 (far)",
+        "angleSmall": "Small angle = similar meaning",
+        "angleLarge": "Large angle = different meaning"
+      },
+      "step4": {
+        "title": "Display similarity as 0-100%",
+        "case1Label": "Case 1:",
+        "case2Label": "Case 2:"
+      }
+    },
+    "conclusion": {
+      "prefixStrong": "In short:",
+      "text1": " the ",
+      "highlightTerm": "AI Match Score",
+      "text2": " is a number that shows how closely the \"direction of meaning\" in your question matches each case. Even if the wording differs, similar meanings will score highly!"
+    }
+  },
+  "results": {
+    "idlePrompt": "Run a search to see results",
+    "noResults": "No matching results found",
+    "resultsLabel": "📊 Results: ",
+    "resultsCount": "{count}",
+    "baseFaultLabel": "Base fault ratio: {value}%",
+    "aiAnalyzing": "Analyzing with AI...",
+    "aiScoreLabel": "🎯 AI Match Score: {value}%"
+  },
+  "performance": {
+    "title": "Performance Comparison",
+    "ratioLine1": "AI is slower than keyword search,",
+    "ratioLine2": "but more accurate",
+    "keywordLabelLine1": "Keyword Search",
+    "durationLine2": "Execution Time",
+    "aiLabelLine1": "AI Search"
+  }
+}

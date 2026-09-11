@@ -1,0 +1,62 @@
+{
+  "heading": "Step 1: Search Assessment Criteria",
+  "description": "Enter the type of accident and its circumstances to search for the appropriate assessment criteria.",
+  "tabs": {
+    "keyword": "Keyword Search",
+    "structured": "Structured Search"
+  },
+  "keywordSearch": {
+    "label": "Search Assessment Criteria",
+    "placeholder": "e.g. intersection, pedestrian, parking lot",
+    "searchButton": "Search",
+    "aiButton": "AI Search",
+    "aiButtonTitle": "Automatically extract conditions from your text (10+ characters required)",
+    "compareButton": "Compare Search",
+    "compareButtonTitle": "Run keyword search and AI search at the same time to compare results"
+  },
+  "chapterFilter": {
+    "label": "Filter by chapter:",
+    "all": "All",
+    "hitCount": "{chapterTitle}: {count}"
+  },
+  "emptyState": {
+    "promptSearch": "Enter a keyword to search",
+    "noResults": "No matching assessment criteria found",
+    "aiSuggestTitle": "💡 Would you like to search with more detailed conditions using AI?",
+    "aiSuggestDescription": "Automatically sets conditions such as \"location,\" \"parties involved,\" and \"traffic signal\" from your text and searches.",
+    "aiSuggestButton": "Switch to Structured Search with AI Search",
+    "tryInstead": "Or try the following:",
+    "resetButton": "Reset Conditions"
+  },
+  "result": {
+    "aiRecommended": "AI Recommended",
+    "aiConfidence": "AI Confidence: {confidence}%",
+    "aiMatchScore": "AI Match Score: {probability}%",
+    "vectorSimilarity": "Vector Search Similarity:",
+    "source": "Source",
+    "baseFaultPercentage": "Base Fault Ratio: {percentage}%",
+    "matchTypeTitle": "{matchType} ({matchField})",
+    "matchType": {
+      "prefix": "Prefix match",
+      "partial": "Partial match",
+      "suffix": "Suffix match"
+    },
+    "matchTypeShort": {
+      "prefix": "Prefix",
+      "partial": "Partial",
+      "suffix": "Suffix"
+    },
+    "matchField": {
+      "title": "Title",
+      "description": "Description",
+      "chapter": "Chapter"
+    }
+  },
+  "alerts": {
+    "aiNoResults": "The AI search found no matching assessment criteria. Please try a different keyword.",
+    "aiSearchFailed": "AI search failed: {error}",
+    "aiSearchFailedGeneric": "AI search failed",
+    "genericError": "An error occurred",
+    "unknownError": "An error occurred"
+  }
+}

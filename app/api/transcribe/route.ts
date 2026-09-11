@@ -9,14 +9,23 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY || process.env.OPEN_API_KEY || "",
 });
 
+type TranscribeLocale = "ja" | "en";
+
 export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
     const file = formData.get("file") as File;
+    const rawLocale = formData.get("locale");
+    const locale: TranscribeLocale = rawLocale === "en" ? "en" : "ja";
 
     if (!file) {
       return NextResponse.json(
-        { error: "音声ファイルがアップロードされていません。" },
+        {
+          error:
+            locale === "en"
+              ? "No audio file was uploaded."
+              : "音声ファイルがアップロードされていません。",
+        },
         { status: 400 }
       );
     }
@@ -31,7 +40,7 @@ export async function POST(request: NextRequest) {
     // Buffer to file for OpenAI API (it expects a file object or path)
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
-    
+
     // Create a temporary file path
     const tempFilePath = join(tmpdir(), `upload-${Date.now()}-${file.name}`);
     await writeFile(tempFilePath, buffer);
@@ -42,11 +51,11 @@ export async function POST(request: NextRequest) {
     const transcription = await openai.audio.transcriptions.create({
       file: await import("fs").then((fs) => fs.createReadStream(tempFilePath)),
       model: "whisper-1",
-      language: "ja", // Force Japanese for better accuracy
+      language: locale, // "ja" or "en", based on the current UI language
     });
 
     // Clean up temp file (optional, but good practice)
-    // await unlink(tempFilePath); 
+    // await unlink(tempFilePath);
 
     return NextResponse.json({ text: transcription.text });
   } catch (error: any) {
@@ -57,4 +66,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-

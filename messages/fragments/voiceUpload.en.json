@@ -1,0 +1,7 @@
+{
+  "invalidFileType": "Please select an audio or video file.",
+  "transcriptionFailed": "Voice transcription failed. Please try again.",
+  "buttonTitle": "Upload an audio file to convert it to text",
+  "converting": "Converting...",
+  "voiceToText": "Voice to text"
+}

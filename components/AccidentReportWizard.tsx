@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useLocale } from "./LocaleProvider";
 import {
   AccidentReportFull,
   AssessmentCriteria,
@@ -19,6 +20,7 @@ import ChatWindow from "./ChatWindow";
 import AISuggestionsPanel from "./AISuggestionsPanel";
 
 export default function AccidentReportWizard() {
+  const { t } = useLocale();
   const [currentStep, setCurrentStep] = useState(1);
   const [reportData, setReportData] = useState<AccidentReportFull | null>(null);
   const [selectedCriteria, setSelectedCriteria] = useState<
@@ -135,15 +137,18 @@ export default function AccidentReportWizard() {
       let status: "complete" | "incomplete" | "valid-empty" = "complete";
       let color: "green" | "red" | "yellow" = "green";
       let missingItems: string[] = [];
-      let reason = `${vehicles.length}台の車両情報が選択されました`;
+      let reason = t("accidentReportWizard.vehicleReason.selected", { count: vehicles.length });
 
       // Check 1: Count mismatch (if AI expected something)
       if (aiExpectedVehicles.length > 0 && vehicles.length !== aiExpectedVehicles.length) {
         status = "incomplete";
         color = "red";
-        reason = `AIは${aiExpectedVehicles.length}台の車両を検出しましたが、${vehicles.length}台しか選択されていません`;
-        missingItems.push("車両台数の不一致");
-      } 
+        reason = t("accidentReportWizard.vehicleReason.countMismatch", {
+          expected: aiExpectedVehicles.length,
+          selected: vehicles.length,
+        });
+        missingItems.push(t("accidentReportWizard.missingItems.vehicleCountMismatch"));
+      }
       // Check 2: Maker mismatch
       else if (aiExpectedVehicles.length > 0) {
         const issues: string[] = [];
@@ -171,8 +176,8 @@ export default function AccidentReportWizard() {
         if (issues.length > 0) {
           status = "incomplete";
           color = "red";
-          reason = `選択された車両がAI分析結果（${issues.join(", ")}）と一致しません`;
-          missingItems.push("車両情報の不一致");
+          reason = t("accidentReportWizard.vehicleReason.makeMismatch", { issues: issues.join(", ") });
+          missingItems.push(t("accidentReportWizard.missingItems.vehicleInfoMismatch"));
         }
       }
 
@@ -193,8 +198,8 @@ export default function AccidentReportWizard() {
           stepNumber: 3,
           status: "incomplete",
           color: "red",
-          missingItems: ["車両情報"],
-          reason: "車両情報が登録されていません"
+          missingItems: [t("accidentReportWizard.missingItems.vehicleInfo")],
+          reason: t("accidentReportWizard.vehicleReason.notRegistered")
         }
       }));
     }
@@ -219,12 +224,12 @@ export default function AccidentReportWizard() {
       const hasHeavy = mods.some(m => m.factorDescription.includes("大型") || m.factorDescription.includes("著しい"));
       
       if (hasElderly) {
-        const msg = "高齢者・幼児に関する修正要素が適用されました。Step 3で、相手車両に「対歩行者安全装置」や「自動ブレーキ」が装備されているか確認することをお勧めします。";
-        setAiSuggestion(`💡 **AI提案**: ${msg}`);
+        const msg = t("accidentReportWizard.aiSuggestion.elderlyChild");
+        setAiSuggestion(`${t("accidentReportWizard.aiSuggestionPrefix")}${msg}`);
         setAiPanelSuggestions(prev => [...prev, msg]);
       } else if (hasHeavy) {
-        const msg = "大型車や著しい過失に関する修正要素が適用されました。Step 3で、車両の具体的なサイズや積載量、整備状況を確認してください。";
-        setAiSuggestion(`💡 **AI提案**: ${msg}`);
+        const msg = t("accidentReportWizard.aiSuggestion.heavyOrSevere");
+        setAiSuggestion(`${t("accidentReportWizard.aiSuggestionPrefix")}${msg}`);
         setAiPanelSuggestions(prev => [...prev, msg]);
       } else {
         setAiSuggestion(null);
@@ -232,8 +237,8 @@ export default function AccidentReportWizard() {
     } else if (currentStep === 3) {
       // Moving from Step 3 (Vehicles) to Step 4 (Report)
       if (selectedVehicles.length === 0) {
-        const msg = "車両情報が登録されていません。報告書の精度を上げるため、少なくともメーカーと車種名は特定しておくことをお勧めします。";
-        setAiSuggestion(`⚠️ **AI注意**: ${msg}`);
+        const msg = t("accidentReportWizard.aiSuggestion.noVehicleInfo");
+        setAiSuggestion(`${t("accidentReportWizard.aiWarningPrefix")}${msg}`);
         setAiPanelSuggestions(prev => [...prev, msg]);
       } else {
         setAiSuggestion(null);
@@ -262,13 +267,13 @@ export default function AccidentReportWizard() {
   const getStepName = () => {
     switch (currentStep) {
       case 1:
-        return "認定基準の検索";
+        return t("accidentReportWizard.steps.search");
       case 2:
-        return "修正要素の適用";
+        return t("accidentReportWizard.steps.modify");
       case 3:
-        return "車両情報検索";
+        return t("accidentReportWizard.steps.vehicle");
       case 4:
-        return "AI報告書作成";
+        return t("accidentReportWizard.steps.report");
       default:
         return "";
     }
@@ -362,10 +367,10 @@ export default function AccidentReportWizard() {
             onStepChange={handleStepChange}
             totalSteps={4}
             steps={[
-              "認定基準の検索",
-              "修正要素の適用",
-              "車両情報検索",
-              "AI報告書作成",
+              t("accidentReportWizard.steps.search"),
+              t("accidentReportWizard.steps.modify"),
+              t("accidentReportWizard.steps.vehicle"),
+              t("accidentReportWizard.steps.report"),
             ]}
             stepValidations={stepValidations}
           />
@@ -397,12 +402,12 @@ export default function AccidentReportWizard() {
             />
           ) : currentStep === 2 ? (
             <div className="bg-white rounded-lg shadow-md p-6 text-center text-gray-500">
-              <p>ステップ1で認定基準を選択してください</p>
+              <p>{t("accidentReportWizard.selectCriteriaFirst")}</p>
               <button
                 onClick={() => setCurrentStep(1)}
                 className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
               >
-                ステップ1に戻る
+                {t("accidentReportWizard.backToStep1")}
               </button>
             </div>
           ) : null}
@@ -427,7 +432,7 @@ export default function AccidentReportWizard() {
             disabled={!canGoBack}
             className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed transition-colors"
           >
-            前のステップに戻る
+            {t("accidentReportWizard.previousStep")}
           </button>
           <div className="flex-1"></div>
           <button
@@ -435,7 +440,7 @@ export default function AccidentReportWizard() {
             disabled={!canGoForward}
             className="px-6 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 disabled:bg-gray-300 disabled:text-gray-400 disabled:cursor-not-allowed transition-colors"
           >
-            次のステップへ
+            {t("accidentReportWizard.nextStep")}
           </button>
         </div>
       </div>

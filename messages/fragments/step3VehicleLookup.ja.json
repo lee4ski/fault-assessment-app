@@ -1,0 +1,56 @@
+{
+  "searchModeCard": {
+    "heading": "車両検索",
+    "modelCodeTab": "型式コードで検索",
+    "makeModelTab": "メーカー・車名で検索"
+  },
+  "modelCodeSearch": {
+    "label": "型式コード",
+    "placeholder": "例: DAA-ZVW30, NHW20",
+    "searchButton": "型式コードで検索"
+  },
+  "makeModelSearch": {
+    "makeLabel": "メーカー選択",
+    "makePlaceholder": "メーカーを選択",
+    "modelLabel": "車名選択",
+    "modelPlaceholder": "車種を選択",
+    "searchButton": "メーカー・車名で検索"
+  },
+  "searchResults": {
+    "heading": "検索結果 ({count}件)"
+  },
+  "table": {
+    "modelCode": "型式コード",
+    "make": "メーカー",
+    "model": "車名",
+    "year": "年式",
+    "actions": "操作",
+    "yearSuffix": "年",
+    "applyButton": "適用",
+    "appliedButton": "適用済"
+  },
+  "selectedVehicles": {
+    "heading": "選択された車両 ({count}件)",
+    "editButton": "編集",
+    "deleteButton": "削除"
+  },
+  "manualEntryButton": "+ 手動で車両情報を入力",
+  "modal": {
+    "editHeading": "車両情報を編集",
+    "createHeading": "車両情報を手動入力",
+    "makeLabel": "メーカー",
+    "makePlaceholder": "例: トヨタ",
+    "modelLabel": "車名",
+    "modelPlaceholder": "例: カローラ",
+    "yearLabel": "年式",
+    "yearPlaceholder": "例: 2020",
+    "modelCodeLabel": "型式コード",
+    "modelCodePlaceholder": "例: TA-NZE120",
+    "modelCodeHint": "※ 選択した車種・年式に関連する型式コードが候補として表示されます",
+    "requiredMark": "*",
+    "cancelButton": "キャンセル",
+    "updateButton": "更新",
+    "addButton": "追加",
+    "requiredFieldsAlert": "必須項目を入力してください"
+  }
+}

@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { AssessmentCriteria, SearchResult, ChapterHitCount, AccidentAttributes } from "@/types";
 import { searchCriteria, calculateChapterHitCounts, searchByAttributes } from "@/lib/calculator";
 import AccidentAttributesForm from "./AccidentAttributesForm";
+import { useLocale } from "@/components/LocaleProvider";
+import { localize } from "@/lib/i18n-simple";
 
 export interface Step1SearchState {
   searchTerm: string;
@@ -37,7 +39,8 @@ export default function Step1Search({
   onStateChange,
 }: Step1SearchProps) {
   const router = useRouter();
-  
+  const { t, locale } = useLocale();
+
   // Use preserved state if available, otherwise initialize with defaults
   const [searchTerm, setSearchTerm] = useState(preservedState?.searchTerm || "");
   const [attributes, setAttributes] = useState<AccidentAttributes>(
@@ -156,7 +159,7 @@ export default function Step1Search({
       const response = await fetch("/api/ai-analyze-accident", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ accidentDescription: searchTerm }),
+        body: JSON.stringify({ accidentDescription: searchTerm, locale }),
       });
       
       if (response.ok) {
@@ -210,7 +213,7 @@ export default function Step1Search({
             // No results from either method
             setDisplayedResults([]);
             setHasSearched(true);
-            alert("AI検索の結果、該当する認定基準が見つかりませんでした。別のキーワードで検索してください。");
+            alert(t("step1Search.alerts.aiNoResults"));
           }
         } else if (result.candidates && result.candidates.length > 0) {
           // If no attributes but we have candidates, show them directly
@@ -233,17 +236,17 @@ export default function Step1Search({
           console.warn("[AI Search] No candidates or attributes returned");
           setDisplayedResults([]);
           setHasSearched(true);
-          alert("AI検索の結果、該当する認定基準が見つかりませんでした。別のキーワードで検索してください。");
+          alert(t("step1Search.alerts.aiNoResults"));
         }
       } else {
         // Handle error response
         const errorData = await response.json().catch(() => ({ error: "Unknown error" }));
         console.error("[AI Search] Error:", response.status, errorData);
-        alert(`AI検索に失敗しました: ${errorData.error || "エラーが発生しました"}`);
+        alert(t("step1Search.alerts.aiSearchFailed", { error: errorData.error || t("step1Search.alerts.genericError") }));
       }
     } catch (error) {
       console.error(error);
-      alert("エラーが発生しました");
+      alert(t("step1Search.alerts.genericError"));
     } finally {
       setIsAiSearching(false);
     }
@@ -275,7 +278,7 @@ export default function Step1Search({
 
     return (
       <div className="flex items-center gap-2 mt-1">
-        <div className="text-xs font-medium text-gray-600">AI信頼度: {confidence}%</div>
+        <div className="text-xs font-medium text-gray-600">{t("step1Search.result.aiConfidence", { confidence })}</div>
         <div className="w-20 h-2 bg-gray-200 rounded-full overflow-hidden">
           <div 
             className={`h-full ${colorClass} transition-all duration-500`} 
@@ -290,9 +293,9 @@ export default function Step1Search({
     <div className="min-h-[500px]">
       <div className="flex flex-col h-full">
         <div className="mb-4">
-          <h2 className="text-2xl font-bold mb-2">ステップ1: 認定基準の検索</h2>
+          <h2 className="text-2xl font-bold mb-2">{t("step1Search.heading")}</h2>
           <p className="text-gray-600">
-            事故の種類や状況を入力して、適切な認定基準を検索してください。
+            {t("step1Search.description")}
           </p>
         </div>
 
@@ -312,7 +315,7 @@ export default function Step1Search({
               : "text-gray-500 hover:text-gray-700"
               }`}
           >
-            キーワード検索
+            {t("step1Search.tabs.keyword")}
           </button>
           <button
             type="button"
@@ -326,7 +329,7 @@ export default function Step1Search({
               : "text-gray-500 hover:text-gray-700"
               }`}
           >
-            構造化検索
+            {t("step1Search.tabs.structured")}
           </button>
         </div>
 
@@ -400,7 +403,7 @@ export default function Step1Search({
                   const response = await fetch("/api/ai-analyze-accident", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ accidentDescription: description }),
+                    body: JSON.stringify({ accidentDescription: description, locale }),
                   });
                   
                   if (response.ok) {
@@ -457,11 +460,11 @@ export default function Step1Search({
                     setDisplayedResults(enhancedResults);
                     setHasSearched(true);
                   } else {
-                    alert("AI検索に失敗しました");
+                    alert(t("step1Search.alerts.aiSearchFailedGeneric"));
                   }
                 } catch (error) {
                   console.error(error);
-                  alert("エラーが発生しました");
+                  alert(t("step1Search.alerts.genericError"));
                 } finally {
                   setIsAiSearching(false);
                 }
@@ -474,7 +477,7 @@ export default function Step1Search({
               htmlFor="search"
               className="block text-sm font-medium text-gray-700 mb-2"
             >
-              認定基準を検索
+              {t("step1Search.keywordSearch.label")}
             </label>
             <div className="relative flex gap-2">
               <div className="relative flex-1">
@@ -483,24 +486,24 @@ export default function Step1Search({
                   id="search"
                   value={searchTerm}
                   onChange={(e) => handleSearchChange(e.target.value)}
-                  placeholder="例: 交差点、歩行者、駐車場など"
+                  placeholder={t("step1Search.keywordSearch.placeholder")}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   // Removed onKeyDown - search now only triggers on button click
                 />
               </div>
-              
+
               <button
                 onClick={handleKeywordSearchClick}
                 className="px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors flex items-center gap-2 whitespace-nowrap"
               >
-                検索
+                {t("step1Search.keywordSearch.searchButton")}
               </button>
 
               <button
                 onClick={handleAiSearch}
                 disabled={isAiSearching || searchTerm.trim().length < 10}
                 className="px-4 py-2 bg-purple-600 text-white rounded-lg font-semibold hover:bg-purple-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center gap-2 whitespace-nowrap"
-                title="文章から条件を自動抽出します（10文字以上必要）"
+                title={t("step1Search.keywordSearch.aiButtonTitle")}
               >
                 {isAiSearching ? (
                   <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -510,18 +513,18 @@ export default function Step1Search({
                 ) : (
                   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-sparkles"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
                 )}
-                AI検索
+                {t("step1Search.keywordSearch.aiButton")}
               </button>
 
               <button
                 onClick={() => router.push('/search-comparison')}
                 className="px-4 py-2 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition-colors flex items-center gap-2 whitespace-nowrap"
-                title="キーワード検索とAI検索を同時実行して比較"
+                title={t("step1Search.keywordSearch.compareButtonTitle")}
               >
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
                 </svg>
-                比較検索
+                {t("step1Search.keywordSearch.compareButton")}
               </button>
             </div>
           </div>
@@ -531,7 +534,7 @@ export default function Step1Search({
         {(chapterHitCounts.length > 0) && (
           <div className="mb-4">
             <div className="flex items-center gap-2 mb-2">
-              <span className="text-sm font-medium text-gray-700">章で絞り込み:</span>
+              <span className="text-sm font-medium text-gray-700">{t("step1Search.chapterFilter.label")}</span>
               <button
                 type="button"
                 onClick={() => setSelectedChapter(null)}
@@ -540,7 +543,7 @@ export default function Step1Search({
                   : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                   }`}
               >
-                すべて
+                {t("step1Search.chapterFilter.all")}
               </button>
             </div>
             <div className="flex flex-wrap gap-2">
@@ -554,7 +557,7 @@ export default function Step1Search({
                     : "bg-blue-100 text-blue-800 hover:bg-blue-200"
                     }`}
                 >
-                  {hit.chapterTitle}: {hit.count}件
+                  {t("step1Search.chapterFilter.hitCount", { chapterTitle: hit.chapterTitle, count: hit.count })}
                 </button>
               ))}
             </div>
@@ -564,31 +567,31 @@ export default function Step1Search({
         <div className="flex-1 overflow-y-auto border border-gray-200 rounded-lg">
           {!hasSearched && !useStructuredSearch ? (
              <div className="p-8 text-center">
-                <p className="text-gray-500 mb-4">キーワードを入力して検索してください</p>
+                <p className="text-gray-500 mb-4">{t("step1Search.emptyState.promptSearch")}</p>
              </div>
           ) : filteredResults.length === 0 ? (
               <div className="p-8 text-center">
-                <p className="text-gray-500 mb-4">一致する認定基準が見つかりませんでした</p>
+                <p className="text-gray-500 mb-4">{t("step1Search.emptyState.noResults")}</p>
                 <div className="flex flex-col gap-4 items-center">
                    {!useStructuredSearch && searchTerm.length > 2 && (
                      <div className="bg-blue-50 p-4 rounded-lg border border-blue-200 max-w-md w-full">
                         <p className="text-sm text-blue-800 mb-2 font-bold">
-                          💡 AIを使って詳細な条件で検索しますか？
+                          {t("step1Search.emptyState.aiSuggestTitle")}
                         </p>
                         <p className="text-xs text-blue-600 mb-3">
-                          入力された文章から、「場所」「当事者」「信号」などの条件を自動で設定して検索します。
+                          {t("step1Search.emptyState.aiSuggestDescription")}
                         </p>
-                        <button 
+                        <button
                           onClick={handleAiSearch}
                           className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
                         >
                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
-                           AI検索で構造化検索へ移動
+                           {t("step1Search.emptyState.aiSuggestButton")}
                         </button>
                      </div>
                    )}
                   <div className="flex flex-col gap-2 items-center mt-2">
-                    <p className="text-sm text-gray-600 mb-2">または次を試してください：</p>
+                    <p className="text-sm text-gray-600 mb-2">{t("step1Search.emptyState.tryInstead")}</p>
                     <button
                       onClick={() => {
                         setSearchTerm("");
@@ -600,7 +603,7 @@ export default function Step1Search({
                       }}
                       className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm"
                     >
-                      条件をリセット
+                      {t("step1Search.emptyState.resetButton")}
                     </button>
                   </div>
                 </div>
@@ -623,21 +626,21 @@ export default function Step1Search({
                         <div className="flex items-start justify-between gap-2 mb-1">
                           <div className="flex flex-col">
                             <h3 className="font-semibold text-gray-900 flex items-center gap-2">
-                              {item.title}
+                              {localize(locale, item.title, item.titleEn)}
                               {aiRecommendation?.id === item.id && (
                                 <span className="px-2 py-0.5 rounded text-xs font-bold bg-blue-100 text-blue-700 border border-blue-200">
-                                  AI推奨
+                                  {t("step1Search.result.aiRecommended")}
                                 </span>
                               )}
                               {result.aiProbability !== undefined && (
                                 <span className={`px-2 py-0.5 rounded text-xs font-bold border ${
-                                  result.aiProbability >= 80 
-                                    ? "bg-green-100 text-green-700 border-green-300" 
+                                  result.aiProbability >= 80
+                                    ? "bg-green-100 text-green-700 border-green-300"
                                     : result.aiProbability >= 50
                                     ? "bg-yellow-100 text-yellow-700 border-yellow-300"
                                     : "bg-orange-100 text-orange-700 border-orange-300"
                                 }`}>
-                                  AI適合度: {result.aiProbability}%
+                                  {t("step1Search.result.aiMatchScore", { probability: result.aiProbability })}
                                 </span>
                               )}
                             </h3>
@@ -645,7 +648,7 @@ export default function Step1Search({
                             {result.aiProbability !== undefined && (
                               <div className="mt-1">
                                 <div className="flex items-center gap-2">
-                                  <div className="text-xs font-medium text-gray-600">ベクトル検索類似度:</div>
+                                  <div className="text-xs font-medium text-gray-600">{t("step1Search.result.vectorSimilarity")}</div>
                                   <div className="flex-1 max-w-32 h-2 bg-gray-200 rounded-full overflow-hidden">
                                     <div 
                                       className={`h-full transition-all duration-500 ${
@@ -666,7 +669,7 @@ export default function Step1Search({
                           {(item.sourceBook || item.pageNumber) && (
                             <div className="text-right flex-shrink-0">
                               <div className="text-xs text-gray-500 font-medium">
-                                出典
+                                {t("step1Search.result.source")}
                               </div>
                               <div className="text-xs text-gray-700 font-semibold">
                                 {item.sourceBook && (
@@ -685,7 +688,7 @@ export default function Step1Search({
                         {item.summary ? (
                           <p className="text-sm text-gray-600 mt-1">{item.summary}</p>
                         ) : (
-                          <p className="text-sm text-gray-600 mt-1">{item.description}</p>
+                          <p className="text-sm text-gray-600 mt-1">{localize(locale, item.description, item.descriptionEn)}</p>
                         )}
                       </div>
                       {searchTerm.trim() && (
@@ -696,22 +699,21 @@ export default function Step1Search({
                               ? "bg-yellow-100 text-yellow-800"
                               : "bg-gray-100 text-gray-800"
                             }`}
-                          title={`${result.matchType === "prefix" ? "前方一致" : result.matchType === "partial" ? "部分一致" : "後方一致"} (${result.matchField === "title" ? "タイトル" : result.matchField === "description" ? "説明" : "章"})`}
+                          title={t("step1Search.result.matchTypeTitle", {
+                            matchType: t(`step1Search.result.matchType.${result.matchType}`),
+                            matchField: t(`step1Search.result.matchField.${result.matchField === "title" ? "title" : result.matchField === "description" ? "description" : "chapter"}`),
+                          })}
                         >
-                          {result.matchType === "prefix"
-                            ? "前方"
-                            : result.matchType === "partial"
-                              ? "部分"
-                              : "後方"}
+                          {t(`step1Search.result.matchTypeShort.${result.matchType}`)}
                         </span>
                       )}
                     </div>
                     <div className="mt-2 flex flex-wrap gap-2">
                       <span className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded">
-                        {item.chapterTitle}
+                        {localize(locale, item.chapterTitle, item.chapterTitleEn)}
                       </span>
                       <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">
-                        基本過失割合: {item.baseFaultPercentage}%
+                        {t("step1Search.result.baseFaultPercentage", { percentage: item.baseFaultPercentage })}
                       </span>
                     </div>
                   </li>

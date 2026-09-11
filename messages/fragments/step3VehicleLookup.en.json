@@ -1,0 +1,56 @@
+{
+  "searchModeCard": {
+    "heading": "Vehicle Search",
+    "modelCodeTab": "Search by Model Code",
+    "makeModelTab": "Search by Make/Model"
+  },
+  "modelCodeSearch": {
+    "label": "Model Code",
+    "placeholder": "e.g. DAA-ZVW30, NHW20",
+    "searchButton": "Search by Model Code"
+  },
+  "makeModelSearch": {
+    "makeLabel": "Select Make",
+    "makePlaceholder": "Select a make",
+    "modelLabel": "Select Model",
+    "modelPlaceholder": "Select a model",
+    "searchButton": "Search by Make/Model"
+  },
+  "searchResults": {
+    "heading": "Search Results ({count})"
+  },
+  "table": {
+    "modelCode": "Model Code",
+    "make": "Make",
+    "model": "Model",
+    "year": "Year",
+    "actions": "Actions",
+    "yearSuffix": "",
+    "applyButton": "Apply",
+    "appliedButton": "Applied"
+  },
+  "selectedVehicles": {
+    "heading": "Selected Vehicles ({count})",
+    "editButton": "Edit",
+    "deleteButton": "Delete"
+  },
+  "manualEntryButton": "+ Enter Vehicle Info Manually",
+  "modal": {
+    "editHeading": "Edit Vehicle Info",
+    "createHeading": "Enter Vehicle Info Manually",
+    "makeLabel": "Make",
+    "makePlaceholder": "e.g. Toyota",
+    "modelLabel": "Model",
+    "modelPlaceholder": "e.g. Corolla",
+    "yearLabel": "Year",
+    "yearPlaceholder": "e.g. 2020",
+    "modelCodeLabel": "Model Code",
+    "modelCodePlaceholder": "e.g. TA-NZE120",
+    "modelCodeHint": "* Suggested model codes related to the selected model/year are shown as candidates",
+    "requiredMark": "*",
+    "cancelButton": "Cancel",
+    "updateButton": "Update",
+    "addButton": "Add",
+    "requiredFieldsAlert": "Please fill in the required fields"
+  }
+}

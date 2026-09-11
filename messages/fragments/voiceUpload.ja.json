@@ -1,0 +1,7 @@
+{
+  "invalidFileType": "音声または動画ファイルを選択してください。",
+  "transcriptionFailed": "音声認識に失敗しました。もう一度お試しください。",
+  "buttonTitle": "音声ファイルをアップロードしてテキストに変換",
+  "converting": "変換中...",
+  "voiceToText": "音声→文字"
+}

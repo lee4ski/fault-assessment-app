@@ -43,18 +43,20 @@ export function searchCriteria(
     let matchField: "title" | "description" | "chapterTitle" = "title";
     let score = 0;
 
-    // Check title first (highest priority)
-    if (isPrefixMatch(item.title, searchTerm)) {
+    // Check title first (highest priority) — also try the English
+    // translation (when one exists) so an English keyword still finds
+    // criteria whose canonical text is Japanese.
+    if (isPrefixMatch(item.title, searchTerm) || (item.titleEn && isPrefixMatch(item.titleEn, searchTerm))) {
       matchType = "prefix";
       matchField = "title";
       score = 100; // Highest score for prefix match in title
-    } else if (isPartialMatch(item.title, searchTerm)) {
+    } else if (isPartialMatch(item.title, searchTerm) || (item.titleEn && isPartialMatch(item.titleEn, searchTerm))) {
       if (!matchType) {
         matchType = "partial";
         matchField = "title";
         score = 50; // Partial match in title
       }
-    } else if (isSuffixMatch(item.title, searchTerm)) {
+    } else if (isSuffixMatch(item.title, searchTerm) || (item.titleEn && isSuffixMatch(item.titleEn, searchTerm))) {
       if (!matchType) {
         matchType = "suffix";
         matchField = "title";
@@ -64,15 +66,15 @@ export function searchCriteria(
 
     // Check description if no title match
     if (!matchType) {
-      if (isPrefixMatch(item.description, searchTerm)) {
+      if (isPrefixMatch(item.description, searchTerm) || (item.descriptionEn && isPrefixMatch(item.descriptionEn, searchTerm))) {
         matchType = "prefix";
         matchField = "description";
         score = 80; // Prefix match in description
-      } else if (isPartialMatch(item.description, searchTerm)) {
+      } else if (isPartialMatch(item.description, searchTerm) || (item.descriptionEn && isPartialMatch(item.descriptionEn, searchTerm))) {
         matchType = "partial";
         matchField = "description";
         score = 40; // Partial match in description
-      } else if (isSuffixMatch(item.description, searchTerm)) {
+      } else if (isSuffixMatch(item.description, searchTerm) || (item.descriptionEn && isSuffixMatch(item.descriptionEn, searchTerm))) {
         matchType = "suffix";
         matchField = "description";
         score = 20; // Suffix match in description
@@ -81,15 +83,15 @@ export function searchCriteria(
 
     // Check chapter title if no other match
     if (!matchType) {
-      if (isPrefixMatch(item.chapterTitle, searchTerm)) {
+      if (isPrefixMatch(item.chapterTitle, searchTerm) || (item.chapterTitleEn && isPrefixMatch(item.chapterTitleEn, searchTerm))) {
         matchType = "prefix";
         matchField = "chapterTitle";
         score = 60; // Prefix match in chapter title
-      } else if (isPartialMatch(item.chapterTitle, searchTerm)) {
+      } else if (isPartialMatch(item.chapterTitle, searchTerm) || (item.chapterTitleEn && isPartialMatch(item.chapterTitleEn, searchTerm))) {
         matchType = "partial";
         matchField = "chapterTitle";
         score = 30; // Partial match in chapter title
-      } else if (isSuffixMatch(item.chapterTitle, searchTerm)) {
+      } else if (isSuffixMatch(item.chapterTitle, searchTerm) || (item.chapterTitleEn && isSuffixMatch(item.chapterTitleEn, searchTerm))) {
         matchType = "suffix";
         matchField = "chapterTitle";
         score = 15; // Suffix match in chapter title
@@ -183,18 +185,30 @@ const hasAnyText = (item: AssessmentCriteria, terms: string[]) => {
   const normalizedTitle = normalizeForSearch(item.title);
   const normalizedDesc = normalizeForSearch(item.description);
   const normalizedChapter = normalizeForSearch(item.chapterTitle);
-  
+  // English translations (when present) so an English keyword search still
+  // matches criteria that only have their canonical Japanese text indexed.
+  const normalizedTitleEn = normalizeForSearch(item.titleEn || "");
+  const normalizedDescEn = normalizeForSearch(item.descriptionEn || "");
+  const normalizedChapterEn = normalizeForSearch(item.chapterTitleEn || "");
+
   // Also check modification factors
   const normalizedMods = (item.modificationFactors || [])
     .map(m => normalizeForSearch(m.description))
     .join(" ");
+  const normalizedModsEn = (item.modificationFactors || [])
+    .map(m => normalizeForSearch(m.descriptionEn || ""))
+    .join(" ");
 
   return terms.some(term => {
     const normalizedTerm = normalizeForSearch(term);
-    return normalizedTitle.includes(normalizedTerm) || 
-           normalizedDesc.includes(normalizedTerm) || 
+    return normalizedTitle.includes(normalizedTerm) ||
+           normalizedDesc.includes(normalizedTerm) ||
            normalizedChapter.includes(normalizedTerm) ||
-           normalizedMods.includes(normalizedTerm);
+           normalizedMods.includes(normalizedTerm) ||
+           normalizedTitleEn.includes(normalizedTerm) ||
+           normalizedDescEn.includes(normalizedTerm) ||
+           normalizedChapterEn.includes(normalizedTerm) ||
+           normalizedModsEn.includes(normalizedTerm);
   });
 };
 

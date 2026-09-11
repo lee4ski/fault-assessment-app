@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { AccidentAttributes } from "@/types";
+import { useLocale } from "@/components/LocaleProvider";
 
 interface AccidentAttributesFormProps {
   onSearch: (attributes: AccidentAttributes) => void;
@@ -16,6 +17,7 @@ export default function AccidentAttributesForm({
   missingFields = [],
   onAiSearch,
 }: AccidentAttributesFormProps) {
+  const { t, locale } = useLocale();
   const [attributes, setAttributes] = useState<AccidentAttributes>(
     initialAttributes || {}
   );
@@ -28,6 +30,10 @@ export default function AccidentAttributesForm({
     }
   }, [initialAttributes]);
 
+  // NOTE: these arrays hold canonical Japanese DATA VALUES that are stored on
+  // `attributes` and matched elsewhere against a Japanese-language criteria
+  // database. Do not translate the values themselves — only the labels
+  // dictionaries below translate what is displayed to the user.
   const accidentTypes = [
     "歩行者×四輪",
     "歩行者×二輪",
@@ -36,6 +42,15 @@ export default function AccidentAttributesForm({
     "二輪×二輪",
     "その他",
   ];
+
+  const accidentTypeLabels: Record<string, string> = {
+    "歩行者×四輪": "Pedestrian × Four-Wheeled Vehicle",
+    "歩行者×二輪": "Pedestrian × Two-Wheeled Vehicle",
+    "四輪×四輪": "Four-Wheeled Vehicle × Four-Wheeled Vehicle",
+    "四輪×二輪": "Four-Wheeled Vehicle × Two-Wheeled Vehicle",
+    "二輪×二輪": "Two-Wheeled Vehicle × Two-Wheeled Vehicle",
+    "その他": "Other",
+  };
 
   const locations = [
     "交差点",
@@ -46,6 +61,15 @@ export default function AccidentAttributesForm({
     "その他",
   ];
 
+  const locationLabels: Record<string, string> = {
+    "交差点": "Intersection",
+    "駐車場": "Parking Lot",
+    "高速道路": "Highway",
+    "一般道路": "General Road",
+    "横断歩道": "Crosswalk",
+    "その他": "Other",
+  };
+
   const partyOptions = [
     "歩行者",
     "四輪車",
@@ -53,6 +77,14 @@ export default function AccidentAttributesForm({
     "自転車",
     "その他",
   ];
+
+  const partyOptionLabels: Record<string, string> = {
+    "歩行者": "Pedestrian",
+    "四輪車": "Four-Wheeled Vehicle",
+    "二輪車": "Two-Wheeled Vehicle",
+    "自転車": "Bicycle",
+    "その他": "Other",
+  };
 
   // Determine Parties from attributes.partyTypes array
   const partyA = attributes.partyTypes?.[0] || "";
@@ -74,25 +106,55 @@ export default function AccidentAttributesForm({
     });
   };
 
-  const signalStates = [
-    { value: "signal_green", label: "青" },
-    { value: "signal_yellow", label: "黄" },
-    { value: "signal_red", label: "赤" },
-    { value: "signal_right", label: "右折" },
-    { value: "signal_none", label: "なし" },
-    { value: "signal_blinking", label: "点滅" },
-  ];
+  const signalStatesJa: Record<string, string> = {
+    signal_green: "青",
+    signal_yellow: "黄",
+    signal_red: "赤",
+    signal_right: "右折",
+    signal_none: "なし",
+    signal_blinking: "点滅",
+  };
 
-  const actionOptions = [
-    { value: "action_straight", label: "直進" },
-    { value: "action_turning_right", label: "右折" },
-    { value: "action_turning_left", label: "左折" },
-    { value: "action_crossing", label: "横断" },
-    { value: "action_stopping", label: "停止/駐車" },
-    { value: "action_backing", label: "後退" },
-    { value: "action_u_turn", label: "転回" },
-    { value: "action_lane_change", label: "進路変更" },
-  ];
+  const signalStatesEn: Record<string, string> = {
+    signal_green: "Green",
+    signal_yellow: "Yellow",
+    signal_red: "Red",
+    signal_right: "Right Turn",
+    signal_none: "None",
+    signal_blinking: "Blinking",
+  };
+
+  const signalStates = Object.keys(signalStatesJa).map((value) => ({
+    value,
+    label: locale === "en" ? signalStatesEn[value] : signalStatesJa[value],
+  }));
+
+  const actionOptionsJa: Record<string, string> = {
+    action_straight: "直進",
+    action_turning_right: "右折",
+    action_turning_left: "左折",
+    action_crossing: "横断",
+    action_stopping: "停止/駐車",
+    action_backing: "後退",
+    action_u_turn: "転回",
+    action_lane_change: "進路変更",
+  };
+
+  const actionOptionsEn: Record<string, string> = {
+    action_straight: "Going Straight",
+    action_turning_right: "Turning Right",
+    action_turning_left: "Turning Left",
+    action_crossing: "Crossing",
+    action_stopping: "Stopped/Parked",
+    action_backing: "Reversing",
+    action_u_turn: "U-Turn",
+    action_lane_change: "Changing Lanes",
+  };
+
+  const actionOptions = Object.keys(actionOptionsJa).map((value) => ({
+    value,
+    label: locale === "en" ? actionOptionsEn[value] : actionOptionsJa[value],
+  }));
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -110,7 +172,7 @@ export default function AccidentAttributesForm({
       (attributes.partyTypes && attributes.partyTypes.length > 0);
     
     if (!hasMinimalAttributes || isAiSearching) {
-      alert("AI検索を行うには、場所または当事者の情報が必要です。");
+      alert(t("accidentAttributesForm.aiSearchMissingInfoAlert"));
       return;
     }
     
@@ -146,7 +208,7 @@ export default function AccidentAttributesForm({
             </div>
             <div className="ml-3">
               <p className="text-sm text-yellow-700">
-                不足している情報があります。ハイライトされた項目を入力してください。
+                {t("accidentAttributesForm.missingFieldsWarning")}
               </p>
             </div>
           </div>
@@ -157,8 +219,8 @@ export default function AccidentAttributesForm({
         {/* 事故類型 */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
-            事故類型
-            {isMissing("accidentType") && <span className="text-xs text-red-500 font-bold">⚠️ 必須</span>}
+            {t("accidentAttributesForm.accidentType.label")}
+            {isMissing("accidentType") && <span className="text-xs text-red-500 font-bold">{t("accidentAttributesForm.required")}</span>}
           </label>
           <select
             value={attributes.accidentType || ""}
@@ -167,10 +229,10 @@ export default function AccidentAttributesForm({
             }
             className={getFieldClass("accidentType")}
           >
-            <option value="">選択してください</option>
+            <option value="">{t("accidentAttributesForm.selectPlaceholder")}</option>
             {accidentTypes.map((type) => (
               <option key={type} value={type}>
-                {type}
+                {locale === "en" ? (accidentTypeLabels[type] || type) : type}
               </option>
             ))}
           </select>
@@ -179,8 +241,8 @@ export default function AccidentAttributesForm({
         {/* 場所 */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
-            場所
-            {isMissing("location") && <span className="text-xs text-red-500 font-bold">⚠️ 必須</span>}
+            {t("accidentAttributesForm.location.label")}
+            {isMissing("location") && <span className="text-xs text-red-500 font-bold">{t("accidentAttributesForm.required")}</span>}
           </label>
           <select
             value={attributes.location || ""}
@@ -189,10 +251,10 @@ export default function AccidentAttributesForm({
             }
             className={getFieldClass("location")}
           >
-            <option value="">選択してください</option>
+            <option value="">{t("accidentAttributesForm.selectPlaceholder")}</option>
             {locations.map((location) => (
               <option key={location} value={location}>
-                {location}
+                {locale === "en" ? (locationLabels[location] || location) : location}
               </option>
             ))}
           </select>
@@ -201,34 +263,34 @@ export default function AccidentAttributesForm({
         {/* 当事者種別 (Party A & B) & 信号 */}
         <div className="col-span-1 md:col-span-2">
           <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
-            当事者と信号
-            {isMissing("partyTypes") && <span className="text-xs text-red-500 font-bold">⚠️ 必須</span>}
+            {t("accidentAttributesForm.partiesAndSignal.label")}
+            {isMissing("partyTypes") && <span className="text-xs text-red-500 font-bold">{t("accidentAttributesForm.required")}</span>}
           </label>
           <div className={`grid grid-cols-2 gap-4 p-4 border rounded-lg bg-gray-50 ${isMissing("partyTypes") && (!attributes.partyTypes || attributes.partyTypes.length === 0) ? "border-red-300 bg-red-50" : "border-gray-200"}`}>
             
             {/* Party A Group */}
             <div className="space-y-2">
-              <label className="block text-sm font-bold text-gray-700">当事者 A</label>
+              <label className="block text-sm font-bold text-gray-700">{t("accidentAttributesForm.partiesAndSignal.partyA")}</label>
               <select
                 value={partyA}
                 onChange={(e) => handlePartyChange(0, e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
               >
-                <option value="">種別を選択...</option>
+                <option value="">{t("accidentAttributesForm.partiesAndSignal.typeSelectPlaceholder")}</option>
                 {partyOptions.map((type) => (
-                  <option key={`a-${type}`} value={type}>{type}</option>
+                  <option key={`a-${type}`} value={type}>{locale === "en" ? (partyOptionLabels[type] || type) : type}</option>
                 ))}
               </select>
-              
+
               <div className="flex items-center gap-2 mt-2">
-                <span className="text-xs text-gray-500 w-10">信号:</span>
+                <span className="text-xs text-gray-500 w-10">{t("accidentAttributesForm.partiesAndSignal.signalLabel")}</span>
                 <select
                   value={attributes.signalA || ""}
                   onChange={(e) => setAttributes({ ...attributes, signalA: e.target.value || undefined })}
                   className="flex-1 px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-1 focus:ring-blue-500"
                   disabled={!partyA}
                 >
-                  <option value="">不明 / 指定なし</option>
+                  <option value="">{t("accidentAttributesForm.partiesAndSignal.signalUnspecified")}</option>
                   {signalStates.map((s) => (
                     <option key={`a-${s.value}`} value={s.value}>{s.label}</option>
                   ))}
@@ -236,44 +298,44 @@ export default function AccidentAttributesForm({
               </div>
 
               <div className="flex items-center gap-2 mt-2">
-                <span className="text-xs text-gray-500 w-10">行動:</span>
+                <span className="text-xs text-gray-500 w-10">{t("accidentAttributesForm.partiesAndSignal.actionLabel")}</span>
                 <select
                   value={attributes.actionA || ""}
                   onChange={(e) => setAttributes({ ...attributes, actionA: e.target.value || undefined })}
                   className="flex-1 px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-1 focus:ring-blue-500"
                   disabled={!partyA}
                 >
-                  <option value="">指定なし</option>
+                  <option value="">{t("accidentAttributesForm.partiesAndSignal.actionUnspecified")}</option>
                   {actionOptions.map((a) => (
                     <option key={`a-${a.value}`} value={a.value}>{a.label}</option>
                   ))}
                 </select>
               </div>
             </div>
-            
+
             {/* Party B Group */}
             <div className="space-y-2 border-l pl-4 border-gray-300">
-              <label className="block text-sm font-bold text-gray-700">当事者 B</label>
+              <label className="block text-sm font-bold text-gray-700">{t("accidentAttributesForm.partiesAndSignal.partyB")}</label>
               <select
                 value={partyB}
                 onChange={(e) => handlePartyChange(1, e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
               >
-                <option value="">種別を選択...</option>
+                <option value="">{t("accidentAttributesForm.partiesAndSignal.typeSelectPlaceholder")}</option>
                 {partyOptions.map((type) => (
-                  <option key={`b-${type}`} value={type}>{type}</option>
+                  <option key={`b-${type}`} value={type}>{locale === "en" ? (partyOptionLabels[type] || type) : type}</option>
                 ))}
               </select>
 
               <div className="flex items-center gap-2 mt-2">
-                <span className="text-xs text-gray-500 w-10">信号:</span>
+                <span className="text-xs text-gray-500 w-10">{t("accidentAttributesForm.partiesAndSignal.signalLabel")}</span>
                 <select
                   value={attributes.signalB || ""}
                   onChange={(e) => setAttributes({ ...attributes, signalB: e.target.value || undefined })}
                   className="flex-1 px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-1 focus:ring-blue-500"
                   disabled={!partyB}
                 >
-                  <option value="">不明 / 指定なし</option>
+                  <option value="">{t("accidentAttributesForm.partiesAndSignal.signalUnspecified")}</option>
                   {signalStates.map((s) => (
                     <option key={`b-${s.value}`} value={s.value}>{s.label}</option>
                   ))}
@@ -281,14 +343,14 @@ export default function AccidentAttributesForm({
               </div>
 
               <div className="flex items-center gap-2 mt-2">
-                <span className="text-xs text-gray-500 w-10">行動:</span>
+                <span className="text-xs text-gray-500 w-10">{t("accidentAttributesForm.partiesAndSignal.actionLabel")}</span>
                 <select
                   value={attributes.actionB || ""}
                   onChange={(e) => setAttributes({ ...attributes, actionB: e.target.value || undefined })}
                   className="flex-1 px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-1 focus:ring-blue-500"
                   disabled={!partyB}
                 >
-                  <option value="">指定なし</option>
+                  <option value="">{t("accidentAttributesForm.partiesAndSignal.actionUnspecified")}</option>
                   {actionOptions.map((a) => (
                     <option key={`b-${a.value}`} value={a.value}>{a.label}</option>
                   ))}
@@ -297,8 +359,8 @@ export default function AccidentAttributesForm({
             </div>
           </div>
           <div className="mt-1 text-right">
-             <button type="button" className="text-xs text-blue-600 hover:underline" onClick={() => alert("3者以上の事故の場合は、主な衝突ごとに分けて検索するか、AI検索を利用してください。")}>
-               3者以上の事故ですか？
+             <button type="button" className="text-xs text-blue-600 hover:underline" onClick={() => alert(t("accidentAttributesForm.partiesAndSignal.multiPartyAlert"))}>
+               {t("accidentAttributesForm.partiesAndSignal.multiPartyQuestion")}
              </button>
           </div>
         </div>
@@ -310,14 +372,14 @@ export default function AccidentAttributesForm({
           type="submit"
           className="px-6 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors"
         >
-          検索
+          {t("accidentAttributesForm.buttons.search")}
         </button>
         <button
           type="button"
           onClick={handleAiSearch}
           disabled={isAiSearching || (!attributes.location && (!attributes.partyTypes || attributes.partyTypes.length === 0))}
           className="px-6 py-2 bg-purple-600 text-white rounded-lg font-semibold hover:bg-purple-700 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center gap-2"
-          title="設定した条件を基にAIで確率検索を実行します"
+          title={t("accidentAttributesForm.aiSearchButtonTitle")}
         >
           {isAiSearching ? (
             <>
@@ -325,14 +387,14 @@ export default function AccidentAttributesForm({
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
               </svg>
-              検索中...
+              {t("accidentAttributesForm.buttons.aiSearching")}
             </>
           ) : (
             <>
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/>
               </svg>
-              AI検索
+              {t("accidentAttributesForm.buttons.aiSearch")}
             </>
           )}
         </button>
@@ -341,7 +403,7 @@ export default function AccidentAttributesForm({
           onClick={handleReset}
           className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300 transition-colors"
         >
-          リセット
+          {t("accidentAttributesForm.buttons.reset")}
         </button>
       </div>
     </form>

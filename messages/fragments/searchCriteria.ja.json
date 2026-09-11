@@ -1,0 +1,6 @@
+{
+  "searchLabel": "認定基準を検索",
+  "searchPlaceholder": "事故の種類や状況を入力してください（例: 交差点、歩行者）",
+  "noResults": "検索結果が見つかりませんでした",
+  "baseFaultPercentage": "基本過失割合: {percentage}%"
+}

@@ -1,6 +1,7 @@
 "use client";
 
 import { StepValidation } from "@/types/workflow";
+import { useLocale } from "./LocaleProvider";
 
 interface WorkflowStepperProps {
   currentStep: number;
@@ -22,6 +23,7 @@ export default function WorkflowStepper({
   ],
   stepValidations = {},
 }: WorkflowStepperProps) {
+  const { t } = useLocale();
   const getStepColor = (stepNumber: number): string => {
     const validation = stepValidations[stepNumber];
     
@@ -141,13 +143,13 @@ export default function WorkflowStepper({
                   <p
                     className={`text-xs font-semibold whitespace-nowrap ${getStepTextColor(stepNumber)}`}
                   >
-                    {steps[stepNumber - 1] || `ステップ${stepNumber}`}
+                    {steps[stepNumber - 1] || t("workflowStepper.stepFallback", { number: stepNumber })}
                   </p>
                   {validation && validation.status === "incomplete" && (
-                    <p className="text-[10px] text-red-500 mt-0.5">不完全</p>
+                    <p className="text-[10px] text-red-500 mt-0.5">{t("workflowStepper.incomplete")}</p>
                   )}
                   {validation && validation.status === "valid-empty" && (
-                    <p className="text-[10px] text-green-500 mt-0.5">適用なし</p>
+                    <p className="text-[10px] text-green-500 mt-0.5">{t("workflowStepper.validEmpty")}</p>
                   )}
                 </div>
               </div>

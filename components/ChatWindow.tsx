@@ -5,31 +5,9 @@ import { ChatMessage } from "@/types/workflow";
 import { sampleCriteria } from "@/data/sampleCriteria";
 import { MessageSquare, Sparkles, ChevronRight, Image as ImageIcon, X } from "lucide-react";
 import VoiceUpload from "./VoiceUpload";
+import { useLocale } from "@/components/LocaleProvider";
 
 type DetailKey = "location" | "signal" | "pedestrian" | "vehicles" | "extra";
-
-const detailQuestions: { id: DetailKey; text: string }[] = [
-  {
-    id: "location",
-    text: "Q1: 事故の場所を教えてください。（例：信号付き交差点、市街地の駐車場、高速道路本線 など）",
-  },
-  {
-    id: "signal",
-    text: "Q2: 信号の状況を教えてください。（歩行者と車両それぞれの信号の色と、信号が変わったかどうか）",
-  },
-  {
-    id: "pedestrian",
-    text: "Q3: 歩行者や運転者に、幼児・高齢者・身体障害者・飲酒など、過失割合に影響しそうな属性はありますか？",
-  },
-  {
-    id: "vehicles",
-    text: "Q4: 関係する車両の台数と種類、わかっている範囲の情報（メーカー・車種・年式など）を教えてください。",
-  },
-  {
-    id: "extra",
-    text: "Q5: その他、過失割合に影響しそうな事情（速度超過、見通し不良、夜間など）があれば教えてください。",
-  },
-];
 
 interface ChatWindowProps {
   step: number;
@@ -44,12 +22,13 @@ export default function ChatWindow({
   onAIAnalysis,
   externalMessage,
 }: ChatWindowProps) {
+  const { t, locale } = useLocale();
   const [isCollapsed, setIsCollapsed] = useState(true);
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: "1",
       role: "assistant",
-      content: `こんにちは！${stepName}ステップのアシスタントです。何かお手伝いできることはありますか？\n\n💡 **ヒント**: 事故の詳細を記述すると、AIが自動的にステップを埋めます！`,
+      content: t("chatWindow.greeting", { stepName }),
       timestamp: new Date(),
     },
   ]);
@@ -68,6 +47,14 @@ export default function ChatWindow({
   const [selectedAudio, setSelectedAudio] = useState<{ name: string; url: string; type: string } | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const detailQuestions: { id: DetailKey; text: string }[] = [
+    { id: "location", text: t("chatWindow.questions.location") },
+    { id: "signal", text: t("chatWindow.questions.signal") },
+    { id: "pedestrian", text: t("chatWindow.questions.pedestrian") },
+    { id: "vehicles", text: t("chatWindow.questions.vehicles") },
+    { id: "extra", text: t("chatWindow.questions.extra") },
+  ];
 
   useEffect(() => {
     if (externalMessage) {
@@ -98,7 +85,7 @@ export default function ChatWindow({
     const selectionMessage: ChatMessage = {
       id: `select-${Date.now()}`,
       role: "user",
-      content: `「${caseTitle}」を選択しました`,
+      content: t("chatWindow.caseSelected", { caseTitle }),
       timestamp: new Date(),
     };
     setMessages((prev) => [...prev, selectionMessage]);
@@ -108,7 +95,7 @@ export default function ChatWindow({
     const analyzingMessage: ChatMessage = {
       id: `analyzing-${Date.now()}`,
       role: "assistant",
-      content: "✨ 選択された認定基準に基づいて分析しています...",
+      content: t("chatWindow.analyzingSelectedCriteria"),
       timestamp: new Date(),
     };
     setMessages((prev) => [...prev, analyzingMessage]);
@@ -123,9 +110,10 @@ export default function ChatWindow({
       const analysisResponse = await fetch("/api/ai-analyze-accident", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           accidentDescription: chatHistory,
-          preferredCriteriaId: caseId // Hint to AI
+          preferredCriteriaId: caseId, // Hint to AI
+          locale
         }),
       });
 
@@ -137,22 +125,22 @@ export default function ChatWindow({
         }
 
         const matchedCriteria = sampleCriteria.find(c => c.id === caseId);
-        let responseText = "✅ **認定基準が選択され、ステップが自動入力されました！**\n\n";
-        
+        let responseText = t("chatWindow.caseSelectionComplete");
+
         if (matchedCriteria) {
-          responseText += `📍 **ステップ1（認定基準）**: ${matchedCriteria.title}\n`;
-          responseText += `- 基本過失割合: ${matchedCriteria.baseFaultPercentage}%\n\n`;
+          responseText += t("chatWindow.step1CriteriaLine", { title: matchedCriteria.title });
+          responseText += t("chatWindow.baseFaultPercentageLine", { percentage: matchedCriteria.baseFaultPercentage });
         }
 
         if (analysis.step2?.recommendedModifications?.length > 0) {
-          responseText += "✅ **ステップ2（修正要素）**: 修正要素が適用されました\n\n";
+          responseText += t("chatWindow.step2ModificationsApplied");
         }
 
         if (analysis.step3?.extractedVehicles?.length > 0) {
-          responseText += "✅ **ステップ3（車両情報）**: 車両情報が抽出されました\n\n";
+          responseText += t("chatWindow.step3VehicleInfoExtracted");
         }
 
-        responseText += "左側のステップで内容を確認し、必要に応じて修正してください。";
+        responseText += t("chatWindow.reviewStepsPrompt");
 
         setMessages((prev) =>
           prev.map((msg) =>
@@ -162,14 +150,14 @@ export default function ChatWindow({
           )
         );
       } else {
-        throw new Error("分析に失敗しました");
+        throw new Error(t("chatWindow.analysisFailed"));
       }
     } catch (error: any) {
       console.error("Case selection analysis error:", error);
       setMessages((prev) =>
         prev.map((msg) =>
           msg.id === analyzingMessage.id
-            ? { ...msg, content: `❌ エラーが発生しました: ${error.message}` }
+            ? { ...msg, content: t("chatWindow.errorOccurred", { message: error.message }) }
             : msg
         )
       );
@@ -218,7 +206,7 @@ export default function ChatWindow({
           const canvas = document.createElement('canvas');
           canvas.width = img.width * scale;
           canvas.height = img.height * scale;
-          
+
           const ctx = canvas.getContext('2d');
           if (ctx) {
             ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
@@ -263,13 +251,18 @@ export default function ChatWindow({
     setMessages((prev) => [...prev, userMessage]);
     const currentInput = input;
     const currentImage = selectedImage;
-    
+
     setInput("");
     setSelectedImage(null);
     setSelectedAudio(null);
     if (fileInputRef.current) fileInputRef.current.value = "";
-    
+
     setIsLoading(true);
+
+    // Captured once so the "analyzing" placeholder text set below and the later
+    // content-matching checks stay in sync regardless of the active locale.
+    const imageAnalyzingText = t("chatWindow.analyzingImage");
+    const accidentAnalyzingText = t("chatWindow.analyzingText");
 
     // すでに詳細質問フロー中であれば、AI解析ではなく Q&A の続きを行う
     if (isCollectingDetails) {
@@ -304,28 +297,29 @@ export default function ChatWindow({
           pieces.push(initialAccidentText.trim());
         }
         if (updatedDetails.location) {
-          pieces.push(`【場所】${updatedDetails.location.trim()}`);
+          pieces.push(`${t("chatWindow.labels.location")}${updatedDetails.location.trim()}`);
         }
         if (updatedDetails.signal) {
-          pieces.push(`【信号】${updatedDetails.signal.trim()}`);
+          pieces.push(`${t("chatWindow.labels.signal")}${updatedDetails.signal.trim()}`);
         }
         if (updatedDetails.pedestrian) {
-          pieces.push(`【歩行者・運転者属性】${updatedDetails.pedestrian.trim()}`);
+          pieces.push(`${t("chatWindow.labels.pedestrian")}${updatedDetails.pedestrian.trim()}`);
         }
         if (updatedDetails.vehicles) {
-          pieces.push(`【車両情報】${updatedDetails.vehicles.trim()}`);
+          pieces.push(`${t("chatWindow.labels.vehicles")}${updatedDetails.vehicles.trim()}`);
         }
         if (updatedDetails.extra) {
-          pieces.push(`【その他事情】${updatedDetails.extra.trim()}`);
+          pieces.push(`${t("chatWindow.labels.extra")}${updatedDetails.extra.trim()}`);
         }
 
         const enrichedDescription = pieces.join("\n");
 
         setIsAnalyzing(true);
+        const reanalyzingText = t("chatWindow.reanalyzing");
         const analyzingMessage: ChatMessage = {
           id: `analyzing-${Date.now()}`,
           role: "assistant",
-          content: "✨ いただいた追加情報を含めて再分析しています...",
+          content: reanalyzingText,
           timestamp: new Date(),
         };
         setMessages((prev) => [...prev, analyzingMessage]);
@@ -334,7 +328,7 @@ export default function ChatWindow({
           const analysisResponse = await fetch("/api/ai-analyze-accident", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ accidentDescription: enrichedDescription }),
+            body: JSON.stringify({ accidentDescription: enrichedDescription, locale }),
           });
 
           if (analysisResponse.ok) {
@@ -360,28 +354,26 @@ export default function ChatWindow({
                 (c) => c.id === analysis.step1.recommendedCriteriaId
               );
 
-            let responseText = "✅ **AI分析が完了しました！**\n\n";
+            let responseText = t("chatWindow.analysisComplete");
             if (analysis.summary) {
-              responseText += `**概要**: ${analysis.summary}\n\n`;
+              responseText += t("chatWindow.summaryLine", { summary: analysis.summary });
             }
 
             if (matchedCriteria) {
-              responseText +=
-                "📍 **ステップ1（認定基準）**: 次の基準が最も適切と考えられます：\n";
-              responseText += `- ${matchedCriteria.title} （基本過失割合: ${matchedCriteria.baseFaultPercentage}%）\n`;
+              responseText += t("chatWindow.step1Recommended");
+              responseText += t("chatWindow.step1RecommendedItem", {
+                title: matchedCriteria.title,
+                percentage: matchedCriteria.baseFaultPercentage,
+              });
             } else if (hasCriteria) {
-              responseText +=
-                "📍 **ステップ1（認定基準）**: ある程度候補はありますが、特定には追加情報が必要です。\n";
+              responseText += t("chatWindow.step1CandidatesNeedMoreInfo");
             } else {
-              responseText +=
-                "⚠️ **ステップ1（認定基準）**: 該当する認定基準が見つかりません。\n" +
-                "💡 **提案**: このケースはデータベースに登録されていない可能性があります。新規に認定基準を作成（カスタム入力）することをお勧めします。\n";
+              responseText += t("chatWindow.step1NoMatch");
             }
 
             const step2Status = analysis.step2?.validation?.status;
             if (step2Status === "valid-empty") {
-              responseText +=
-                "\n✅ **ステップ2（修正要素）**: このケースでは、追加の修正要素は適用不要と判断されました。\n";
+              responseText += t("chatWindow.step2NoModsNeeded");
             } else if (hasModsSuggestion && matchedCriteria) {
               const mfMap = new Map(
                 (matchedCriteria.modificationFactors || []).map((m: any) => [
@@ -393,32 +385,28 @@ export default function ChatWindow({
                 .map((id: string) => mfMap.get(id)?.description || id)
                 .filter(Boolean);
 
-              responseText +=
-                "\n✅ **ステップ2（修正要素）**: 次の修正要素を適用する候補があります：\n";
+              responseText += t("chatWindow.step2Candidates");
               described.forEach((d: string) => {
                 responseText += `- ${d}\n`;
               });
               if (analysis.step2.validation?.reason) {
-                responseText += `理由: ${analysis.step2.validation.reason}\n`;
+                responseText += t("chatWindow.step2Reason", { reason: analysis.step2.validation.reason });
               }
             } else if (analysis.step2?.validation) {
-              responseText += `\n${
-                analysis.step2.validation.status === "complete" ? "✅" : "⚠️"
-              } **ステップ2（修正要素）**: ${
-                analysis.step2.validation.reason
-              }\n`;
+              responseText += t("chatWindow.step2StatusLine", {
+                icon: analysis.step2.validation.status === "complete" ? "✅" : "⚠️",
+                reason: analysis.step2.validation.reason,
+              });
             }
 
             if (analysis.step3?.validation) {
-              responseText += `\n${
-                analysis.step3.validation.color === "green" ? "✅" : "⚠️"
-              } **ステップ3（車両情報）**: ${
-                analysis.step3.validation.reason
-              }\n`;
+              responseText += t("chatWindow.step3StatusLine", {
+                icon: analysis.step3.validation.color === "green" ? "✅" : "⚠️",
+                reason: analysis.step3.validation.reason,
+              });
             }
 
-            responseText +=
-              "\n左側のステップを自動入力した内容を確認し、必要に応じて手動で修正してください。";
+            responseText += t("chatWindow.reviewAutoFilledSteps");
 
             setMessages((prev) =>
               prev.map((msg) =>
@@ -428,12 +416,12 @@ export default function ChatWindow({
               )
             );
           } else {
-            throw new Error("分析に失敗しました");
+            throw new Error(t("chatWindow.analysisFailed"));
           }
         } catch (error: any) {
           console.error("AI analysis error (detail flow):", error);
           setMessages((prev) =>
-            prev.filter((msg) => !msg.content.includes("再分析しています"))
+            prev.filter((msg) => !msg.content.includes(reanalyzingText))
           );
         } finally {
           setIsAnalyzing(false);
@@ -450,12 +438,12 @@ export default function ChatWindow({
 
     if (shouldAnalyze && onAIAnalysis) {
       setIsAnalyzing(true);
-      
+
       // Add analyzing message
       const analyzingMessage: ChatMessage = {
         id: `analyzing-${Date.now()}`,
         role: "assistant",
-        content: currentImage ? "🖼️ 画像を分析して状況を推論しています..." : "✨ 事故情報を分析しています...",
+        content: currentImage ? imageAnalyzingText : accidentAnalyzingText,
         timestamp: new Date(),
       };
       setMessages((prev) => [...prev, analyzingMessage]);
@@ -472,9 +460,9 @@ export default function ChatWindow({
           const analysisResponse = await fetch("/api/ai-analyze-accident", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ accidentDescription: currentInput }),
+            body: JSON.stringify({ accidentDescription: currentInput, locale }),
           });
-          
+
           if (analysisResponse.ok) {
           const analysis = await analysisResponse.json();
 
@@ -511,10 +499,7 @@ export default function ChatWindow({
             setInitialAccidentText(currentInput);
 
             const firstQuestion = detailQuestions[0].text;
-            const responseText =
-              "⚠️ **現在の説明だけでは、具体的な認定基準や修正要素を特定するには情報が足りません。**\n\n" +
-              "いくつか質問をさせてください。順番にお答えいただくと、AI が自動的にステップを埋めます。\n\n" +
-              firstQuestion;
+            const responseText = t("chatWindow.insufficientInfoIntro") + firstQuestion;
 
             setMessages((prev) =>
               prev.map((msg) =>
@@ -524,30 +509,28 @@ export default function ChatWindow({
               )
             );
           } else {
-            let responseText = "✅ **AI分析が完了しました！**\n\n";
+            let responseText = t("chatWindow.analysisComplete");
             if (analysis.summary) {
-              responseText += `**概要**: ${analysis.summary}\n\n`;
+              responseText += t("chatWindow.summaryLine", { summary: analysis.summary });
             }
 
             // Step 1 – criteria suggestion
             if (matchedCriteria) {
-              responseText +=
-                "📍 **ステップ1（認定基準）**: 次の基準が最も適切と考えられます：\n";
-              responseText += `- ${matchedCriteria.title} （基本過失割合: ${matchedCriteria.baseFaultPercentage}%）\n`;
+              responseText += t("chatWindow.step1Recommended");
+              responseText += t("chatWindow.step1RecommendedItem", {
+                title: matchedCriteria.title,
+                percentage: matchedCriteria.baseFaultPercentage,
+              });
             } else if (hasCriteria) {
-              responseText +=
-                "📍 **ステップ1（認定基準）**: ある程度候補はありますが、特定には追加情報が必要です。\n";
+              responseText += t("chatWindow.step1CandidatesNeedMoreInfo");
             } else {
-              responseText +=
-                "⚠️ **ステップ1（認定基準）**: 該当する認定基準が見つかりません。\n" +
-                "💡 **提案**: このケースはデータベースに登録されていない可能性があります。新規に認定基準を作成（カスタム入力）することをお勧めします。\n";
+              responseText += t("chatWindow.step1NoMatch");
             }
 
             // Step 2 – modification factors
             const step2Status = analysis.step2?.validation?.status;
             if (step2Status === "valid-empty") {
-              responseText +=
-                "\n✅ **ステップ2（修正要素）**: このケースでは、追加の修正要素は適用不要と判断されました。\n";
+              responseText += t("chatWindow.step2NoModsNeeded");
             } else if (hasModsSuggestion && matchedCriteria) {
               const mfMap = new Map(
                 (matchedCriteria.modificationFactors || []).map((m: any) => [
@@ -559,33 +542,29 @@ export default function ChatWindow({
                 .map((id: string) => mfMap.get(id)?.description || id)
                 .filter(Boolean);
 
-              responseText +=
-                "\n✅ **ステップ2（修正要素）**: 次の修正要素を適用する候補があります：\n";
+              responseText += t("chatWindow.step2Candidates");
               described.forEach((d: string) => {
                 responseText += `- ${d}\n`;
               });
               if (analysis.step2.validation?.reason) {
-                responseText += `理由: ${analysis.step2.validation.reason}\n`;
+                responseText += t("chatWindow.step2Reason", { reason: analysis.step2.validation.reason });
               }
             } else if (analysis.step2?.validation) {
-              responseText += `\n${
-                analysis.step2.validation.status === "complete" ? "✅" : "⚠️"
-              } **ステップ2（修正要素）**: ${
-                analysis.step2.validation.reason
-              }\n`;
+              responseText += t("chatWindow.step2StatusLine", {
+                icon: analysis.step2.validation.status === "complete" ? "✅" : "⚠️",
+                reason: analysis.step2.validation.reason,
+              });
             }
 
             // Step 3 – vehicles
             if (analysis.step3?.validation) {
-              responseText += `\n${
-                analysis.step3.validation.color === "green" ? "✅" : "⚠️"
-              } **ステップ3（車両情報）**: ${
-                analysis.step3.validation.reason
-              }\n`;
+              responseText += t("chatWindow.step3StatusLine", {
+                icon: analysis.step3.validation.color === "green" ? "✅" : "⚠️",
+                reason: analysis.step3.validation.reason,
+              });
             }
 
-            responseText +=
-              "\n左側のステップを自動入力した内容を確認し、必要に応じて手動で修正してください。";
+            responseText += t("chatWindow.reviewAutoFilledSteps");
 
             // Replace analyzing message with result
             setMessages((prev) =>
@@ -597,12 +576,12 @@ export default function ChatWindow({
             );
           }
         } else {
-          throw new Error("分析に失敗しました");
+          throw new Error(t("chatWindow.analysisFailed"));
         }
       }
     } catch (error: any) {
       console.error("AI analysis error:", error);
-      
+
       // Fall back to regular chat
       setMessages((prev) => prev.filter(msg => msg.id !== analyzingMessage.id));
     } finally {
@@ -630,6 +609,7 @@ export default function ChatWindow({
               image: msg.image,
             })),
             step,
+            locale,
           }),
         });
 
@@ -653,7 +633,7 @@ export default function ChatWindow({
               // Replace the analyzing message with the actual response for image queries
               setMessages((prev) =>
                 prev.map((msg) =>
-                  msg.content.includes("🖼️ 画像を分析して状況を推論しています")
+                  msg.content.includes(imageAnalyzingText)
                     ? { ...msg, content: data.message }
                     : msg
                 )
@@ -668,57 +648,60 @@ export default function ChatWindow({
               };
               setMessages((prev) => [...prev, assistantMessage]);
             }
-            
+
             // Check if AI has finished reasoning and provided a complete accident description (works for both image and text conversations)
-            if (data.message.includes("【事故分析完了】") && data.message.includes("【分析終了】")) {
+            if (data.message.includes("[ANALYSIS_COMPLETE]") && data.message.includes("[ANALYSIS_END]")) {
                 // Extract the accident description
-                const match = data.message.match(/【事故分析完了】\s*([\s\S]*?)\s*【分析終了】/);
+                const match = data.message.match(/\[ANALYSIS_COMPLETE\]\s*([\s\S]*?)\s*\[ANALYSIS_END\]/);
                 if (match && match[1]) {
                   const accidentDescription = match[1].trim();
-                  
+
                   // Trigger automatic analysis to fill in the steps
                   setTimeout(async () => {
+                    // Declared outside the try block so the catch block below can also
+                    // reference it (a `const` inside `try {}` isn't visible in `catch {}`).
+                    const autoAnalyzingText = t("chatWindow.autoAnalyzing");
                     try {
                       setIsAnalyzing(true);
-                      
+
                       // Add analyzing message
                       const autoAnalyzingMsg: ChatMessage = {
                         id: `auto-analyzing-${Date.now()}`,
                         role: "assistant",
-                        content: "✨ 収集した情報を基に事故を分析し、ステップを自動入力しています...",
+                        content: autoAnalyzingText,
                         timestamp: new Date(),
                       };
                       setMessages((prev) => [...prev, autoAnalyzingMsg]);
-                      
+
                       const analysisResponse = await fetch("/api/ai-analyze-accident", {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ accidentDescription }),
+                        body: JSON.stringify({ accidentDescription, locale }),
                       });
-                      
+
                       if (analysisResponse.ok) {
                         const analysis = await analysisResponse.json();
-                        
+
                         // Pass analysis to parent to fill in steps
                         if (onAIAnalysis) {
                           onAIAnalysis(analysis);
                         }
-                        
+
                         // Update the analyzing message with success
                         setMessages((prev) =>
                           prev.map((msg) =>
                             msg.id === autoAnalyzingMsg.id
-                              ? { ...msg, content: "✅ 分析完了！左側のステップが自動入力されました。内容を確認してください。" }
+                              ? { ...msg, content: t("chatWindow.autoAnalysisComplete") }
                               : msg
                           )
                         );
                       } else {
-                        throw new Error("分析に失敗しました");
+                        throw new Error(t("chatWindow.analysisFailed"));
                       }
                     } catch (error: any) {
                       console.error("Auto-analysis error:", error);
                       setMessages((prev) =>
-                        prev.filter((msg) => !msg.content.includes("収集した情報を基に"))
+                        prev.filter((msg) => !msg.content.includes(autoAnalyzingText))
                       );
                     } finally {
                       setIsAnalyzing(false);
@@ -733,7 +716,7 @@ export default function ChatWindow({
           const errorMessage: ChatMessage = {
             id: (Date.now() + 1).toString(),
             role: "assistant",
-            content: `申し訳ございません。エラーが発生しました: ${error.message}`,
+            content: t("chatWindow.errorFallback", { message: error.message }),
             timestamp: new Date(),
           };
           setMessages((prev) => [...prev, errorMessage]);
@@ -753,10 +736,10 @@ export default function ChatWindow({
         <button
           onClick={() => setIsCollapsed(false)}
           className="fixed right-6 top-[140px] z-50 px-4 py-3 bg-blue-600 text-white rounded-lg shadow-lg hover:bg-blue-700 transition-colors flex items-center gap-2 md:top-[120px]"
-          title="チャットを開く"
+          title={t("chatWindow.openChat")}
         >
           <MessageSquare className="w-5 h-5" />
-          <span className="font-medium hidden sm:inline">チャット</span>
+          <span className="font-medium hidden sm:inline">{t("chatWindow.chatLabel")}</span>
         </button>
       )}
 
@@ -774,7 +757,7 @@ export default function ChatWindow({
             <div className="flex items-center gap-2">
               <MessageSquare className="w-5 h-5 text-blue-600" />
               <div className="text-left">
-                <h3 className="font-semibold text-gray-900">アシスタントチャット</h3>
+                <h3 className="font-semibold text-gray-900">{t("chatWindow.assistantChatTitle")}</h3>
                 <p className="text-sm text-gray-600">{stepName}</p>
               </div>
             </div>
@@ -797,21 +780,21 @@ export default function ChatWindow({
                   {/* Render image attachment if present */}
                   {message.image && (
                     <div className="mb-2">
-                      <img 
-                        src={message.image} 
-                        alt="Uploaded" 
+                      <img
+                        src={message.image}
+                        alt="Uploaded"
                         className="max-w-full rounded cursor-pointer hover:opacity-90 transition-opacity"
                         onClick={() => window.open(message.image, '_blank')}
                         style={{ maxHeight: '200px' }}
                       />
                     </div>
                   )}
-                  
+
                   {/* Render audio attachment if present */}
                   {message.audio && (
                     <div className="mb-2 p-2 bg-white bg-opacity-20 rounded flex items-center gap-2">
-                      <audio 
-                        controls 
+                      <audio
+                        controls
                         className="w-full"
                         style={{ height: '32px' }}
                       >
@@ -821,9 +804,9 @@ export default function ChatWindow({
                       <span className="text-xs opacity-75 whitespace-nowrap">{message.audio.name}</span>
                     </div>
                   )}
-                  
+
                   <p className="text-sm whitespace-pre-wrap">{message.content}</p>
-                  
+
                   {/* Render case recommendations if present */}
                   {message.recommendations && message.recommendations.length > 0 && (
                     <div className="mt-3 space-y-2">
@@ -843,11 +826,11 @@ export default function ChatWindow({
                               </p>
                               <div className="mt-2 flex items-center gap-2">
                                 <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded">
-                                  基本過失割合: {rec.baseFaultPercentage}%
+                                  {t("chatWindow.baseFaultPercentageBadge", { percentage: rec.baseFaultPercentage })}
                                 </span>
                                 {rec.confidence > 0 && (
                                   <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded">
-                                    一致度: {rec.confidence}%
+                                    {t("chatWindow.confidenceBadge", { confidence: rec.confidence })}
                                   </span>
                                 )}
                               </div>
@@ -866,7 +849,7 @@ export default function ChatWindow({
                 <div className="bg-gray-100 rounded-lg p-3 flex items-center gap-2">
                   {isAnalyzing && <Sparkles className="w-4 h-4 text-blue-600 animate-pulse" />}
                   <p className="text-sm text-gray-600">
-                    {isAnalyzing ? "AI分析中..." : "考えています..."}
+                    {isAnalyzing ? t("chatWindow.analyzingStatus") : t("chatWindow.thinkingStatus")}
                   </p>
                 </div>
               </div>
@@ -914,7 +897,7 @@ export default function ChatWindow({
               <button
                 onClick={() => fileInputRef.current?.click()}
                 className={`p-2 rounded-full hover:bg-gray-100 text-gray-500 transition-colors ${selectedImage ? 'text-blue-600 bg-blue-50 ring-2 ring-blue-100' : ''}`}
-                title="画像をアップロード"
+                title={t("chatWindow.uploadImage")}
                 disabled={isLoading}
               >
                 <ImageIcon className="w-5 h-5" />
@@ -923,7 +906,7 @@ export default function ChatWindow({
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder="質問を入力してください... (Shift+Enterで送信)"
+                placeholder={t("chatWindow.inputPlaceholder")}
                 className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none overflow-y-auto"
                 style={{
                   minHeight: "40px",
@@ -938,11 +921,11 @@ export default function ChatWindow({
                 disabled={isLoading || (!input.trim() && !selectedImage)}
                 className="px-6 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex-shrink-0"
               >
-                送信
+                {t("chatWindow.sendButton")}
               </button>
             </div>
             <p className="text-xs text-gray-500 mt-1">
-              💡 <span className="font-medium">Shift+Enter</span>で送信、<span className="font-medium">Enter</span>で改行
+              💡 <span className="font-medium">Shift+Enter</span>{t("chatWindow.shortcutSendSuffix")}<span className="font-medium">Enter</span>{t("chatWindow.shortcutNewlineSuffix")}
             </p>
           </div>
         </div>
@@ -951,4 +934,3 @@ export default function ChatWindow({
     </>
   );
 }
-

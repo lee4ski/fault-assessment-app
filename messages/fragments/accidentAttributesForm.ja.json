@@ -1,0 +1,31 @@
+{
+  "missingFieldsWarning": "不足している情報があります。ハイライトされた項目を入力してください。",
+  "accidentType": {
+    "label": "事故類型"
+  },
+  "location": {
+    "label": "場所"
+  },
+  "required": "⚠️ 必須",
+  "selectPlaceholder": "選択してください",
+  "partiesAndSignal": {
+    "label": "当事者と信号",
+    "partyA": "当事者 A",
+    "partyB": "当事者 B",
+    "typeSelectPlaceholder": "種別を選択...",
+    "signalLabel": "信号:",
+    "signalUnspecified": "不明 / 指定なし",
+    "actionLabel": "行動:",
+    "actionUnspecified": "指定なし",
+    "multiPartyQuestion": "3者以上の事故ですか？",
+    "multiPartyAlert": "3者以上の事故の場合は、主な衝突ごとに分けて検索するか、AI検索を利用してください。"
+  },
+  "aiSearchMissingInfoAlert": "AI検索を行うには、場所または当事者の情報が必要です。",
+  "buttons": {
+    "search": "検索",
+    "aiSearch": "AI検索",
+    "aiSearching": "検索中...",
+    "reset": "リセット"
+  },
+  "aiSearchButtonTitle": "設定した条件を基にAIで確率検索を実行します"
+}

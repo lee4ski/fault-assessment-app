@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import OpenAI from "openai";
 import { sampleCriteria } from "@/data/sampleCriteria";
 import { AssessmentCriteria } from "@/types";
+import { localize } from "@/lib/i18n-simple";
 import fs from "fs";
 import path from "path";
 
@@ -174,13 +175,67 @@ export interface AIAnalysisResult {
   summary: string;
 }
 
+type AnalyzeLocale = "ja" | "en";
+
+const STRINGS: Record<AnalyzeLocale, {
+  tooShort: string;
+  tooLong: string;
+  criteriaSpecified: string;
+  criteriaNotSpecified: string;
+  noModificationsNeeded: (count: number) => string;
+  modificationsApplied: (count: number) => string;
+  modificationsNeedInfo: (missing: string) => string;
+  modificationsNeedEvaluation: string;
+  vehicleInfoMissing: string;
+  vehiclePartial: (count: number) => string;
+  vehiclesConfirmed: (count: number) => string;
+  defaultSummary: string;
+  analysisError: string;
+  languageInstruction: string;
+}> = {
+  ja: {
+    tooShort: "事故の説明が短すぎます。詳細を入力してください。",
+    tooLong: "事故の説明が長すぎます。要約して入力してください（最大1000文字）。",
+    criteriaSpecified: "認定基準が特定されました",
+    criteriaNotSpecified: "認定基準を特定できませんでした。追加情報が必要です。",
+    noModificationsNeeded: () => "修正要素は不要です（標準的なケース）",
+    modificationsApplied: (count) => `${count}個の修正要素が適用されます`,
+    modificationsNeedInfo: (missing) => `修正要素の判断に追加情報が必要です: ${missing}`,
+    modificationsNeedEvaluation: "修正要素の評価が必要です",
+    vehicleInfoMissing: "車両情報が不足しています",
+    vehiclePartial: (count) => `${count}台の車両情報が不完全です（型式等の詳細が不足）`,
+    vehiclesConfirmed: (count) => `${count}台の車両情報が確認されました`,
+    defaultSummary: "事故情報を分析しました。",
+    analysisError: "分析中にエラーが発生しました。",
+    languageInstruction: "自由記述のフィールド（reasoning、summary、reasonなど）は日本語で書いてください。",
+  },
+  en: {
+    tooShort: "The accident description is too short. Please provide more detail.",
+    tooLong: "The accident description is too long. Please summarize it (1000 characters max).",
+    criteriaSpecified: "An assessment criterion has been identified",
+    criteriaNotSpecified: "An assessment criterion could not be identified. More information is needed.",
+    noModificationsNeeded: () => "No modification factors are needed (a standard case)",
+    modificationsApplied: (count) => `${count} modification factor(s) will be applied`,
+    modificationsNeedInfo: (missing) => `More information is needed to determine modification factors: ${missing}`,
+    modificationsNeedEvaluation: "Modification factors still need to be evaluated",
+    vehicleInfoMissing: "Vehicle information is missing",
+    vehiclePartial: (count) => `${count} vehicle(s) have incomplete information (details such as model are missing)`,
+    vehiclesConfirmed: (count) => `${count} vehicle(s) confirmed`,
+    defaultSummary: "The accident information has been analyzed.",
+    analysisError: "An error occurred during analysis.",
+    languageInstruction: "Write all free-text fields (reasoning, summary, reason, etc.) in English.",
+  },
+};
+
 export async function POST(request: NextRequest) {
+  let locale: AnalyzeLocale = "ja";
   try {
-    const { accidentDescription } = await request.json();
+    const { accidentDescription, locale: rawLocale } = await request.json();
+    locale = rawLocale === "en" ? "en" : "ja";
 
     if (!accidentDescription || accidentDescription.trim().length < 10) {
       return NextResponse.json(
-        { error: "事故の説明が短すぎます。詳細を入力してください。" },
+        { error: STRINGS[locale].tooShort },
         { status: 400 }
       );
     }
@@ -188,7 +243,7 @@ export async function POST(request: NextRequest) {
     // Check for overly long descriptions to prevent Vercel request size limits
     if (accidentDescription.length > 1000) {
       return NextResponse.json(
-        { error: "事故の説明が長すぎます。要約して入力してください（最大1000文字）。" },
+        { error: STRINGS[locale].tooLong },
         { status: 400 }
       );
     }
@@ -228,12 +283,14 @@ export async function POST(request: NextRequest) {
 - **信号A/B**: それぞれの当事者の信号色（青、黄、赤、右折、なし）
 - **行動A/B**: それぞれの当事者の行動（直進、右折、左折、横断、停止、後退、転回、進路変更）
 
-利用可能な属性値の定義:
+利用可能な属性値の定義（重要: "attributes" フィールドの値は、回答全体の言語設定に関わらず、必ず下記の日本語の語彙をそのまま使用してください。これはアプリ内部でこの語彙をキーとして検索・照合するためです）:
 - accidentType: "歩行者×四輪", "歩行者×二輪", "四輪×四輪", "四輪×二輪", "二輪×二輪", "その他"
 - location: "交差点", "駐車場", "高速道路", "一般道路", "横断歩道", "その他"
 - partyTypes: ["歩行者", "四輪車", "二輪車", "自転車", "その他"]
 - signal states: "signal_green" (青), "signal_yellow" (黄), "signal_red" (赤), "signal_right" (右折), "signal_none" (なし)
 - actions: "action_straight" (直進), "action_turning_right" (右折), "action_turning_left" (左折), "action_crossing" (横断), "action_stopping" (停止), "action_backing" (後退)
+
+${STRINGS[locale].languageInstruction}
 
 【検索された認定基準候補】(ベクトル検索による類似度スコア付き。これらの中から最適なものを選択し、確率を付与してください):
 ${JSON.stringify(
@@ -241,14 +298,14 @@ ${JSON.stringify(
     const c = r.criteria;
     return {
       id: c.id,
-      title: c.title,
-      description: c.description,
+      title: localize(locale, c.title, c.titleEn),
+      description: localize(locale, c.description, c.descriptionEn),
       baseFaultPercentage: c.baseFaultPercentage,
       similarity: Math.round(r.similarity * 100), // Vector similarity score (0-100)
       // 修正要素は「IDと説明」をセットで渡す
       modificationFactors: (c.modificationFactors || []).map((m: any) => ({
         id: m.id,
-        description: m.description,
+        description: localize(locale, m.description, m.descriptionEn),
       })),
     };
   }),
@@ -294,7 +351,10 @@ ${JSON.stringify(
   "summary": "全体の分析サマリー"
 }`;
 
-    const userPrompt = `以下の事故説明を分析してください：\n\n${accidentDescription}`;
+    const userPrompt =
+      locale === "en"
+        ? `Please analyze the following accident description:\n\n${accidentDescription}`
+        : `以下の事故説明を分析してください：\n\n${accidentDescription}`;
 
     const completion = await openai.chat.completions.create(
       {
@@ -348,7 +408,7 @@ ${JSON.stringify(
         const c = sampleCriteria.find(s => s.id === cand.id);
         return {
           id: cand.id,
-          title: c?.title || cand.id,
+          title: c ? localize(locale, c.title, c.titleEn) : cand.id,
           probability: cand.probability || similarityScores.get(cand.id) || 0
         };
       });
@@ -356,7 +416,7 @@ ${JSON.stringify(
       // Fallback: Use vector similarity scores for all retrieved cases
       candidates = relevantCriteriaWithScores.map((r) => ({
         id: r.criteria.id,
-        title: r.criteria.title,
+        title: localize(locale, r.criteria.title, r.criteria.titleEn),
         probability: Math.round(r.similarity * 100)
       }));
     }
@@ -372,9 +432,9 @@ ${JSON.stringify(
           status: aiResponse.criteriaId ? "complete" : "incomplete",
           color: aiResponse.criteriaId ? "green" : "red",
           missingItems: aiResponse.missingInfo?.criteria || [],
-          reason: aiResponse.criteriaId 
-            ? "認定基準が特定されました" 
-            : "認定基準を特定できませんでした。追加情報が必要です。",
+          reason: aiResponse.criteriaId
+            ? STRINGS[locale].criteriaSpecified
+            : STRINGS[locale].criteriaNotSpecified,
         },
       },
       candidates: candidates, // Return candidates with probability
@@ -387,7 +447,7 @@ ${JSON.stringify(
           status: determineStep2Status(aiResponse),
           color: determineStep2Color(aiResponse),
           missingItems: aiResponse.missingInfo?.modifications || [],
-          reason: determineStep2Reason(aiResponse),
+          reason: determineStep2Reason(aiResponse, locale),
         },
       },
       step3: {
@@ -398,19 +458,19 @@ ${JSON.stringify(
           status: determineStep3Status(aiResponse.vehicles),
           color: determineStep3Color(aiResponse.vehicles),
           missingItems: aiResponse.missingInfo?.vehicles || [],
-          reason: determineStep3Reason(aiResponse.vehicles),
+          reason: determineStep3Reason(aiResponse.vehicles, locale),
         },
       },
       attributes: aiResponse.attributes || {},
       missingStructuredFields: aiResponse.missingInfo?.structuredFields || [],
-      summary: aiResponse.summary || "事故情報を分析しました。",
+      summary: aiResponse.summary || STRINGS[locale].defaultSummary,
     };
 
     return NextResponse.json(result);
   } catch (error: any) {
     console.error("AI analysis error:", error);
     return NextResponse.json(
-      { error: error.message || "分析中にエラーが発生しました。" },
+      { error: error.message || STRINGS[locale].analysisError },
       { status: 500 }
     );
   }
@@ -444,23 +504,23 @@ function determineStep2Color(aiResponse: any): "green" | "red" | "yellow" {
   return "red";
 }
 
-function determineStep2Reason(aiResponse: any): string {
+function determineStep2Reason(aiResponse: any, locale: AnalyzeLocale = "ja"): string {
   const mods = aiResponse.modifications || [];
   const missing = aiResponse.missingInfo?.modifications || [];
-  
+
   if (mods.length === 0 && missing.length === 0) {
-    return "修正要素は不要です（標準的なケース）";
+    return STRINGS[locale].noModificationsNeeded(0);
   }
-  
+
   if (mods.length > 0) {
-    return `${mods.length}個の修正要素が適用されます`;
+    return STRINGS[locale].modificationsApplied(mods.length);
   }
-  
+
   if (missing.length > 0) {
-    return `修正要素の判断に追加情報が必要です: ${missing.join(", ")}`;
+    return STRINGS[locale].modificationsNeedInfo(missing.join(", "));
   }
-  
-  return "修正要素の評価が必要です";
+
+  return STRINGS[locale].modificationsNeedEvaluation;
 }
 
 function determineStep3Status(vehicles: any[]): "complete" | "incomplete" | "valid-empty" {
@@ -484,17 +544,17 @@ function determineStep3Color(vehicles: any[]): "green" | "red" | "yellow" {
   return "yellow";
 }
 
-function determineStep3Reason(vehicles: any[]): string {
+function determineStep3Reason(vehicles: any[], locale: AnalyzeLocale = "ja"): string {
   if (!vehicles || vehicles.length === 0) {
-    return "車両情報が不足しています";
+    return STRINGS[locale].vehicleInfoMissing;
   }
-  
+
   const hasPartial = vehicles.some((v: any) => v.partial === true);
-  
+
   if (hasPartial) {
     const partialVehicles = vehicles.filter((v: any) => v.partial);
-    return `${partialVehicles.length}台の車両情報が不完全です（型式等の詳細が不足）`;
+    return STRINGS[locale].vehiclePartial(partialVehicles.length);
   }
-  
-  return `${vehicles.length}台の車両情報が確認されました`;
+
+  return STRINGS[locale].vehiclesConfirmed(vehicles.length);
 }

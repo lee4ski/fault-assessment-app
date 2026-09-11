@@ -1,7 +1,7 @@
 "use client";
 
-import { createContext, useContext, useState, ReactNode } from "react";
-import { Locale, getTranslations } from "@/lib/i18n-simple";
+import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { Locale, defaultLocale, getTranslations } from "@/lib/i18n-simple";
 
 interface LocaleContextType {
   locale: Locale;
@@ -9,10 +9,39 @@ interface LocaleContextType {
   t: (key: string, params?: Record<string, string | number>) => string;
 }
 
+const STORAGE_KEY = "fault-assessment-locale";
+
 const LocaleContext = createContext<LocaleContextType | undefined>(undefined);
 
 export function LocaleProvider({ children }: { children: ReactNode }) {
-  const [locale, setLocale] = useState<Locale>("ja");
+  // Start with the default locale on both server and first client render so
+  // hydration matches; the saved preference (if any) is applied right after.
+  const [locale, setLocaleState] = useState<Locale>(defaultLocale);
+
+  useEffect(() => {
+    try {
+      const saved = window.localStorage.getItem(STORAGE_KEY);
+      if (saved === "en" || saved === "ja") {
+        setLocaleState(saved);
+      }
+    } catch {
+      // localStorage can be unavailable (e.g. private browsing); default stands.
+    }
+  }, []);
+
+  useEffect(() => {
+    document.documentElement.lang = locale;
+  }, [locale]);
+
+  const setLocale = (next: Locale) => {
+    setLocaleState(next);
+    try {
+      window.localStorage.setItem(STORAGE_KEY, next);
+    } catch {
+      // Ignore write failures; the switch still applies for this session.
+    }
+  };
+
   const t = getTranslations(locale);
 
   return (
@@ -29,4 +58,3 @@ export function useLocale() {
   }
   return context;
 }
-

@@ -3,8 +3,11 @@ export interface AssessmentCriteria {
   id: string;
   chapter: number;
   chapterTitle: string;
+  chapterTitleEn?: string; // English translation of chapterTitle (for EN locale)
   title: string;
+  titleEn?: string; // English translation of title (for EN locale)
   description: string;
+  descriptionEn?: string; // English translation of description (for EN locale)
   summary?: string; // 要約（100-200字）
   baseFaultPercentage: number;
   modificationFactors: ModificationFactor[];
@@ -16,6 +19,7 @@ export interface AssessmentCriteria {
 export interface ModificationFactor {
   id: string;
   description: string;
+  descriptionEn?: string; // English translation of description (for EN locale)
   adjustment: number; // Percentage adjustment (e.g., -5, +10)
   category?: string; // e.g., "pedestrian", "vehicle", "road" - Made optional
 }
